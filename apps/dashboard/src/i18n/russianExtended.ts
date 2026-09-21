@@ -7,6 +7,9 @@
  * entries are sentence fragments by design.
  */
 export const russianExtended: Record<string, string> = {
+  "Interface language": "Язык интерфейса",
+  "Language used by Tilecast Studio in this browser.":
+    "Язык интерфейса Tilecast Studio в этом браузере.",
   // Screens, pairing, playback and device management.
   ") is selected": ") выбран(о)",
   "1 hour": "1 час",

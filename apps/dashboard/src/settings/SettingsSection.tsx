@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { SettingDefinition } from "../api/types";
 import { dependencyState } from "./settingDependencies";
 import { descriptionFor, groupsFor } from "./settingDisplay";
@@ -11,6 +12,7 @@ export function SettingsSection({
   editable,
   onChange,
   before,
+  afterDefinition,
 }: {
   section: SettingsSectionId;
   definitions: SettingDefinition[];
@@ -18,6 +20,7 @@ export function SettingsSection({
   editable: boolean;
   onChange: (key: string, value: unknown) => void;
   before?: React.ReactNode;
+  afterDefinition?: (definition: SettingDefinition) => React.ReactNode;
 }) {
   return (
     <div className="settings-sections">
@@ -32,33 +35,35 @@ export function SettingsSection({
             const dependency = dependencyState(definition.key, values);
             const disabled = !editable || dependency.disabled;
             return (
-              <div
-                className={`setting-row${disabled ? " setting-row--disabled" : ""}`}
-                key={definition.key}
-              >
-                <div className="setting-copy">
-                  <label>{definition.title}</label>
-                  <p>{descriptionFor(definition)}</p>
-                  {definition.futureOnly && (
-                    <span className="setting-note">
-                      Applies to future processing only
-                    </span>
-                  )}
-                  {dependency.disabled && (
-                    <span className="setting-dependency">
-                      {dependency.message}
-                    </span>
-                  )}
+              <Fragment key={definition.key}>
+                <div
+                  className={`setting-row${disabled ? " setting-row--disabled" : ""}`}
+                >
+                  <div className="setting-copy">
+                    <label>{definition.title}</label>
+                    <p>{descriptionFor(definition)}</p>
+                    {definition.futureOnly && (
+                      <span className="setting-note">
+                        Applies to future processing only
+                      </span>
+                    )}
+                    {dependency.disabled && (
+                      <span className="setting-dependency">
+                        {dependency.message}
+                      </span>
+                    )}
+                  </div>
+                  <div className="setting-control">
+                    <SettingControl
+                      definition={definition}
+                      value={values[definition.key] ?? definition.default}
+                      disabled={disabled}
+                      onChange={(value) => onChange(definition.key, value)}
+                    />
+                  </div>
                 </div>
-                <div className="setting-control">
-                  <SettingControl
-                    definition={definition}
-                    value={values[definition.key] ?? definition.default}
-                    disabled={disabled}
-                    onChange={(value) => onChange(definition.key, value)}
-                  />
-                </div>
-              </div>
+                {afterDefinition?.(definition)}
+              </Fragment>
             );
           })}
         </section>

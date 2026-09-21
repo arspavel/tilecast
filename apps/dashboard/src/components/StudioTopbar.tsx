@@ -40,7 +40,7 @@ import {
 } from "../navigation/studioRoutes";
 import { UploadContentDialog } from "./content-picker/UploadContentDialog";
 import { Button, Dialog, IconButton, Popover } from "./ui";
-import { LanguageSwitcher, useLanguage } from "../i18n/LanguageProvider";
+import { useLanguage } from "../i18n/LanguageProvider";
 
 type CommandGroupName =
   | "Quick actions"
@@ -610,7 +610,6 @@ export function StudioTopbar({
         <kbd>{platformShortcut()}</kbd>
       </button>
       <div className="topbar__utilities">
-        <LanguageSwitcher />
         {/* Not a menu: the panel carries a heading, a count, and labelled
             groups, none of which an ARIA menu may contain — a screen reader
             drops them and announces a bare item count. It is a labelled surface

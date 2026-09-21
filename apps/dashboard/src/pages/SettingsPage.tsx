@@ -27,6 +27,7 @@ import { IntegrationTokensPanel } from "../settings/IntegrationTokensPanel";
 import { LocationsPanel } from "../settings/LocationsPanel";
 import { ActivityRetentionPanel } from "../settings/ActivityRetentionPanel";
 import { PresentationNetworksPanel } from "../settings/PresentationNetworksPanel";
+import { useLanguage } from "../i18n/LanguageProvider";
 
 export { PlayerPolicyEditor } from "../settings/PlayerPolicyEditor";
 export {
@@ -328,7 +329,37 @@ function Destination({
       editable={manageable}
       onChange={onChange}
       before={before}
+      afterDefinition={
+        active === "general"
+          ? (definition) =>
+              definition.key === "organization.locale" ? (
+                <InterfaceLanguageSetting />
+              ) : null
+          : undefined
+      }
     />
+  );
+}
+
+function InterfaceLanguageSetting() {
+  const { language, setLanguage } = useLanguage();
+  return (
+    <div className="setting-row">
+      <div className="setting-copy">
+        <label htmlFor="interface-language">Interface language</label>
+        <p>Language used by Tilecast Studio in this browser.</p>
+      </div>
+      <div className="setting-control">
+        <select
+          id="interface-language"
+          value={language}
+          onChange={(event) => setLanguage(event.target.value as "en" | "ru")}
+        >
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </div>
   );
 }
 /**
