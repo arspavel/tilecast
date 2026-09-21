@@ -8,6 +8,7 @@ import {
 } from "react";
 import { russianCore } from "./russianCore";
 import { russianExtended } from "./russianExtended";
+import { russianFinal } from "./russianFinal";
 
 export type AppLanguage = "en" | "ru";
 
@@ -183,6 +184,7 @@ const russian: Record<string, string> = {
   None: "Нет",
   ...russianCore,
   ...russianExtended,
+  ...russianFinal,
 };
 
 function translateEnglish(english: string): string {
@@ -208,6 +210,36 @@ function translateEnglish(english: string): string {
     };
     return `Обновлено ${match[1]} ${units[match[2]!]}`;
   }
+
+  match = english.match(/^(\d+)\s*(m|h|d|w) ago$/);
+  if (match) {
+    const units: Record<string, string> = {
+      m: "мин. назад",
+      h: "ч. назад",
+      d: "дн. назад",
+      w: "нед. назад",
+    };
+    return `${match[1]} ${units[match[2]!]}`;
+  }
+
+  match = english.match(/^(.+) screens? down$/);
+  if (match) return `${match[1]} экран(а) не в сети`;
+
+  match = english.match(/^Per screen · (.+) with downtime$/);
+  if (match) return `По экранам · ${match[1]} с простоем`;
+
+  match = english.match(/^Open (.+)$/);
+  if (match) return `Открыть ${match[1]}`;
+
+  match = english.match(/^Configure (.+) for Tilecast\.$/);
+  if (match) return `Настройте параметр «${translateEnglish(match[1]!)}» для Tilecast.`;
+
+  match = english.match(/^(\d+) of (\d+) selected$/);
+  if (match) return `Выбрано ${match[1]} из ${match[2]}`;
+
+  match = english.match(/^Showing (\d+) of (\d+) (.+)$/);
+  if (match)
+    return `Показано ${match[1]} из ${match[2]}: ${translateEnglish(match[3]!)}`;
 
   return english;
 }
