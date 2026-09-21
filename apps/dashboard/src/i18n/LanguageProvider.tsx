@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { russianCore } from "./russianCore";
 
 export type AppLanguage = "en" | "ru";
 
@@ -179,6 +180,7 @@ const russian: Record<string, string> = {
   No: "Нет",
   Never: "Никогда",
   None: "Нет",
+  ...russianCore,
 };
 
 function translateEnglish(english: string): string {
