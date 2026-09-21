@@ -40,6 +40,7 @@ import {
 } from "../navigation/studioRoutes";
 import { UploadContentDialog } from "./content-picker/UploadContentDialog";
 import { Button, Dialog, IconButton, Popover } from "./ui";
+import { LanguageSwitcher, useLanguage } from "../i18n/LanguageProvider";
 
 type CommandGroupName =
   | "Quick actions"
@@ -550,6 +551,7 @@ export function StudioTopbar({
   user?: User;
   csrfToken?: string;
 }) {
+  const { t } = useLanguage();
   const routes = useStudioRoutes();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -595,29 +597,32 @@ export function StudioTopbar({
       <button
         className="topbar__search"
         type="button"
-        aria-label="Search Tilecast"
+        aria-label={t("Search Tilecast")}
         aria-haspopup="dialog"
         onClick={() => setPaletteOpen(true)}
       >
         <Search size={17} aria-hidden="true" />
         {/* Deliberately not "Search screens…": pages carry their own list filter,
             and two controls promising to search screens read as competitors. */}
-        <span className="topbar__search-placeholder">Search Tilecast…</span>
+        <span className="topbar__search-placeholder">
+          {t("Search Tilecast…")}
+        </span>
         <kbd>{platformShortcut()}</kbd>
       </button>
       <div className="topbar__utilities">
+        <LanguageSwitcher />
         {/* Not a menu: the panel carries a heading, a count, and labelled
             groups, none of which an ARIA menu may contain — a screen reader
             drops them and announces a bare item count. It is a labelled surface
             holding grouped lists of links. */}
         <Popover
-          label="Notifications"
+          label={t("Notifications")}
           className="topbar__notifications"
           panelClassName="topbar__alerts"
           width="22rem"
           align="end"
           trigger={(props) => (
-            <IconButton label="Notifications" {...props}>
+            <IconButton label={t("Notifications")} {...props}>
               <Bell size={18} aria-hidden="true" />
               {notifications.count > 0 && (
                 <span
@@ -631,11 +636,11 @@ export function StudioTopbar({
           )}
         >
           <header>
-            <strong>Notifications</strong>
+            <strong>{t("Notifications")}</strong>
             <span>{notifications.count || "No"} active</span>
           </header>
           {notifications.count === 0 ? (
-            <p>You&rsquo;re all caught up.</p>
+            <p>{t("You're all caught up.")}</p>
           ) : (
             <div className="topbar__alert-groups">
               {notificationGroups.map((group) => {
@@ -683,22 +688,22 @@ export function StudioTopbar({
           <Link
             className="button button--secondary topbar__pair"
             to="/screens/pair"
-            aria-label="Pair screen"
+            aria-label={t("Pair screen")}
           >
             <MonitorCheck size={16} aria-hidden="true" />
-            <span>Pair screen</span>
+            <span>{t("Pair screen")}</span>
           </Link>
         )}
         {canCreate && (
           <Popover
-            label="Create"
+            label={t("Create")}
             mode="menu"
             className="topbar__create"
             panelClassName="topbar__create-menu"
             align="end"
             trigger={(props) => (
               <Button variant="primary" {...props}>
-                <Plus size={16} aria-hidden="true" /> Create
+                <Plus size={16} aria-hidden="true" /> {t("Create")}
                 <ChevronDown size={15} aria-hidden="true" />
               </Button>
             )}
@@ -713,22 +718,25 @@ export function StudioTopbar({
                     setUploadOpen(true);
                   }}
                 >
-                  <Upload size={16} aria-hidden="true" /> Upload media
+                  <Upload size={16} aria-hidden="true" /> {t("Upload media")}
                 </button>
                 <Link role="menuitem" to="/widgets/new" onClick={close}>
-                  <Blocks size={16} aria-hidden="true" /> Create widget
+                  <Blocks size={16} aria-hidden="true" /> {t("Create widget")}
                 </Link>
                 <Link role="menuitem" to="/data-sources/new" onClick={close}>
-                  <Database size={16} aria-hidden="true" /> Create data source
+                  <Database size={16} aria-hidden="true" />{" "}
+                  {t("Create data source")}
                 </Link>
                 <Link role="menuitem" to="/playlists?create=1" onClick={close}>
-                  <ListVideo size={16} aria-hidden="true" /> Create playlist
+                  <ListVideo size={16} aria-hidden="true" />{" "}
+                  {t("Create playlist")}
                 </Link>
                 <Link role="menuitem" to="/layouts?create=1" onClick={close}>
-                  <Layers3 size={16} aria-hidden="true" /> Create layout
+                  <Layers3 size={16} aria-hidden="true" /> {t("Create layout")}
                 </Link>
                 <Link role="menuitem" to="/schedules/new" onClick={close}>
-                  <CalendarClock size={16} aria-hidden="true" /> Create schedule
+                  <CalendarClock size={16} aria-hidden="true" />{" "}
+                  {t("Create schedule")}
                 </Link>
               </>
             )}
@@ -747,7 +755,7 @@ export function StudioTopbar({
       {uploadOpen && (
         <UploadContentDialog
           csrf={csrfToken}
-          closeLabel="Done"
+          closeLabel={t("Done")}
           onCreated={() => {
             void queryClient.invalidateQueries({ queryKey: ["assets"] });
           }}

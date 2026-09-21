@@ -499,3 +499,26 @@
     display: none;
   }
 }
+.language-switcher {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--tc-border-subtle);
+  border-radius: 0.35rem;
+}
+
+.language-switcher button {
+  min-width: 2.25rem;
+  min-height: 2rem;
+  border: 0;
+  background: transparent;
+  color: var(--tc-text-secondary);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.language-switcher button[aria-pressed="true"] {
+  background: var(--tc-bg-subtle);
+  color: var(--tc-text-primary);
+}

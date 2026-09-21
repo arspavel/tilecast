@@ -7,6 +7,7 @@ import "./theme";
 import { App } from "./App";
 import { AuthProvider } from "./auth/AuthProvider";
 import { installCommandPaletteFocus } from "./commandPaletteFocus";
+import { LanguageProvider } from "./i18n/LanguageProvider";
 import "./styles.css";
 import "./styles/layout-fonts.css";
 import "./styles/signal.css";
@@ -41,9 +42,11 @@ const router = createBrowserRouter([{ path: "*", element: <App /> }]);
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   </StrictMode>,
 );
