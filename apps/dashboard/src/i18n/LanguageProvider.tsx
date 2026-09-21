@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { russianCore } from "./russianCore";
+import { russianExtended } from "./russianExtended";
 
 export type AppLanguage = "en" | "ru";
 
@@ -181,6 +182,7 @@ const russian: Record<string, string> = {
   Never: "Никогда",
   None: "Нет",
   ...russianCore,
+  ...russianExtended,
 };
 
 function translateEnglish(english: string): string {
@@ -302,8 +304,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return {
       language,
       setLanguage,
-      t: (english) =>
-        language === "ru" ? (russian[english] ?? english) : english,
+      t: (english) => (language === "ru" ? translateEnglish(english) : english),
     };
   }, [language]);
 
