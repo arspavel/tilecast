@@ -23,7 +23,7 @@ fi
 # Build the exact versioned AppImage (tsc + electron-builder --linux).
 npm run player:linux:dist --prefix "$ROOT"
 
-DIST="$ROOT/apps/player-linux/dist"
+DIST="$ROOT/apps/player-linux/release"
 APPIMAGE="$DIST/tilecast-player-$VERSION_NAME.AppImage"
 if [ ! -f "$APPIMAGE" ]; then
 	echo "Expected AppImage was not produced at $APPIMAGE." >&2
