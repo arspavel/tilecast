@@ -109,16 +109,18 @@ jobs:
         if: steps.release.outputs.channel == 'stable'
         env:
           ALLOW_BEHIND_MAIN: ${{ inputs.allow_behind_main }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
-          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
-          if git merge-base --is-ancestor refs/remotes/origin/main HEAD; then
+          git fetch --no-tags origin +refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}
+          if git merge-base --is-ancestor refs/remotes/origin/${DEFAULT_BRANCH} HEAD; then
             echo "Release commit contains all of main."
             exit 0
           fi
           echo "This stable release does not contain the following commits already merged to main:" >&2
-          git log --oneline --no-decorate HEAD..refs/remotes/origin/main >&2
+          git log --oneline --no-decorate HEAD..refs/remotes/origin/${DEFAULT_BRANCH} >&2
           if [ "${ALLOW_BEHIND_MAIN:-false}" = "true" ]; then
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
             echo "allow_behind_main was set; publishing anyway." >&2
             exit 0
           fi
