@@ -166,7 +166,7 @@ func serve() {
 	campaignService.SetScheduler(schedulingService)
 	campaignService.SetSchedulingLimits(scheduleLimits)
 	alertService := alerts.NewService(db, deviceService, playlistService, logger, cfg.PublicURL, time.Duration(cfg.Operations.MaxTakeoverDurationHours)*time.Hour)
-	updateService, updateErr := updates.NewService(db, updates.NewGitHubProvider(cfg.Updates.GitHubToken), updates.Config{Root: cfg.Updates.Root, TrustedPublicKey: cfg.Updates.TrustedPublicKey, MaxAPKBytes: cfg.Updates.MaxAPKBytes, GitHubClientID: cfg.Updates.GitHubClientID, GitHubTokenConfigured: strings.TrimSpace(cfg.Updates.GitHubToken) != ""})
+	updateService, updateErr := updates.NewService(db, updates.NewGitHubProviderForRepository(cfg.Updates.GitHubToken, cfg.Updates.GitHubOwner, cfg.Updates.GitHubRepo), updates.Config{Root: cfg.Updates.Root, TrustedPublicKey: cfg.Updates.TrustedPublicKey, MaxAPKBytes: cfg.Updates.MaxAPKBytes, GitHubClientID: cfg.Updates.GitHubClientID, GitHubTokenConfigured: strings.TrimSpace(cfg.Updates.GitHubToken) != ""})
 	if updateErr != nil {
 		fail("initialize player update service", updateErr)
 	}

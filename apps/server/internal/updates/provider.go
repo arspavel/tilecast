@@ -54,6 +54,8 @@ type GitHubProvider struct {
 	oauthBase string
 	mu        sync.RWMutex
 	token     string
+	owner     string
+	repo      string
 }
 
 type DeviceAuthorization struct {
@@ -71,6 +73,10 @@ type DeviceTokenResult struct {
 }
 
 func NewGitHubProvider(token string) *GitHubProvider {
+	return NewGitHubProviderForRepository(token, GitHubOwner, GitHubRepo)
+}
+
+func NewGitHubProviderForRepository(token, owner, repo string) *GitHubProvider {
 	client := &http.Client{Timeout: 30 * time.Second}
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if len(via) >= 3 {
@@ -82,11 +88,11 @@ func NewGitHubProvider(token string) *GitHubProvider {
 		}
 		return nil
 	}
-	return &GitHubProvider{client: client, apiBase: "https://api.github.com", oauthBase: "https://github.com", token: strings.TrimSpace(token)}
+	return &GitHubProvider{client: client, apiBase: "https://api.github.com", oauthBase: "https://github.com", token: strings.TrimSpace(token), owner: strings.TrimSpace(owner), repo: strings.TrimSpace(repo)}
 }
 
 func (p *GitHubProvider) Releases(ctx context.Context, etag string) (ProviderResult, error) {
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, p.apiBase+"/repos/"+GitHubOwner+"/"+GitHubRepo+"/releases?per_page=30", nil)
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, p.apiBase+"/repos/"+p.owner+"/"+p.repo+"/releases?per_page=30", nil)
 	p.headers(req)
 	if etag != "" {
 		req.Header.Set("If-None-Match", etag)
@@ -150,7 +156,7 @@ func (p *GitHubProvider) Download(ctx context.Context, rawURL string, maximum in
 
 func (p *GitHubProvider) Open(ctx context.Context, rawURL string) (*http.Response, error) {
 	parsed, err := url.Parse(rawURL)
-	if err != nil || parsed.Scheme != "https" || parsed.Hostname() != "api.github.com" || !strings.HasPrefix(parsed.Path, "/repos/"+GitHubOwner+"/"+GitHubRepo+"/releases/assets/") {
+	if err != nil || parsed.Scheme != "https" || parsed.Hostname() != "api.github.com" || !strings.HasPrefix(parsed.Path, "/repos/"+p.owner+"/"+p.repo+"/releases/assets/") {
 		return nil, errors.New("untrusted GitHub release asset URL")
 	}
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, parsed.String(), nil)
@@ -162,7 +168,7 @@ func (p *GitHubProvider) Open(ctx context.Context, rawURL string) (*http.Respons
 func (p *GitHubProvider) headers(req *http.Request) {
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-	req.Header.Set("User-Agent", "Tilecast-Server/0.9 (+https://github.com/gbyo/tilecast)")
+	req.Header.Set("User-Agent", "Tilecast-Server/0.9 (+https://github.com/"+p.owner+"/"+p.repo+")")
 	if token := p.currentToken(); token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}

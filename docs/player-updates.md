@@ -67,6 +67,11 @@ optional.
 
 Tilecast refreshes the GitHub release catalog automatically when the catalog is empty or the previous check is more than 15 minutes old. Studio keeps **Sync from GitHub** as an immediate retry and displays provider, signature, and release-verification failures instead of showing an unexplained empty table.
 
+The release source defaults to `gbyo/tilecast`. Forks can select their own
+repository with `TILECAST_GITHUB_OWNER` and `TILECAST_GITHUB_REPO`. Exact asset
+names and all manifest, signature, checksum, package, and certificate checks
+remain mandatory.
+
 When a release is being cached, the server records downloaded bytes while the
 artifact streams to disk. The Player Updates page polls that release every
 second during the download and shows the live megabytes downloaded against the

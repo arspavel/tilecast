@@ -81,6 +81,8 @@ type UpdatesConfig struct {
 	TrustedPublicKey string
 	GitHubToken      string
 	GitHubClientID   string
+	GitHubOwner      string
+	GitHubRepo       string
 	PublishToken     string
 	RetentionDays    int
 	MaxAPKBytes      int64
@@ -277,6 +279,8 @@ func Load() (Config, error) {
 		TrustedPublicKey: get("TILECAST_UPDATE_MANIFEST_PUBLIC_KEY", DefaultUpdateManifestPublicKey),
 		GitHubToken:      os.Getenv("TILECAST_GITHUB_TOKEN"),
 		GitHubClientID:   os.Getenv("TILECAST_GITHUB_CLIENT_ID"),
+		GitHubOwner:      get("TILECAST_GITHUB_OWNER", "gbyo"),
+		GitHubRepo:       get("TILECAST_GITHUB_REPO", "tilecast"),
 		PublishToken:     os.Getenv("TILECAST_RELEASE_PUBLISH_TOKEN"),
 	}
 	if cfg.Updates.MaxAPKBytes, err = parsePositiveInt64("TILECAST_UPDATE_MAX_APK_BYTES", "536870912"); err != nil {

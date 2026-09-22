@@ -18,6 +18,23 @@ func TestFixedGitHubReleaseSource(t *testing.T) {
 	}
 }
 
+func TestConfiguredGitHubReleaseSource(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/repos/arspavel/tilecast/releases" {
+			t.Fatalf("release path = %q", r.URL.Path)
+		}
+		_, _ = w.Write([]byte("[]"))
+	}))
+	defer server.Close()
+
+	provider := NewGitHubProviderForRepository("", "arspavel", "tilecast")
+	provider.client = server.Client()
+	provider.apiBase = server.URL
+	if _, err := provider.Releases(t.Context(), ""); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGitHubDeviceAuthorizationProtocol(t *testing.T) {
 	polls := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
