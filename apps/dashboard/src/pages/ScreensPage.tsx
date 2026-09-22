@@ -1555,6 +1555,7 @@ function updateLabel(value: string) {
 function platformLabel(value: string) {
   const normalized = value.toLowerCase();
   if (normalized === "linux") return "Linux";
+  if (normalized === "windows" || normalized === "win32") return "Windows";
   if (normalized.includes("fire")) return "Fire TV";
   if (normalized.includes("google")) return "Google TV";
   if (normalized.includes("android")) return "Android TV";

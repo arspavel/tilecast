@@ -7,6 +7,9 @@ module.exports = {
   extraMetadata: {
     version: playerPackage.version,
   },
+  directories: {
+    output: "release",
+  },
   // The legacy AppImage toolset dynamically loads libfuse.so.2 before the
   // Electron process can start. The static runtime carries its own mount
   // support, so modern Linux hosts do not need a FUSE 2 compatibility package.
@@ -19,5 +22,19 @@ module.exports = {
     category: "AudioVideo",
     executableName: "tilecast-player",
     artifactName: "tilecast-player-${version}.${ext}",
+  },
+  win: {
+    target: [{ target: "nsis", arch: ["x64"] }],
+    executableName: "tilecast-player",
+    artifactName: "tilecast-player-windows-${version}-x64.${ext}",
+  },
+  nsis: {
+    oneClick: false,
+    perMachine: false,
+    allowToChangeInstallationDirectory: true,
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    runAfterFinish: true,
+    deleteAppDataOnUninstall: false,
   },
 };

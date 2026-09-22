@@ -16,6 +16,30 @@ APK self-update, and the `power_assist_*` / `restart_activity` /
 `install_player_update` commands. On Linux the equivalent reliability comes
 from a kiosk compositor plus the systemd unit below.
 
+## Windows 10/11 x64
+
+The same Electron runtime can be packaged as a Windows installer. It supports
+pairing, cached playback, playlists, Layouts, schedules, websites, Widgets,
+preview capture, and automatic recovery. Linux-only AirPlay, Presentation
+Networks, systemd management, and CEC/DDC display control remain unavailable.
+
+Build the installer on Windows from the repository root:
+
+```powershell
+npm install
+npm run player:windows:dist
+```
+
+The NSIS installer is written to `apps/player-linux/release`. Installed builds
+start with the signed-in Windows account by default. Set
+`TILECAST_AUTOSTART=0` before launching to opt out. Player data and cached media
+are stored under `%LOCALAPPDATA%\Tilecast\Player` and remain after uninstall so
+an accidental reinstall does not discard enrollment or offline content.
+
+For a dedicated signage computer, configure Windows to sign in to a restricted
+local account automatically and disable sleep in the operating-system power
+policy. Tilecast keeps the display awake while its kiosk policy is enabled.
+
 Linux Display Control is an optional host integration. It uses `cec-ctl` for
 HDMI-CEC and `ddcutil` for DDC/CI when those tools and device permissions are
 available; it is capability-gated and never required for playback.

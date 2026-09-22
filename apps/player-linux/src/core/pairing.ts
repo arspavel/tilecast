@@ -83,12 +83,13 @@ export function buildDeviceMetadata(input: {
   screenWidth: number;
   screenHeight: number;
 }): DeviceMetadata {
+  const windows = process.platform === "win32";
   return {
     playerInstallationId: input.playerInstallationId,
-    platform: "linux",
+    platform: windows ? "windows" : "linux",
     manufacturer: os.hostname().slice(0, 120) || "unknown",
     model: `${os.type()} ${os.arch()}`.slice(0, 120),
-    // Contract field name; carries the OS release string on Linux.
+    // Legacy contract field name; carries the host OS release string.
     androidVersion: os.release().slice(0, 120) || "unknown",
     playerVersion: input.playerVersion,
     screenWidth: clampDimension(input.screenWidth),

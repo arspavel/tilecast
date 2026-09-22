@@ -16,6 +16,7 @@
     "player:linux:test": "npm test --workspace @gibsonmb71/tilecast-player-linux",
     "helper:test": "python3 -m unittest discover -s apps/player-linux/helper",
     "player:linux:dist": "npm run dist --workspace @gibsonmb71/tilecast-player-linux",
+    "player:windows:dist": "npm run dist:windows --workspace @gibsonmb71/tilecast-player-linux",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "npm run lint --workspace @tilecast/dashboard",

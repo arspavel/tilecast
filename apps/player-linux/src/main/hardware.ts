@@ -36,7 +36,7 @@ export function applyLowEndTuning(app: App): void {
   // VA-API. Enabling it keeps 1080p video off the CPU, which a dual-core
   // Ivy Bridge cannot sustain in software. If a specific box has a broken
   // VA-API stack, set TILECAST_DISABLE_VAAPI=1 to fall back to software.
-  if (envFlag("TILECAST_HW_DECODE", true)) {
+  if (process.platform === "linux" && envFlag("TILECAST_HW_DECODE", true)) {
     app.commandLine.appendSwitch(
       "enable-features",
       "VaapiVideoDecoder,VaapiIgnoreDriverChecks,CanvasOopRasterization",
@@ -46,7 +46,7 @@ export function applyLowEndTuning(app: App): void {
       "UseChromeOSDirectVideoDecoder",
     );
     app.commandLine.appendSwitch("ignore-gpu-blocklist");
-  } else {
+  } else if (process.platform === "linux") {
     app.commandLine.appendSwitch("disable-features", "VaapiVideoDecoder");
   }
 

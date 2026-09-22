@@ -1,5 +1,5 @@
 /**
- * Tilecast Player for Linux — Electron main process.
+ * Tilecast Player for Linux and Windows — Electron main process.
  *
  * The main process is a thin host: it owns the kiosk window, the tcmedia://
  * protocol, renderer crash recovery, and process relaunch. All protocol and
@@ -88,6 +88,18 @@ let shutdownPromise: Promise<void> | null = null;
 let activeLinuxKioskPolicy = linuxKioskPolicy(null);
 let displaySleepBlockerId: number | null = null;
 const configuredWebsiteSessions = new WeakSet<Session>();
+
+function configureWindowsAutostart(): void {
+  if (process.platform !== "win32" || !app.isPackaged) return;
+  const disabled = ["0", "false"].includes(
+    (process.env.TILECAST_AUTOSTART ?? "1").toLowerCase(),
+  );
+  app.setLoginItemSettings({
+    openAtLogin: !disabled,
+    path: process.execPath,
+    args: ["--autostart"],
+  });
+}
 
 function stopRuntime(): Promise<void> {
   if (!shutdownPromise) {
@@ -856,6 +868,7 @@ async function startRuntime(serverUrl: string): Promise<void> {
 }
 
 app.whenReady().then(async () => {
+  configureWindowsAutostart();
   store = new StateStore(process.env.TILECAST_DATA_DIR ?? defaultDataDir());
   await store.init();
 

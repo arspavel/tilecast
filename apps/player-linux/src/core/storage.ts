@@ -15,6 +15,13 @@ import * as os from "os";
 import { randomUUID } from "crypto";
 
 export function defaultDataDir(): string {
+  if (process.platform === "win32") {
+    const base =
+      process.env.LOCALAPPDATA ??
+      process.env.APPDATA ??
+      path.join(os.homedir(), "AppData", "Local");
+    return path.join(base, "Tilecast", "Player");
+  }
   const xdg = process.env.XDG_DATA_HOME;
   const base =
     xdg && xdg.length > 0 ? xdg : path.join(os.homedir(), ".local", "share");
