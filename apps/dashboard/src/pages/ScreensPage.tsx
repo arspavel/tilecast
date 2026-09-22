@@ -2422,6 +2422,30 @@ export function ScreenDetailPage() {
     queryFn: api.screens,
     refetchInterval: 10_000,
   });
+  const presentationOverrides = useQuery({
+    queryKey: ["presentation-overrides"],
+    queryFn: api.presentationOverrides,
+    refetchInterval: 5_000,
+    enabled: canManageScreens(auth.status?.user),
+  });
+  const activeQuickPresent = presentationOverrides.data?.items.find(
+    (item) => item.targetType === "screen" && item.targetId === id,
+  );
+  const stopQuickPresent = useMutation({
+    mutationFn: () => {
+      if (!activeQuickPresent) throw new Error("Активный показ уже завершён.");
+      return api.stopPresentationOverride(
+        activeQuickPresent.id,
+        auth.status?.csrfToken ?? "",
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["presentation-overrides"],
+      });
+      await queryClient.invalidateQueries({ queryKey: ["screens", id] });
+    },
+  });
   const detailsForm = useForm<ApprovalForm>({
     resolver: zodResolver(approvalSchema),
     defaultValues: {
@@ -2619,7 +2643,19 @@ export function ScreenDetailPage() {
         }
         actions={
           <>
-            {canManageScreens(auth.status?.user) && (
+            {canManageScreens(auth.status?.user) && activeQuickPresent && (
+              <button
+                type="button"
+                className="button button--danger-quiet"
+                disabled={stopQuickPresent.isPending}
+                onClick={() => stopQuickPresent.mutate()}
+              >
+                {stopQuickPresent.isPending
+                  ? "Останавливаем…"
+                  : "Остановить показ"}
+              </button>
+            )}
+            {canManageScreens(auth.status?.user) && !activeQuickPresent && (
               <button
                 type="button"
                 className="button button--secondary"
@@ -2673,6 +2709,17 @@ export function ScreenDetailPage() {
         csrfToken={auth.status?.csrfToken ?? ""}
         onClose={() => setQuickPresentOpen(false)}
       />
+      {stopQuickPresent.error && (
+        <div className="notice notice--error" role="alert">
+          {stopQuickPresent.error.message}
+        </div>
+      )}
+      {activeQuickPresent && (
+        <div className="notice notice--info">
+          Сейчас показывается: {activeQuickPresent.contentName}. После остановки
+          возобновится обычный контент.
+        </div>
+      )}
       {editingDetails && (
         <section
           className="screen-details-editor"
