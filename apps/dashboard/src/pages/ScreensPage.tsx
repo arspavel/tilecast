@@ -3454,8 +3454,8 @@ export function ScreenDetailPage() {
                   {isAndroidScreen(screen.platform) && (
                     <div className="reliability-control-group">
                       <div>
-                        <h5>Power Assist</h5>
-                        <p>Test Android sleep and wake behavior.</p>
+                        <h5>Управление экраном</h5>
+                        <p>Отключите трансляцию или возобновите её удалённо.</p>
                       </div>
                       <div className="reliability-button-grid">
                         <button
@@ -3468,7 +3468,7 @@ export function ScreenDetailPage() {
                             })
                           }
                         >
-                          Test sleep
+                          Выключить экран
                         </button>
                         <button
                           className="button button--secondary"
@@ -3480,7 +3480,7 @@ export function ScreenDetailPage() {
                             })
                           }
                         >
-                          Test wake
+                          Включить экран
                         </button>
                       </div>
                     </div>

@@ -150,6 +150,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	private val commandCoordinator=CommandCoordinator(application,api)
 	private val mutablePlaybackDisabled=MutableStateFlow(commandCoordinator.playbackDisabled)
 	val playbackDisabled:StateFlow<Boolean> = mutablePlaybackDisabled.asStateFlow()
+	private val mutableRemoteSleep=MutableStateFlow(false)
+	val remoteSleep:StateFlow<Boolean> = mutableRemoteSleep.asStateFlow()
 	private val mutableIdentify=MutableStateFlow<String?>(null)
 	val identify:StateFlow<String?> = mutableIdentify.asStateFlow()
 	private var takeoverJob:Job?=null
@@ -665,8 +667,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 			"install_player_update"->updateManager.prepare(url,credential,command,{activeTakeoverId!=null||!mutableActiveHours.value}){mutableUpdate.value=it}
 			"retry_player_recovery"->{reliabilitySupervisor.exitSafeMode();reliabilityController.setSafeMode(false);mutableSafeMode.value=false;reconcileManifest(url,credential);CommandOutcome(true,"player_recovery_retried","Player recovery was retried")}
 			"exit_safe_mode"->{reliabilitySupervisor.exitSafeMode();reliabilityController.setSafeMode(false);mutableSafeMode.value=false;scheduleContent?.let{activateScheduleSelection(it,url,credential)};CommandOutcome(true,"safe_mode_exited","Safe mode was cleared")}
-			"power_assist_sleep"->{if(activeTakeoverId!=null)CommandOutcome(false,"power_assist_deferred_takeover","Power Assist sleep was delayed by takeover playback")else{val result=reliabilityController.requestSleep();CommandOutcome(true,result,"Power Assist sleep request was sent to Android")}}
-				"power_assist_wake"->{val result=reliabilityController.requestWake();CommandOutcome(true,result,"Power Assist wake request was sent to Android")}
+			"power_assist_sleep"->{if(activeTakeoverId!=null)CommandOutcome(false,"power_assist_deferred_takeover","Power Assist sleep was delayed by takeover playback")else{mutableRemoteSleep.value=true;mutableContent.value=null;val result=reliabilityController.requestBlackScreenSleep();CommandOutcome(true,result,"Playback stopped and the black screen was enabled")}}
+				"power_assist_wake"->{mutableRemoteSleep.value=false;val url=current?.serverUrl;val credential=credentials.read();if(url!=null&&credential!=null)scheduleContent?.let{activateScheduleSelection(it,url,credential)};val result=reliabilityController.requestWake();CommandOutcome(true,result,"The player resumed scheduled playback")}
 				"retry_current_item"->{retryCurrentItem();CommandOutcome(true,"current_item_retried","Current item was restarted")}
 				"skip_current_item"->{skipCurrentItem();CommandOutcome(true,"current_item_skipped","Player advanced to the next item")}
 				"recreate_renderer"->{recreateRenderer();CommandOutcome(true,"renderer_recreated","Playback renderer was recreated")}

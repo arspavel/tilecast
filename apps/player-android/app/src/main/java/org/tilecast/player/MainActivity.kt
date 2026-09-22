@@ -144,6 +144,7 @@ class MainActivity : ComponentActivity() {
 	val unavailableKnown by model.unavailableKnown.collectAsStateWithLifecycle()
 	val noContentLogoPath by model.noContentLogoPath.collectAsStateWithLifecycle()
 	val disabled by model.playbackDisabled.collectAsStateWithLifecycle()
+	val remoteSleep by model.remoteSleep.collectAsStateWithLifecycle()
 	val identify by model.identify.collectAsStateWithLifecycle()
 	val config by model.playerConfig.collectAsStateWithLifecycle()
 	val update by model.update.collectAsStateWithLifecycle()
@@ -155,6 +156,7 @@ class MainActivity : ComponentActivity() {
 	val activity=LocalActivity.current as? MainActivity
 	LaunchedEffect(config,activeHours){config?.let{activity?.applyReliability(it,activeHours)}}
 	if(adminPrompt&&reliability!=null){AdministratorMaintenance(reliability,dismissAdmin);return}
+	if(remoteSleep){Box(Modifier.fillMaxSize().background(Color.Black));return}
 	if(commissioning.required){CommissioningScreen(commissioning,model::setCommissioningPin,{activity?.openSystemSettings(Settings.ACTION_ACCESSIBILITY_SETTINGS)},{activity?.openSystemSettings(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)},model::refreshCommissioning,model::advanceCommissioning,{model.runSelfTest(); Unit},model::completeCommissioning);return}
 	if(identify!=null){Box(Modifier.fillMaxSize().background(Color.Black),contentAlignment=Alignment.Center){Text(identify!!,color=Color.White,style=MaterialTheme.typography.displayLarge)};return}
 	if(update?.state in setOf("waiting_for_permission","waiting_for_user","installing")){UpdateApproval(update!!,model::openUpdatePermission,{activity?.installPlayerUpdate()?:model.installUpdate()});return}

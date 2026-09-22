@@ -167,6 +167,9 @@ class ReliabilityController(private val context: Context) {
             .also { store.edit().putString("last-wake-result", it).apply() }
     }
 
+    /** Keep the command channel alive so a later remote wake can still arrive. */
+    fun requestBlackScreenSleep(): String = recordSleepResult("black_screen_active")
+
     fun restartActivity() {
         context.startActivity(
             Intent(context, MainActivity::class.java).addFlags(
