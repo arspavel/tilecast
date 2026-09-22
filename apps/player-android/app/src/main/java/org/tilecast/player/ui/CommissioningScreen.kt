@@ -64,7 +64,10 @@ fun CommissioningScreen(
                 CommissioningStep.ACCESSIBILITY -> SignalButton(onClick = advance, enabled = !state.accessibilitySupported || state.accessibilityEnabled) { Text("Continue") }
                 CommissioningStep.INSTALL_PERMISSION -> SignalButton(onClick = advance, enabled = state.installPermissionGranted) { Text("Continue") }
                 CommissioningStep.BOOT_RECOVERY -> SignalButton(onClick = advance, enabled = state.bootLaunchVerified) { Text("Continue") }
-                CommissioningStep.PRESENTATION -> SignalButton(onClick = advance, enabled = state.immersiveVerified && state.keepAwakeVerified) { Text("Continue") }
+                CommissioningStep.PRESENTATION -> SignalButton(
+                    onClick = advance,
+                    enabled = !state.presentationVerificationRequired || (state.immersiveVerified && state.keepAwakeVerified),
+                ) { Text(if (state.presentationVerificationRequired) "Continue" else "Continue with warning") }
                 CommissioningStep.SELF_TEST -> SignalButton(onClick = advance, enabled = state.selfTestResult != null) { Text("View result") }
                 CommissioningStep.CACHED_FALLBACK -> Unit
             }
@@ -151,6 +154,13 @@ private fun CommissioningStepBody(
             Text("Verify fullscreen presentation", color = SignalText, fontSize = 30.sp)
             StatusLine("Immersive mode", state.immersiveVerified)
             StatusLine("Keep screen awake", state.keepAwakeVerified)
+            if (!state.presentationVerificationRequired && (!state.immersiveVerified || !state.keepAwakeVerified)) {
+                Text(
+                    "This device does not identify itself as Android TV. Some mobile Android firmware does not report TV presentation flags consistently, so you can continue and verify fullscreen playback on the device.",
+                    color = SignalWarning,
+                    fontSize = 17.sp,
+                )
+            }
             SignalOutlinedButton(onClick = refresh) { Text("Verify again") }
         }
         CommissioningStep.SELF_TEST -> {

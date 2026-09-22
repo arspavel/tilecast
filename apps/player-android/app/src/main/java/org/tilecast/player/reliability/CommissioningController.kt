@@ -19,7 +19,7 @@ enum class CommissioningStep(val wireValue: String) {
     ;
 
     companion object {
-        val activeEntries = entries.filterNot { it == CACHED_FALLBACK }
+        val activeEntries = entries.filterNot { it == CACHED_FALLBACK || it == PRESENTATION }
     }
 }
 
@@ -33,6 +33,7 @@ data class CommissioningStatus(
     val bootLaunchVerified: Boolean = false,
     val immersiveVerified: Boolean = false,
     val keepAwakeVerified: Boolean = false,
+    val presentationVerificationRequired: Boolean = true,
     val cachedFallbackAvailable: Boolean = false,
     val selfTestResult: String? = null,
     val selfTestCompletedAt: Instant? = null,
@@ -47,8 +48,6 @@ data class CommissioningStatus(
                     !accessibilitySupported || accessibilityEnabled,
                     installPermissionGranted,
                     bootLaunchVerified,
-                    immersiveVerified,
-                    keepAwakeVerified,
                 )
             return when {
                 supported.all { it } && selfTestResult == "passed" -> "ready"
@@ -73,7 +72,7 @@ class CommissioningController(
                 ?.let(Instant::ofEpochMilli)
         val storedStep = CommissioningStep.entries.getOrElse(preferences.getInt("step-$screenId", 0)) { CommissioningStep.ADMIN_PIN }
         val step =
-            if (storedStep == CommissioningStep.CACHED_FALLBACK) {
+            if (storedStep == CommissioningStep.CACHED_FALLBACK || storedStep == CommissioningStep.PRESENTATION) {
                 preferences.edit().putInt("step-$screenId", CommissioningStep.SELF_TEST.ordinal).commit()
                 CommissioningStep.SELF_TEST
             } else {
@@ -81,6 +80,7 @@ class CommissioningController(
             }
         val boot = BootRecovery.status(context)
         val accessibilitySupported = !Build.MANUFACTURER.equals("Amazon", ignoreCase = true)
+        val televisionDevice = context.packageManager.hasSystemFeature("android.software.leanback")
         return CommissioningStatus(
             required = completedAt == null || preferences.getBoolean("run-again-$screenId", false),
             step = step,
@@ -91,6 +91,7 @@ class CommissioningController(
             bootLaunchVerified = boot.launchVerified,
             immersiveVerified = context.getSharedPreferences("tilecast-reliability", Context.MODE_PRIVATE).getBoolean("immersive", false),
             keepAwakeVerified = context.getSharedPreferences("tilecast-reliability", Context.MODE_PRIVATE).getBoolean("keep-screen-on", false),
+            presentationVerificationRequired = televisionDevice,
             cachedFallbackAvailable = cachedFallbackAvailable,
             selfTestResult = preferences.getString("self-test-result-$screenId", null),
             selfTestCompletedAt = preferences.getLong("self-test-at-$screenId", 0).takeIf { it > 0 }?.let(Instant::ofEpochMilli),
