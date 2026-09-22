@@ -286,6 +286,8 @@ func (s *server) routes() http.Handler {
 				dashboard.With(s.requireRoles("owner", "administrator"), s.operationsRateLimit, s.requireCSRF).Post("/notifications/webhooks/{id}/test", s.testNotificationWebhook)
 			}
 			dashboard.Get("/player-releases", s.listPlayerReleases)
+			dashboard.Get("/player-releases/{id}/download", s.downloadPlayerRelease)
+			dashboard.Head("/player-releases/{id}/download", s.downloadPlayerRelease)
 			dashboard.With(s.requireRoles("owner"), s.operationsRateLimit, s.requireCSRF).Post("/player-releases/check", s.checkPlayerReleases)
 			dashboard.With(s.requireRoles("owner"), s.operationsRateLimit, s.requireCSRF).Post("/player-releases/github/configuration", s.configureGitHubOAuth)
 			dashboard.With(s.requireRoles("owner"), s.operationsRateLimit, s.requireCSRF).Post("/player-releases/github/device", s.startGitHubDeviceAuthorization)

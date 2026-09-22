@@ -560,7 +560,7 @@ export function PlayerUpdatesPanel({
             <h3>Available {platformLabel} releases</h3>
             <p>
               Upload a signed release directly or optionally synchronize from{" "}
-              <code>Gibsonmb71/tilecast</code>.
+              <code>{releases.data?.repository ?? "GitHub"}</code>.
             </p>
           </div>
           {owner && (
@@ -736,7 +736,7 @@ export function PlayerUpdatesPanel({
                     <th scope="col">Published</th>
                     <th scope="col">Size</th>
                     <th scope="col">Status</th>
-                    {owner && <th scope="col" aria-label="Actions" />}
+                    <th scope="col" aria-label="Actions" />
                   </tr>
                 </thead>
                 <tbody id="player-releases-table-body">
@@ -793,10 +793,22 @@ export function PlayerUpdatesPanel({
                             <small>{readiness.detail}</small>
                           )}
                         </td>
-                        {owner && (
-                          <td>
-                            <div className="player-updates__row-actions">
-                              {readiness.cacheable && (
+                        <td>
+                          <div className="player-updates__row-actions">
+                            {release.verificationStatus === "verified" &&
+                              release.cacheStatus === "cached" && (
+                                <a
+                                  className="button button--quiet button--compact"
+                                  href={`/api/v1/player-releases/${release.id}/download`}
+                                  download
+                                >
+                                  <Download size={15} aria-hidden="true" />
+                                  {release.platform === "linux"
+                                    ? "Скачать AppImage"
+                                    : "Скачать APK"}
+                                </a>
+                              )}
+                            {owner && readiness.cacheable && (
                                 <ReleaseCacheButton
                                   downloading={
                                     cache.isPending &&
@@ -804,8 +816,8 @@ export function PlayerUpdatesPanel({
                                   }
                                   onDownload={() => cache.mutate(release.id)}
                                 />
-                              )}
-                              {purgeAction(release) && (
+                            )}
+                            {owner && purgeAction(release) && (
                                 <Button
                                   variant="quiet"
                                   compact
@@ -825,10 +837,9 @@ export function PlayerUpdatesPanel({
                                     ? "Delete"
                                     : "Free file"}
                                 </Button>
-                              )}
-                            </div>
-                          </td>
-                        )}
+                            )}
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}

@@ -56,7 +56,49 @@ func (s *server) listPlayerReleases(w http.ResponseWriter, r *http.Request) {
 			items = append(items, map[string]any{"id": id, "tag": tag, "platform": platform, "source": source, "channel": channel, "versionCode": code, "versionName": name, "minimumSdk": sdk, "releaseNotes": notes, "publishedAt": published, "apkSizeBytes": size, "downloadedBytes": downloadedBytes, "apkSha256": hash, "signingCertificateSha256": cert, "manifestSignature": signature, "cacheStatus": cache, "verificationStatus": verification, "verificationError": verificationError, "deploymentCount": deploymentCount, "activeDeploymentCount": activeDeploymentCount})
 		}
 	}
-	writeJSON(w, 200, map[string]any{"data": map[string]any{"repository": "Gibsonmb71/tilecast", "lastCheckedAt": checked, "providerError": providerError, "manifestKeyConfigured": s.updates.ManifestKeyConfigured(), "githubAuth": s.updates.GitHubAuthStatus(), "items": items}})
+	githubOwner := strings.TrimSpace(os.Getenv("TILECAST_GITHUB_OWNER"))
+	if githubOwner == "" {
+		githubOwner = "gbyo"
+	}
+	githubRepo := strings.TrimSpace(os.Getenv("TILECAST_GITHUB_REPO"))
+	if githubRepo == "" {
+		githubRepo = "tilecast"
+	}
+	writeJSON(w, 200, map[string]any{"data": map[string]any{
+		"repository": githubOwner + "/" + githubRepo, "lastCheckedAt": checked,
+		"providerError": providerError, "manifestKeyConfigured": s.updates.ManifestKeyConfigured(),
+		"githubAuth": s.updates.GitHubAuthStatus(), "items": items,
+	}})
+}
+
+// downloadPlayerRelease streams a cached, fully verified Player artifact to
+// an authenticated Studio user. ArtifactPath rejects uncached or unverified
+// releases, so the browser can never download an untrusted release here.
+func (s *server) downloadPlayerRelease(w http.ResponseWriter, r *http.Request) {
+	release, ok := urlUUID(w, r, "id")
+	if !ok {
+		return
+	}
+	path, size, hash, platform, err := s.updates.ArtifactPath(r.Context(), release)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "player_release_not_cached", "Verified release artifact is unavailable.")
+		return
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "player_release_not_cached", "Verified release artifact is unavailable.")
+		return
+	}
+	defer file.Close()
+	filename, contentType := "tilecast-player.apk", "application/vnd.android.package-archive"
+	if platform == updates.PlatformLinux {
+		filename, contentType = updates.LinuxArtifactName, "application/octet-stream"
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("ETag", `"sha256-`+hash+`"`)
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
+	http.ServeContent(w, r, filename, time.Time{}, ioSection{file, size})
 }
 
 func (s *server) uploadPlayerRelease(w http.ResponseWriter, r *http.Request) {
