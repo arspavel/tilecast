@@ -99,12 +99,13 @@ jobs:
           STORE_PASSWORD: ${{ secrets.TILECAST_ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.TILECAST_ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.TILECAST_ANDROID_KEY_PASSWORD }}
+          CERT_SHA256: ${{ secrets.TILECAST_ANDROID_CERT_SHA256 }}
           UPDATE_PRIVATE_KEY: ${{ secrets.TILECAST_UPDATE_MANIFEST_PRIVATE_KEY_PEM }}
           UPDATE_PUBLIC_KEY: ${{ secrets.TILECAST_UPDATE_MANIFEST_PUBLIC_KEY_PEM }}
         run: |
           set -euo pipefail
           missing=0
-          for name in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD UPDATE_PRIVATE_KEY UPDATE_PUBLIC_KEY; do
+          for name in KEYSTORE_B64 STORE_PASSWORD KEY_ALIAS KEY_PASSWORD CERT_SHA256 UPDATE_PRIVATE_KEY UPDATE_PUBLIC_KEY; do
             if [ -z "${!name}" ]; then
               echo "Required signing secret for $name is missing." >&2
               missing=1
@@ -172,7 +173,7 @@ jobs:
       - name: Verify permanent Android signing certificate
         env:
           ANDROID_BUILD_TOOLS_VERSION: 35.0.0
-          EXPECTED_CERT_SHA256: e718f5807d11c45c54477ab57c067516ddb1ed8a74194b4f46f882db16905733
+          EXPECTED_CERT_SHA256: ${{ secrets.TILECAST_ANDROID_CERT_SHA256 }}
         run: |
           set -euo pipefail
 
