@@ -1,0 +1,85 @@
+name: Tilecast Windows Player Release
+
+on:
+  push:
+    tags:
+      - "player-windows-v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag, for example player-windows-v0.18.0
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-player-release-${{ github.ref }}-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        shell: pwsh
+        run: npm.cmd ci
+
+      - name: Resolve and validate release
+        id: release
+        shell: pwsh
+        env:
+          MANUAL_TAG: ${{ inputs.tag }}
+        run: |
+          $tag = if ($env:GITHUB_EVENT_NAME -eq "push") { $env:GITHUB_REF_NAME } else { $env:MANUAL_TAG }
+          if ($tag -notmatch '^player-windows-v([0-9]+\.[0-9]+\.[0-9]+(?:[.-][0-9A-Za-z.-]+)?)$') {
+            throw "Release tag must use player-windows-v<versionName>."
+          }
+          $version = $Matches[1]
+          $packageVersion = node -p "require('./apps/player-linux/package.json').version"
+          if ($version -ne $packageVersion) {
+            throw "Tag version $version does not match package.json version $packageVersion."
+          }
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Build Windows NSIS installer
+        shell: pwsh
+        run: npm.cmd run player:windows:dist
+
+      - name: Verify Windows release artifact
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          $installer = "apps/player-linux/release/tilecast-player-windows-$env:RELEASE_VERSION-x64.exe"
+          if (-not (Test-Path $installer)) { throw "Expected Windows installer was not produced at $installer." }
+          $item = Get-Item $installer
+          if ($item.Length -le 0) { throw "Windows installer is empty." }
+          $hash = (Get-FileHash -Algorithm SHA256 $installer).Hash.ToLowerInvariant()
+          "Installer: $installer"
+          "Size: $($item.Length)"
+          "SHA-256: $hash"
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          $installer = "apps/player-linux/release/tilecast-player-windows-$env:RELEASE_VERSION-x64.exe"
+          gh release create $env:RELEASE_TAG $installer `
+            --repo $env:GITHUB_REPOSITORY `
+            --verify-tag `
+            --title "Tilecast Player for Windows $env:RELEASE_VERSION" `
+            --generate-notes

@@ -336,8 +336,15 @@ export function PlayerUpdatesPanel({
   // a bookmark, or the back button all keep the fleet the operator was looking
   // at instead of silently returning to Android.
   const [searchParams, setSearchParams] = useSearchParams();
-  const platform: PlayerPlatform =
-    searchParams.get("platform") === "linux" ? "linux" : "android";
+  type PlayerUpdatesViewPlatform = PlayerPlatform | "windows" | "webos";
+  const requestedPlatform = searchParams.get("platform");
+  const platform: PlayerUpdatesViewPlatform =
+    requestedPlatform === "linux" ||
+    requestedPlatform === "windows" ||
+    requestedPlatform === "webos"
+      ? requestedPlatform
+      : "android";
+  const managedPlatform = platform === "android" || platform === "linux";
   const [releaseId, setReleaseId] = useState("");
   const [screenIds, setScreenIds] = useState<string[]>([]);
   const [groupIds, setGroupIds] = useState<string[]>([]);
@@ -510,7 +517,14 @@ export function PlayerUpdatesPanel({
     (item) =>
       item.verificationStatus === "verified" && item.cacheStatus === "cached",
   );
-  const platformLabel = platform === "android" ? "Android" : "Linux";
+  const platformLabel =
+    platform === "android"
+      ? "Android"
+      : platform === "linux"
+        ? "Linux"
+        : platform === "windows"
+          ? "Windows"
+          : "webOS";
   const query = targetSearch.toLowerCase();
   const platformScreens = (screens.data?.items ?? []).filter(
     (item) => screenPlatformFamily(item.platform) === platform,
@@ -537,7 +551,9 @@ export function PlayerUpdatesPanel({
         value={platform}
         items={[
           { value: "android", label: "Android" },
+          { value: "windows", label: "Windows" },
           { value: "linux", label: "Linux" },
+          { value: "webos", label: "webOS" },
         ]}
         onValueChange={(value) => {
           if (value === platform) return;
@@ -573,14 +589,16 @@ export function PlayerUpdatesPanel({
                 {!check.isPending && <RefreshCw size={16} aria-hidden="true" />}
                 {check.isPending ? "Synchronizing…" : "Sync from GitHub"}
               </Button>
-              <Button
-                variant="primary"
-                aria-expanded={showUpload}
-                onClick={() => setShowUpload((visible) => !visible)}
-              >
-                <Upload size={16} aria-hidden="true" />
-                Upload release
-              </Button>
+              {managedPlatform && (
+                <Button
+                  variant="primary"
+                  aria-expanded={showUpload}
+                  onClick={() => setShowUpload((visible) => !visible)}
+                >
+                  <Upload size={16} aria-hidden="true" />
+                  Upload release
+                </Button>
+              )}
             </div>
           )}
         </header>
@@ -674,9 +692,9 @@ export function PlayerUpdatesPanel({
             )}
           </div>
         )}
-        {showUpload && (
+        {managedPlatform && showUpload && (
           <PlayerReleaseUpload
-            platform={platform}
+            platform={platform as PlayerPlatform}
             csrfToken={auth.status?.csrfToken ?? ""}
             onImported={() => {
               void client.invalidateQueries({ queryKey: ["player-releases"] });
@@ -720,7 +738,33 @@ export function PlayerUpdatesPanel({
               ? "Loading releases…"
               : releases.error
                 ? `Releases could not be loaded. ${mutationError(releases.error)}`
-                : `No ${platformLabel} Player releases have been imported. Tilecast checks GitHub automatically; use Sync from GitHub to retry immediately.`}
+                : platform === "windows" ? (
+                  <>
+                    <strong>Tilecast Player для Windows 0.18.0</strong>
+                    <p>
+                      Windows-клиент устанавливается локально. Удалённое
+                      обновление будет добавлено после реализации безопасной
+                      замены работающего приложения.
+                    </p>
+                    <a
+                      className="button button--primary"
+                      href="https://github.com/arspavel/tilecast/releases/download/player-windows-v0.18.0/tilecast-player-windows-0.18.0-x64.exe"
+                    >
+                      <Download size={16} aria-hidden="true" />
+                      Скачать EXE
+                    </a>
+                  </>
+                ) : platform === "webos" ? (
+                  <>
+                    <strong>Клиент Tilecast для webOS находится в разработке</strong>
+                    <p>
+                      Вкладка подготовлена для будущих выпусков LG webOS.
+                      Сейчас установка и удалённое обновление недоступны.
+                    </p>
+                  </>
+                ) : (
+                  `No ${platformLabel} Player releases have been imported. Tilecast checks GitHub automatically; use Sync from GitHub to retry immediately.`
+                )}
           </div>
         ) : (
           <>
@@ -926,7 +970,7 @@ export function PlayerUpdatesPanel({
           )}
         </Dialog>
       </section>
-      {manageable && (
+      {manageable && managedPlatform && (
         <section className="settings-subsection player-updates__deployment">
           <header>
             <h3>New deployment</h3>
