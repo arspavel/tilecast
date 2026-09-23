@@ -1,6 +1,8 @@
 package org.tilecast.player.content
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.tilecast.player.network.ManifestWebsite
 import org.tilecast.player.network.PlayerWebsitePolicy
@@ -64,5 +66,29 @@ class WebsitePolicyTest {
         assertEquals("on_each_activation", resolved.reloadPolicy)
         assertEquals("placeholder", resolved.failureBehavior)
         assertEquals(100, resolved.zoomPercent)
+    }
+
+    @Test
+    fun mixedContentCompatibilityIsRestrictedToApprovedHost() {
+        assertTrue(
+            WebsiteMixedContentPolicy.allowsCompatibilityMode(
+                "https://deck.aer.aero/display_app/krr/index.html",
+            ),
+        )
+        assertTrue(
+            WebsiteMixedContentPolicy.allowsCompatibilityMode(
+                "https://DECK.AER.AERO./display",
+            ),
+        )
+        assertFalse(
+            WebsiteMixedContentPolicy.allowsCompatibilityMode(
+                "https://example.com/display",
+            ),
+        )
+        assertFalse(
+            WebsiteMixedContentPolicy.allowsCompatibilityMode(
+                "not a URL",
+            ),
+        )
     }
 }
