@@ -19,6 +19,7 @@
         android:hardwareAccelerated="true"
         android:icon="@drawable/tilecast_icon"
         android:label="Tilecast Player"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
         android:theme="@style/Theme.Tilecast"
         android:usesCleartextTraffic="true">
