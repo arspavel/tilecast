@@ -1034,3 +1034,22 @@
     flex-direction: column-reverse;
   }
 }
+
+.player-updates__empty .technical {
+  display: block;
+  max-width: 100%;
+  margin: var(--tc-space-3) auto;
+  padding: var(--tc-space-2) var(--tc-space-3);
+  overflow-x: auto;
+  color: var(--tc-text-primary);
+  background: var(--tc-bg-default);
+  border: 1px solid var(--tc-border-default);
+  border-radius: var(--tc-radius-control);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.player-updates__webos-actions {
+  justify-content: center !important;
+  margin: var(--tc-space-4) 0;
+}

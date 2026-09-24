@@ -756,10 +756,41 @@ export function PlayerUpdatesPanel({
                   </>
                 ) : platform === "webos" ? (
                   <>
-                    <strong>Клиент Tilecast для webOS находится в разработке</strong>
+                    <strong>Tilecast Player для LG webOS Signage</strong>
                     <p>
-                      Вкладка подготовлена для будущих выпусков LG webOS.
-                      Сейчас установка и удалённое обновление недоступны.
+                      Рекомендуемый вариант — запуск плеера через URL. Он не
+                      требует установки IPK и автоматически получает обновления
+                      с сервера Tilecast.
+                    </p>
+                    <p>
+                      На панели откройте <strong>Настройка Ez → Play via URL</strong>{" "}
+                      и укажите адрес:
+                    </p>
+                    <code className="technical">
+                      https://arspavel.ru/tilecast/webos/app/index.html?build=012
+                    </code>
+                    <div className="settings-inline-actions player-updates__webos-actions">
+                      <a
+                        className="button button--primary"
+                        href="https://arspavel.ru/tilecast/webos/app/index.html?build=012"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <ExternalLink size={16} aria-hidden="true" />
+                        Открыть webOS-плеер
+                      </a>
+                      <a
+                        className="button button--secondary"
+                        href="https://github.com/arspavel/tilecast/releases/download/player-webos-v0.1.1/org.tilecast.player.webos_0.1.1_all.ipk"
+                      >
+                        <Download size={16} aria-hidden="true" />
+                        Скачать IPK 0.1.1
+                      </a>
+                    </div>
+                    <p>
+                      Установка IPK через SI Server или USB может потребовать
+                      сертификат подписи LG webOS Signage. Удалённое обновление
+                      webOS-плеера пока не поддерживается.
                     </p>
                   </>
                 ) : (
