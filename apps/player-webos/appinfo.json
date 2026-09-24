@@ -1,0 +1,16 @@
+{
+  "id": "org.tilecast.player.webos",
+  "version": "0.1.0",
+  "vendor": "Tilecast",
+  "type": "web",
+  "main": "index.html",
+  "title": "Tilecast Player",
+  "icon": "icon.png",
+  "largeIcon": "icon.png",
+  "backgroundColor": "#0e141b",
+  "transparent": false,
+  "fullscreen": true,
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true,
+  "allowCrossDomain": true
+}
