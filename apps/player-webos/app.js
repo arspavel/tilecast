@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.1.0";
-  var VERSION_CODE = 1;
+  var VERSION = "0.1.1";
+  var VERSION_CODE = 2;
   var STORE = "tilecast.webos.";
   var stage = document.getElementById("stage");
   var state = {

@@ -51,7 +51,7 @@ jobs:
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
       - name: Install webOS CLI
-        run: npm install --global @webos-tools/cli
+        run: npm install --global @webos-sdk/cli
 
       - name: Package webOS application
         run: |
