@@ -28,7 +28,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 20
 
       - name: Resolve and validate release
         id: release
@@ -51,7 +51,10 @@ jobs:
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
       - name: Install webOS CLI
-        run: npm install --global @webos-sdk/cli
+        run: |
+          npm install --global @webos-tools/cli@3.2.6
+          ares-config -p signage
+          ares-config --profile-details
 
       - name: Package webOS application
         run: |
