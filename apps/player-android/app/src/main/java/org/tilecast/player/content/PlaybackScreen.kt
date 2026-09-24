@@ -184,10 +184,23 @@ fun FullscreenPlayback(
     // boundaries, which activates pending manifests and feeds the stall watchdog.
     LaunchedEffect(item.id, cursor.cycle) { onBoundary(item.id, item.assetId) }
 
+    val preserveSingleWebsite =
+        playlist.items.size == 1 &&
+            item.assetType == "website" &&
+            website != null
+
     fun advance(failed: Boolean = false, empty: Boolean = false) {
         consecutiveFailures = if (failed) consecutiveFailures + 1 else 0
         consecutiveEmptySkips = if (empty) consecutiveEmptySkips + 1 else 0
-        if (synchronizedTimeline == null) cursor = nextPlaybackCursor(cursor, playlist.items.size)
+        if (synchronizedTimeline == null) {
+            if (preserveSingleWebsite && !failed && !empty) {
+                // Preserve the existing WebView while still exposing a real
+                // playback boundary so pending manifests can be activated.
+                onBoundary(item.id, item.assetId)
+            } else {
+                cursor = nextPlaybackCursor(cursor, playlist.items.size)
+            }
+        }
     }
 
     if (asset == null && website == null && widget == null && layout == null) {
@@ -217,7 +230,13 @@ fun FullscreenPlayback(
 
     key(session.content.manifest.manifestVersion, playlist.id, playlist.revision) {
         SeamlessItemSwap(
-            cursor = cursor,
+            // A new occurrence of the only website item is a logical boundary,
+            // not a reason to destroy and recreate its WebView.
+            cursor = if (preserveSingleWebsite) {
+                PlaybackCursor(cursor.index, 0)
+            } else {
+                cursor
+            },
             animateFor = { shouldAnimateTransition(playlist.items[it.index.coerceIn(0, playlist.items.lastIndex)].transition) },
         ) { entryCursor, isActive, onFirstFrame ->
             val renderedItem = playlist.items[entryCursor.index.coerceIn(0, playlist.items.lastIndex)]

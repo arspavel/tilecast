@@ -64,7 +64,14 @@ object WebsiteDataManager {
     fun report(state:String,category:String?=null,fallback:Boolean=false,host:String?=Uri.parse(site.url).host){onStatus(WebsitePlaybackStatus(site.assetId,state,started,if(state=="loaded")Instant.now().toString() else null,category,blocked,host,fallback,rendererRecoveries))}
     DisposableEffect(item.id){onDispose{onStatus(WebsitePlaybackStatus())}}
     LaunchedEffect(item.id){report("loading");delay(site.loadTimeoutSeconds*1000L);if(!loaded&&failed==null){failed="load_timeout";report("timed_out","load_timeout")}}
-    LaunchedEffect(item.id,item.durationMs,startOffsetMs){delay(((item.durationMs?:30_000)-startOffsetMs).coerceAtLeast(1));onDone()}
+    LaunchedEffect(item.id,item.durationMs,startOffsetMs){
+        val duration=(item.durationMs?:30_000).coerceAtLeast(1)
+        delay((duration-startOffsetMs).coerceAtLeast(1))
+        while(true){
+            onDone()
+            delay(duration)
+        }
+    }
     if(failed!=null&&!loaded){if(site.failureBehavior=="skip"){LaunchedEffect(failed){onDone()};return};val fallbackAsset=site.fallbackVariantId?.let{variantId->session.content.manifest.assets.firstOrNull{asset->asset.variantId==variantId&&asset.assetId==site.fallbackImageAssetId&&asset.isAvailableAt(session.content.serverNow())}};val fallbackPath=fallbackAsset?.variantId?.let{session.content.localFiles[it]};if(site.failureBehavior=="fallback_image"&&fallbackPath!=null){val bitmap=remember(fallbackPath){BitmapFactory.decodeFile(fallbackPath)};if(bitmap!=null){LaunchedEffect(bitmap){firstFrame()};report("showing_fallback",failed,true);Image(bitmap.asImageBitmap(),null,Modifier.fillMaxSize().background(Color.Black),contentScale=when(item.fitMode){"cover"->ContentScale.Crop;"stretch"->ContentScale.FillBounds;else->ContentScale.Fit});return}};LaunchedEffect(failed){firstFrame()};Box(Modifier.fillMaxSize().background(parseColor(site.backgroundColor)),contentAlignment=Alignment.Center){Text("Website unavailable",color=Color.White)};return}
     AndroidView(modifier=Modifier.fillMaxSize().graphicsLayer{alpha=if(pageVisible)1f else 0f}.background(parseColor(site.backgroundColor)),factory={context->WebView(context).apply{activeWebView=this
         setBackgroundColor(android.graphics.Color.parseColor(site.backgroundColor));isFocusable=false;isFocusableInTouchMode=false
