@@ -1,6 +1,12 @@
 package org.tilecast.player.reliability
 
 import android.accessibilityservice.AccessibilityService
+import android.graphics.Bitmap
+import android.os.Build
+import android.view.Display
+import androidx.annotation.RequiresApi
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
@@ -11,7 +17,65 @@ import java.time.Duration
 import java.time.Instant
 
 class TilecastAccessibilityService:AccessibilityService(){
-    companion object { @Volatile private var active:TilecastAccessibilityService?=null;fun requestLock():Boolean=active?.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)?:false }
+    companion object {
+        @Volatile private var active:TilecastAccessibilityService?=null
+
+        fun requestLock():Boolean=
+            active?.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)?:false
+
+        @RequiresApi(Build.VERSION_CODES.R)
+        suspend fun captureDisplay(maxWidth:Int,maxHeight:Int):Bitmap?=
+            active?.captureDisplayInternal(maxWidth,maxHeight)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    private suspend fun captureDisplayInternal(
+        maxWidth:Int,
+        maxHeight:Int,
+    ):Bitmap?=suspendCancellableCoroutine { continuation ->
+        takeScreenshot(
+            Display.DEFAULT_DISPLAY,
+            mainExecutor,
+            object:TakeScreenshotCallback {
+                override fun onSuccess(result:ScreenshotResult) {
+                    val buffer=result.hardwareBuffer
+                    val source=runCatching {
+                        Bitmap.wrapHardwareBuffer(buffer,result.colorSpace)
+                            ?.copy(Bitmap.Config.ARGB_8888,false)
+                    }.getOrNull()
+                    buffer.close()
+
+                    if(source==null){
+                        if(continuation.isActive)continuation.resume(null)
+                        return
+                    }
+
+                    val scale=minOf(
+                        1f,
+                        maxWidth.toFloat()/source.width,
+                        maxHeight.toFloat()/source.height,
+                    )
+                    val width=(source.width*scale).toInt().coerceAtLeast(1)
+                    val height=(source.height*scale).toInt().coerceAtLeast(1)
+                    val output=if(
+                        width==source.width&&height==source.height
+                    ) source else Bitmap.createScaledBitmap(
+                        source,
+                        width,
+                        height,
+                        true,
+                    ).also { source.recycle() }
+
+                    if(continuation.isActive)continuation.resume(output)
+                    else output.recycle()
+                }
+
+                override fun onFailure(errorCode:Int){
+                    if(continuation.isActive)continuation.resume(null)
+                }
+            },
+        )
+    }
     private val handler=Handler(Looper.getMainLooper())
     private var exitedAt=Instant.now()
     private var policy:AccessibilityReturnPolicy?=null

@@ -163,3 +163,8 @@
   flex-wrap: wrap;
   gap: var(--tc-space-2);
 }
+
+
+.monitoring-table tr.is-idle {
+  background: color-mix(in srgb, var(--tc-warning) 8%, transparent);
+}

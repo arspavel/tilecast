@@ -11,6 +11,7 @@ import android.view.SurfaceView
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
+import org.tilecast.player.reliability.TilecastAccessibilityService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -37,6 +38,18 @@ internal class PlayerWindowCapture(private val activity: Activity) {
     private val mutex = Mutex()
 
     suspend fun capture(maxWidth: Int, maxHeight: Int): WindowCapture = mutex.withLock {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val display = runCatching {
+                TilecastAccessibilityService.captureDisplay(
+                    maxWidth,
+                    maxHeight,
+                )
+            }.getOrNull()
+            if (display != null) {
+                return@withLock WindowCapture.Success(display)
+            }
+        }
+
         withContext(Dispatchers.Main.immediate) {
             val view = activity.window.decorView
             if (!view.isAttachedToWindow || view.width < 1 || view.height < 1) {
