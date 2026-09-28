@@ -13,7 +13,7 @@ import {
   TableContainer,
 } from "../components/ui";
 
-type Filter = "all" | "online" | "offline" | "errors";
+type Filter = "all" | "online" | "idle" | "offline" | "errors";
 
 const statusNames: Record<ScreenStatus, string> = {
   online: "Онлайн",
@@ -39,8 +39,21 @@ function hasError(screen: Screen) {
   );
 }
 
+function isIdle(screen: Screen) {
+  const playbackIdle =
+    !screen.playbackState ||
+    ["idle", "stopped", "no_content"].includes(screen.playbackState);
+  return (
+    screen.status === "online" &&
+    !screen.nowPlayingName &&
+    playbackIdle &&
+    !hasError(screen)
+  );
+}
+
 function statusTone(screen: Screen) {
   if (hasError(screen)) return "danger" as const;
+  if (isIdle(screen)) return "warning" as const;
   if (screen.status === "online") return "success" as const;
   if (screen.status === "recent") return "info" as const;
   if (screen.status === "stale") return "warning" as const;
@@ -49,7 +62,8 @@ function statusTone(screen: Screen) {
 
 function statusRank(screen: Screen) {
   if (hasError(screen)) return 0;
-  if (screen.status === "offline" || screen.status === "stale") return 1;
+  if (isIdle(screen)) return 1;
+  if (screen.status === "offline" || screen.status === "stale") return 2;
   if (screen.status === "recent") return 2;
   if (screen.status === "online") return 3;
   return 4;
@@ -233,6 +247,7 @@ export function ScreenMonitoringPage() {
   const counts = {
     total: screens.length,
     online: screens.filter((item) => item.status === "online").length,
+    idle: screens.filter(isIdle).length,
     offline: screens.filter((item) =>
       ["offline", "stale"].includes(item.status)
     ).length,
@@ -244,6 +259,7 @@ export function ScreenMonitoringPage() {
     return screens
       .filter((screen) => {
         if (filter === "online" && screen.status !== "online") return false;
+        if (filter === "idle" && !isIdle(screen)) return false;
         if (
           filter === "offline" &&
           !["offline", "stale"].includes(screen.status)
@@ -272,6 +288,7 @@ export function ScreenMonitoringPage() {
   const cards: Array<[Filter, string, number]> = [
     ["all", "Всего", counts.total],
     ["online", "Онлайн", counts.online],
+    ["idle", "Простаивают", counts.idle],
     ["offline", "Без связи", counts.offline],
     ["errors", "С ошибками", counts.errors],
   ];
@@ -367,7 +384,9 @@ export function ScreenMonitoringPage() {
             {visible.map((screen) => (
               <tr
                 key={screen.id}
-                className={hasError(screen) ? "has-error" : ""}
+                className={
+                  hasError(screen) ? "has-error" : isIdle(screen) ? "is-idle" : ""
+                }
               >
                 <th scope="row">
                   <Link to={`/screens/${screen.id}`}>{screen.name}</Link>
@@ -381,9 +400,13 @@ export function ScreenMonitoringPage() {
                 <td>
                   <StatusDot
                     tone={statusTone(screen)}
-                    label={statusNames[screen.status]}
+                    label={isIdle(screen) ? "Простой" : statusNames[screen.status]}
                   />
-                  <small>{playbackName(screen.playbackState)}</small>
+                  <small>
+                    {isIdle(screen)
+                      ? "Контент не назначен"
+                      : playbackName(screen.playbackState)}
+                  </small>
                 </td>
                 <td>
                   <strong>{screen.nowPlayingName || "Не назначено"}</strong>

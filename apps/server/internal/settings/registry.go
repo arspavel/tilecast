@@ -83,6 +83,7 @@ var definitions = []Definition{
 	{Key: "branding.primary_color", Category: "branding", Type: "color", Default: "#78BFA6", Scope: ScopeOrganization, Title: "Primary color", Immediate: true},
 	{Key: "branding.player_background_color", Category: "branding", Type: "color", Default: "#0E141B", Scope: ScopeOrganization, Title: "Player background", Immediate: true},
 	{Key: "branding.player_text_color", Category: "branding", Type: "color", Default: "#F5F7FA", Scope: ScopeOrganization, Title: "Player text", Immediate: true},
+	{Key: "branding.no_content_mode", Category: "branding", Type: "enum", Default: "message", Allowed: []string{"message", "fullscreen_logo", "black"}, Scope: ScopeOrganization, Title: "Режим экрана без контента", Description: "Текст, полноэкранная заставка или чёрный экран", Immediate: true},
 	{Key: "branding.no_content_title", Category: "branding", Type: "string", Default: "No content assigned", Scope: ScopeOrganization, Title: "No-content title"},
 	{Key: "branding.no_content_message", Category: "branding", Type: "string", Default: "This screen is ready for content.", Scope: ScopeOrganization, Title: "No-content message"},
 	{Key: "branding.disabled_title", Category: "branding", Type: "string", Default: "Playback disabled", Scope: ScopeOrganization, Title: "Disabled title"},
