@@ -673,6 +673,32 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 				"skip_current_item"->{skipCurrentItem();CommandOutcome(true,"current_item_skipped","Player advanced to the next item")}
 				"recreate_renderer"->{recreateRenderer();CommandOutcome(true,"renderer_recreated","Playback renderer was recreated")}
 				"recreate_playback_session"->{recreatePlaybackSession();CommandOutcome(true,"playback_session_recreated","Playback session was recreated")}
+				"display_set_volume"->{
+				        val value=command.payload["volume"]?.jsonPrimitive?.content?.toIntOrNull()
+				        if(value==null||value !in 0..100)
+				                CommandOutcome(false,"volume_invalid","Volume must be between 0 and 100")
+				        else{
+				                val applied=org.tilecast.player.reliability.AndroidDeviceControl(getApplication()).setVolume(value)
+				                CommandOutcome(true,"volume_applied","Media volume set to $applied percent")
+				        }
+				}
+				"display_mute"->{
+				        org.tilecast.player.reliability.AndroidDeviceControl(getApplication()).mute()
+				        CommandOutcome(true,"volume_muted","Media volume muted")
+				}
+				"display_unmute"->{
+				        val applied=org.tilecast.player.reliability.AndroidDeviceControl(getApplication()).unmute()
+				        CommandOutcome(true,"volume_unmuted","Media volume restored to $applied percent")
+				}
+				"display_set_brightness"->{
+				        val value=command.payload["brightness"]?.jsonPrimitive?.content?.toIntOrNull()
+				        if(value==null||value !in 1..100)
+				                CommandOutcome(false,"brightness_invalid","Brightness must be between 1 and 100")
+				        else{
+				                val applied=org.tilecast.player.reliability.AndroidDeviceControl(getApplication()).setBrightness(value)
+				                CommandOutcome(true,"brightness_applied","Tilecast brightness set to $applied percent")
+				        }
+				}
 				"restart_activity"->{reliabilityController.restartActivity();CommandOutcome(true,"activity_restart_requested","Player activity restart was requested")}
 				"restart_player_process"->{viewModelScope.launch{delay(1500);reliabilityController.restartProcess()};CommandOutcome(true,"process_restart_requested","Controlled player process restart was requested")}
 				"resynchronize_player"->{reconcileManifest(url,credential);reconcilePlayerConfig(url,credential);CommandOutcome(true,"player_resynchronized","Manifest and configuration synchronization completed")}

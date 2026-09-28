@@ -93,6 +93,16 @@ import java.time.Instant
 import java.time.Duration
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        @Volatile private var activeInstance: MainActivity? = null
+
+        fun applyRemoteBrightness(percent: Int) {
+            activeInstance?.runOnUiThread {
+                activeInstance?.applyBrightness(percent)
+            }
+        }
+    }
+
     private val model:PlayerViewModel by viewModels()
 	private lateinit var reliability:ReliabilityController
 	private lateinit var livePreview:LivePreviewCoordinator
@@ -116,7 +126,26 @@ class MainActivity : ComponentActivity() {
         setContent { TilecastSignalTheme { TilecastPlayer(model,adminPrompt,{adminPrompt=false},reliability) } }
     }
     override fun onStart(){super.onStart();livePreview.start();liveStream.start();getSharedPreferences("tilecast-reliability",MODE_PRIVATE).edit().putBoolean("foreground",true).apply();ContextCompat.registerReceiver(this,clockReceiver,IntentFilter().apply{addAction(Intent.ACTION_TIME_CHANGED);addAction(Intent.ACTION_TIMEZONE_CHANGED)},ContextCompat.RECEIVER_NOT_EXPORTED);model.recalculateSchedule();model.refreshUpdatePermission();model.resumeUpdateSchedule();model.playerConfig.value?.let{reliability.applyWindow(this,it,model.activeHours.value)};reliabilityHandler.postDelayed({BootRecovery.markForegroundHealthy(this);model.refreshCommissioning()},5000)}
-    override fun onResume(){super.onResume();model.refreshCommissioning()}
+    override fun onResume(){
+        super.onResume()
+        activeInstance=this
+        applyBrightness(
+            org.tilecast.player.reliability.AndroidDeviceControl
+                .savedBrightness(this),
+        )
+        model.refreshCommissioning()
+    }
+
+    override fun onPause(){
+        if(activeInstance===this)activeInstance=null
+        super.onPause()
+    }
+
+    private fun applyBrightness(percent:Int){
+        val attributes=window.attributes
+        attributes.screenBrightness=percent.coerceIn(1,100)/100f
+        window.attributes=attributes
+    }
     override fun onStop(){livePreview.stop();liveStream.stop();getSharedPreferences("tilecast-reliability",MODE_PRIVATE).edit().putBoolean("foreground",false).putLong("last-foreground-exit",System.currentTimeMillis()).apply();unregisterReceiver(clockReceiver);super.onStop()}
     override fun onDestroy(){model.onLiveStreamSessionChanged=null;livePreview.close();liveStream.close();super.onDestroy()}
     override fun onWindowFocusChanged(hasFocus:Boolean){super.onWindowFocusChanged(hasFocus);if(hasFocus)model.playerConfig.value?.let{reliability.applyWindow(this,it,model.activeHours.value)}}

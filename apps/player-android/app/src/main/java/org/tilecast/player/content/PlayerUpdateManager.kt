@@ -175,11 +175,21 @@ class PlayerUpdateManager(private val app:Application,private val api:TilecastAp
     @Suppress("DEPRECATION") private fun inspect(file:File,expectedSha256:String="",expectedSize:Long=0):ArchiveMetadata{
         require(expectedSize<=0 || file.length()==expectedSize){"artifact_size_mismatch"}
         val artifactSha=if(expectedSha256.isBlank())"" else run { require(verifyArtifact(file,expectedSha256,expectedSize)){"artifact_hash_mismatch"};expectedSha256.lowercase() }
-        val flags=if(Build.VERSION.SDK_INT>=28)PackageManager.GET_SIGNING_CERTIFICATES else PackageManager.GET_SIGNATURES
-        val info=app.packageManager.getPackageArchiveInfo(file.absolutePath,flags)?:throw IllegalStateException("package_metadata_invalid")
+        // Some Android 9 / vendor PackageManager implementations leave
+        // signingInfo empty for archive APKs. Request both APIs and fall back
+        // to the legacy signatures array. Signature verification itself
+        // remains mandatory.
+        val flags=if(Build.VERSION.SDK_INT>=28)
+            PackageManager.GET_SIGNING_CERTIFICATES or PackageManager.GET_SIGNATURES
+        else PackageManager.GET_SIGNATURES
+        val info=app.packageManager.getPackageArchiveInfo(file.absolutePath,flags)
+            ?:throw IllegalStateException("package_metadata_invalid")
         val version=if(Build.VERSION.SDK_INT>=28)info.longVersionCode else info.versionCode.toLong()
-        val signatures=if(Build.VERSION.SDK_INT>=28)info.signingInfo?.apkContentsSigners else info.signatures
-        val certificate=signatures?.firstOrNull()?.toByteArray()?:throw IllegalStateException("certificate_missing")
+        val signatures=if(Build.VERSION.SDK_INT>=28)
+            info.signingInfo?.apkContentsSigners?.takeIf { it.isNotEmpty() } ?: info.signatures
+        else info.signatures
+        val certificate=signatures?.firstOrNull()?.toByteArray()
+            ?:throw IllegalStateException("certificate_missing")
         return ArchiveMetadata(info.packageName,version,MessageDigest.getInstance("SHA-256").digest(certificate).joinToString(""){"%02x".format(it)},file.length(),artifactSha)
     }
     @Suppress("DEPRECATION") private fun installedCertificateSha256():String{
