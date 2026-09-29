@@ -19,6 +19,37 @@ const (
 	saltLen      = 16
 )
 
+const (
+	// MinPasswordLength is the minimum accepted account password length.
+	MinPasswordLength = 12
+	// MaxPasswordLength bounds password length to keep hashing cost predictable.
+	MaxPasswordLength = 1024
+	// minPasswordUniqueChars rejects trivial passwords such as repeated or
+	// whitespace-only strings (e.g. twelve spaces) that satisfy the length rule.
+	minPasswordUniqueChars = 5
+)
+
+// ValidatePasswordStrength enforces the account password policy: length bounds,
+// a non-blank value, and a minimum number of distinct characters. It is the
+// single source of truth for password acceptance across setup and user
+// management.
+func ValidatePasswordStrength(password string) error {
+	if len(password) < MinPasswordLength || len(password) > MaxPasswordLength {
+		return fmt.Errorf("password must be between %d and %d characters", MinPasswordLength, MaxPasswordLength)
+	}
+	if strings.TrimSpace(password) == "" {
+		return errors.New("password must not consist only of whitespace")
+	}
+	unique := make(map[rune]struct{})
+	for _, r := range password {
+		unique[r] = struct{}{}
+	}
+	if len(unique) < minPasswordUniqueChars {
+		return fmt.Errorf("password must contain at least %d different characters", minPasswordUniqueChars)
+	}
+	return nil
+}
+
 func HashPassword(password string) (string, error) {
 	if len(password) < 12 {
 		return "", errors.New("password must be at least 12 characters")

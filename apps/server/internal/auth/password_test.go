@@ -26,3 +26,29 @@ func TestMalformedPasswordHash(t *testing.T) {
 		t.Fatal("malformed hash must not verify")
 	}
 }
+
+func TestValidatePasswordStrength(t *testing.T) {
+	valid := []string{
+		"a strong example password",
+		"correct horse battery staple",
+		"Tr0ub4dour&3xample",
+	}
+	for _, p := range valid {
+		if err := ValidatePasswordStrength(p); err != nil {
+			t.Errorf("expected %q to be accepted, got %v", p, err)
+		}
+	}
+
+	invalid := []string{
+		"            ", // twelve spaces
+		"aaaaaaaaaaaa", // repeated single character
+		"121212121212", // only two distinct characters
+		"short",        // below minimum length
+		"",             // empty
+	}
+	for _, p := range invalid {
+		if err := ValidatePasswordStrength(p); err == nil {
+			t.Errorf("expected %q to be rejected", p)
+		}
+	}
+}

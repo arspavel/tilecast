@@ -355,8 +355,8 @@ func validateManagedUser(input managedUserInput, requirePassword bool) error {
 		return errors.New("role must be " + strings.Join(sortedManagedRoles(), ", "))
 	}
 	if requirePassword || input.Password != "" {
-		if len(input.Password) < 12 || len(input.Password) > 1024 {
-			return errors.New("password must be between 12 and 1024 characters")
+		if err := auth.ValidatePasswordStrength(input.Password); err != nil {
+			return err
 		}
 	}
 	return nil

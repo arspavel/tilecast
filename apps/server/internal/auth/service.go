@@ -304,8 +304,8 @@ func validateSetup(input SetupInput) error {
 	if !usernamePattern.MatchString(input.Username) {
 		return errors.New("username must be 3 to 254 characters and contain only letters, numbers, or . _ @ + -")
 	}
-	if len(input.Password) < 12 || len(input.Password) > 1024 {
-		return errors.New("password must be between 12 and 1024 characters")
+	if err := ValidatePasswordStrength(input.Password); err != nil {
+		return err
 	}
 	return nil
 }
