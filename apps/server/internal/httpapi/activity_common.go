@@ -43,6 +43,15 @@ func activityCanSeeSensitive(role string) bool {
 	return role == "owner" || role == "administrator"
 }
 
+// activityAuditContentOnly reports whether a role may see only content-related
+// audit entries (assets, media, playlists, and similar) and never
+// authentication, user-management, or device-command activity. Contributors,
+// like editors, are limited to content; only administrators and owners see the
+// full audit log.
+func activityAuditContentOnly(role string) bool {
+	return role == "editor" || role == "contributor"
+}
+
 func activityCanExport(role string) bool {
 	return role == "owner" || role == "administrator"
 }

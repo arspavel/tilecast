@@ -57,7 +57,7 @@ func (s *server) listAuditActivity(w http.ResponseWriter, r *http.Request) {
 
 	clauses := []string{"a.created_at >= $1", "a.created_at < $2"}
 	args := []any{window.From, window.To}
-	if session.User.Role == "editor" {
+	if activityAuditContentOnly(session.User.Role) {
 		clauses = append(clauses, "a.resource_type IN ('asset','media','source','widget','playlist','layout','campaign','schedule')")
 	}
 	if err := appendActivityUUIDFilter(&clauses, &args, "a.user_id = $%d", queryValue(r, "actor")); err != nil {
