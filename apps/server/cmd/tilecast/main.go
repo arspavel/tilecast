@@ -288,6 +288,7 @@ func serve() {
 	handler := httpapi.New(httpapi.Dependencies{
 		Auth:                 authService,
 		PublicURL:            cfg.PublicURL,
+		TrustedProxies:       cfg.TrustedProxies,
 		Devices:              deviceService,
 		Media:                mediaService,
 		Forms:                formService,

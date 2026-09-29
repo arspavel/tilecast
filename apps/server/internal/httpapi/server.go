@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -67,6 +68,7 @@ type Dependencies struct {
 	SecureCookies        bool
 	ReleasePublishToken  string
 	PublicURL            string
+	TrustedProxies       []netip.Prefix
 	Operations           OperationsConfig
 	Backups              *backup.Service
 	BackupWorker         *backup.Worker
@@ -122,6 +124,8 @@ type server struct {
 	backupLimits                  backup.Limits
 	publicURL                     string
 	installLimiter                *rateLimiter
+	accountLimiter                *rateLimiter
+	trustedProxies                []netip.Prefix
 }
 
 type contextKey string
@@ -167,6 +171,8 @@ func New(deps Dependencies) *API {
 		// credential until it pairs — so it gets its own budget, generous
 		// enough for a cart of machines behind one NAT.
 		installLimiter:       newRateLimiter(60, time.Minute),
+		accountLimiter:       newRateLimiter(10, 10*time.Minute),
+		trustedProxies:       deps.TrustedProxies,
 		publicURL:            deps.PublicURL,
 		operations:           deps.Operations,
 		settings:             deps.Settings,
@@ -321,8 +327,17 @@ func (s *server) login(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
+	accountKey := "account:" + strings.ToLower(strings.TrimSpace(body.Username))
+	now := time.Now()
+	if strings.TrimSpace(body.Username) != "" && !s.accountLimiter.permitted(accountKey, now) {
+		writeRateLimited(w, s.accountLimiter)
+		return
+	}
 	result, err := s.auth.Login(r.Context(), auth.LoginInput{Username: body.Username, Password: body.Password}, s.mfaPolicy(r))
 	if errors.Is(err, auth.ErrInvalidCredentials) || errors.Is(err, auth.ErrInactive) {
+		if strings.TrimSpace(body.Username) != "" {
+			s.accountLimiter.record(accountKey, now)
+		}
 		writeError(w, http.StatusUnauthorized, "invalid_credentials", "The username or password is incorrect.")
 		return
 	}
