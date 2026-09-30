@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/netip"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -289,9 +290,14 @@ func Load() (Config, error) {
 		TrustedPublicKey: get("TILECAST_UPDATE_MANIFEST_PUBLIC_KEY", DefaultUpdateManifestPublicKey),
 		GitHubToken:      os.Getenv("TILECAST_GITHUB_TOKEN"),
 		GitHubClientID:   os.Getenv("TILECAST_GITHUB_CLIENT_ID"),
-		GitHubOwner:      get("TILECAST_GITHUB_OWNER", "gbyo"),
+		GitHubOwner:      get("TILECAST_GITHUB_OWNER", "arspavel"),
 		GitHubRepo:       get("TILECAST_GITHUB_REPO", "tilecast"),
 		PublishToken:     os.Getenv("TILECAST_RELEASE_PUBLISH_TOKEN"),
+	}
+	cfg.Updates.GitHubOwner = strings.TrimSpace(cfg.Updates.GitHubOwner)
+	cfg.Updates.GitHubRepo = strings.TrimSpace(cfg.Updates.GitHubRepo)
+	if err := validateGitHubRepository(cfg.Updates.GitHubOwner, cfg.Updates.GitHubRepo); err != nil {
+		return Config{}, err
 	}
 	if cfg.Updates.MaxAPKBytes, err = parsePositiveInt64("TILECAST_UPDATE_MAX_APK_BYTES", "536870912"); err != nil {
 		return Config{}, err
@@ -404,4 +410,24 @@ func trustedProxiesFromEnv() ([]netip.Prefix, error) {
 		prefixes = append(prefixes, netip.PrefixFrom(addr, addr.BitLen()))
 	}
 	return prefixes, nil
+}
+
+// githubOwnerPattern matches a valid GitHub account name: 1-39 characters,
+// alphanumeric with single internal hyphens. It exists so a configured owner
+// cannot smuggle "..", "/", or "?" into an update request path.
+var githubOwnerPattern = regexp.MustCompile(`^[A-Za-z0-9](?:-?[A-Za-z0-9]){0,38}$`)
+
+// githubRepoPattern matches a valid GitHub repository name.
+var githubRepoPattern = regexp.MustCompile(`^[A-Za-z0-9._-]{1,100}$`)
+
+// validateGitHubRepository rejects an owner or repository that could alter the
+// GitHub API request path rather than name a repository.
+func validateGitHubRepository(owner, repo string) error {
+	if !githubOwnerPattern.MatchString(owner) {
+		return fmt.Errorf("TILECAST_GITHUB_OWNER %q is not a valid GitHub owner", owner)
+	}
+	if repo == "." || repo == ".." || !githubRepoPattern.MatchString(repo) {
+		return fmt.Errorf("TILECAST_GITHUB_REPO %q is not a valid GitHub repository", repo)
+	}
+	return nil
 }

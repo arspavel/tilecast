@@ -58,7 +58,7 @@ func (s *server) listPlayerReleases(w http.ResponseWriter, r *http.Request) {
 	}
 	githubOwner := strings.TrimSpace(os.Getenv("TILECAST_GITHUB_OWNER"))
 	if githubOwner == "" {
-		githubOwner = "gbyo"
+		githubOwner = "arspavel"
 	}
 	githubRepo := strings.TrimSpace(os.Getenv("TILECAST_GITHUB_REPO"))
 	if githubRepo == "" {

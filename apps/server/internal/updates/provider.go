@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	GitHubOwner = "gbyo"
+	GitHubOwner = "arspavel"
 	GitHubRepo  = "tilecast"
 )
 
@@ -154,11 +154,24 @@ func (p *GitHubProvider) Download(ctx context.Context, rawURL string, maximum in
 	return body, nil
 }
 
-func (p *GitHubProvider) Open(ctx context.Context, rawURL string) (*http.Response, error) {
+// trustedAssetURL reports whether rawURL is a GitHub release-asset URL for the
+// configured repository. The host and path are compared case-insensitively
+// because GitHub treats owner and repository names that way, so a difference in
+// case must not reject a legitimate asset.
+func (p *GitHubProvider) trustedAssetURL(rawURL string) bool {
 	parsed, err := url.Parse(rawURL)
-	if err != nil || parsed.Scheme != "https" || parsed.Hostname() != "api.github.com" || !strings.HasPrefix(parsed.Path, "/repos/"+p.owner+"/"+p.repo+"/releases/assets/") {
+	if err != nil || parsed.Scheme != "https" || !strings.EqualFold(parsed.Hostname(), "api.github.com") {
+		return false
+	}
+	prefix := "/repos/" + p.owner + "/" + p.repo + "/releases/assets/"
+	return strings.HasPrefix(strings.ToLower(parsed.Path), strings.ToLower(prefix))
+}
+
+func (p *GitHubProvider) Open(ctx context.Context, rawURL string) (*http.Response, error) {
+	if !p.trustedAssetURL(rawURL) {
 		return nil, errors.New("untrusted GitHub release asset URL")
 	}
+	parsed, _ := url.Parse(rawURL)
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, parsed.String(), nil)
 	p.headers(req)
 	req.Header.Set("Accept", "application/octet-stream")
@@ -191,7 +204,7 @@ func (p *GitHubProvider) BeginDeviceAuthorization(ctx context.Context, clientID 
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, p.oauthBase+"/login/device/code", bytes.NewBufferString(form.Encode()))
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("User-Agent", "Tilecast-Server/0.9 (+https://github.com/gbyo/tilecast)")
+	req.Header.Set("User-Agent", "Tilecast-Server/0.9 (+https://github.com/"+GitHubOwner+"/"+GitHubRepo+")")
 	response, err := p.client.Do(req)
 	if err != nil {
 		return DeviceAuthorization{}, fmt.Errorf("GitHub authorization request failed: %w", err)
@@ -226,7 +239,7 @@ func (p *GitHubProvider) PollDeviceAuthorization(ctx context.Context, clientID, 
 	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, p.oauthBase+"/login/oauth/access_token", bytes.NewBufferString(form.Encode()))
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("User-Agent", "Tilecast-Server/0.9 (+https://github.com/gbyo/tilecast)")
+	req.Header.Set("User-Agent", "Tilecast-Server/0.9 (+https://github.com/"+GitHubOwner+"/"+GitHubRepo+")")
 	response, err := p.client.Do(req)
 	if err != nil {
 		return DeviceTokenResult{}, fmt.Errorf("GitHub authorization poll failed: %w", err)
