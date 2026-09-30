@@ -13,7 +13,7 @@ func TestFixedGitHubReleaseSource(t *testing.T) {
 	if _, err := provider.Open(t.Context(), "https://example.com/tilecast-player.apk"); err == nil {
 		t.Fatal("arbitrary update URL accepted")
 	}
-	if GitHubOwner != "gbyo" || GitHubRepo != "tilecast" {
+	if GitHubOwner != "arspavel" || GitHubRepo != "tilecast" {
 		t.Fatal("GitHub source is not fixed")
 	}
 }
@@ -117,5 +117,29 @@ func TestGitHubProviderUsesUpdatedToken(t *testing.T) {
 	provider.SetToken("new-token")
 	if _, err := provider.Releases(t.Context(), ""); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestTrustedAssetURL(t *testing.T) {
+	p := NewGitHubProviderForRepository("", "Arspavel", "TileCast")
+	accepts := []string{
+		"https://api.github.com/repos/arspavel/tilecast/releases/assets/123",
+		"https://API.GITHUB.COM/repos/ARSPAVEL/TILECAST/releases/assets/9",
+	}
+	for _, u := range accepts {
+		if !p.trustedAssetURL(u) {
+			t.Errorf("expected %q to be accepted for a case-insensitive repository match", u)
+		}
+	}
+	rejects := []string{
+		"http://api.github.com/repos/arspavel/tilecast/releases/assets/1",
+		"https://evil.com/repos/arspavel/tilecast/releases/assets/1",
+		"https://api.github.com/repos/other/repo/releases/assets/1",
+		"https://api.github.com/repos/arspavel/tilecast/tarball",
+	}
+	for _, u := range rejects {
+		if p.trustedAssetURL(u) {
+			t.Errorf("expected %q to be rejected", u)
+		}
 	}
 }
