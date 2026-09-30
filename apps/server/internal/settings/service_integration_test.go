@@ -135,11 +135,11 @@ func TestSettingsPolicyInheritanceAndRevision(t *testing.T) {
 	}
 	config, etag, err := service.PlayerConfiguration(ctx, screen)
 	if err != nil || config.Playback["defaultVolume"] != 0.25 ||
-        config.Playback["defaultImageDurationSeconds"] == nil ||
-        config.Playback["defaultTransition"] == nil ||
-        config.Playback["defaultAudioEnabled"] == nil ||
-        config.Playback["resumeAfterRestart"] == nil ||
-        config.Reliability["mode"] != "managed_kiosk" || config.Power["keepScreenOn"] != false || config.Power["outsideActiveHoursDisplay"] != "custom_text" || config.Power["outsideActiveHoursText"] != "School is closed" || config.Power["blackScreenFallback"] != false || config.LinuxKiosk["fullscreenEnabled"] != true || config.LinuxKiosk["preventDisplaySleep"] != true || etag == "" {
+		config.Playback["defaultImageDurationSeconds"] == nil ||
+		config.Playback["defaultTransition"] == nil ||
+		config.Playback["defaultAudioEnabled"] == nil ||
+		config.Playback["resumeAfterRestart"] == nil ||
+		config.Reliability["mode"] != "managed_kiosk" || config.Power["keepScreenOn"] != false || config.Power["outsideActiveHoursDisplay"] != "custom_text" || config.Power["outsideActiveHoursText"] != "School is closed" || config.Power["blackScreenFallback"] != false || config.LinuxKiosk["fullscreenEnabled"] != true || config.LinuxKiosk["preventDisplaySleep"] != true || etag == "" {
 		t.Fatalf("config=%#v etag=%q err=%v", config, etag, err)
 	}
 	if notifier.notes < 3 {

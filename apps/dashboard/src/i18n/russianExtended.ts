@@ -51,7 +51,8 @@ export const russianExtended: Record<string, string> = {
   "Health &amp; recovery": "Состояние и восстановление",
   "Keep the logical screen, Display Group, content, schedules, policies, and history.":
     "Сохранить логический экран, группу экранов, контент, расписания, политики и историю.",
-  "Keep this player installation on “": "Оставить эту установку проигрывателя на «",
+  "Keep this player installation on “":
+    "Оставить эту установку проигрывателя на «",
   "Launch after boot": "Запускать после загрузки",
   Level: "Уровень",
   "Linux autostart": "Автозапуск Linux",
@@ -104,7 +105,8 @@ export const russianExtended: Record<string, string> = {
     "Проверить переход Android в сон и пробуждение.",
   "The player clock differs from server time by more than five minutes. Offline schedule changes may occur at the wrong time.":
     "Часы проигрывателя отличаются от времени сервера более чем на пять минут. Изменения автономного расписания могут сработать не вовремя.",
-  "This device was previously paired as “": "Ранее это устройство было подключено как «",
+  "This device was previously paired as “":
+    "Ранее это устройство было подключено как «",
   "This player belongs to the": "Этот проигрыватель входит в",
   Timezone: "Часовой пояс",
   Unassigned: "Не назначено",
@@ -209,7 +211,8 @@ export const russianExtended: Record<string, string> = {
 
   // Operations, updates and maintenance.
   ") frees": ") освобождает",
-  "All three files are verified before the": "Все три файла проверяются до того, как",
+  "All three files are verified before the":
+    "Все три файла проверяются до того, как",
   "Applies configured retention policies to eligible operational records.":
     "Применяет настроенные правила хранения к подходящим служебным записям.",
   "Apply imported settings": "Применить импортированные настройки",
@@ -230,7 +233,8 @@ export const russianExtended: Record<string, string> = {
   "Deploy update": "Развернуть обновление",
   Deployment: "Развёртывание",
   "Deployment history": "История развёртываний",
-  "Deployment history could not be loaded.": "Не удалось загрузить историю развёртываний.",
+  "Deployment history could not be loaded.":
+    "Не удалось загрузить историю развёртываний.",
   "Deployment mode": "Режим развёртывания",
   "Deployment targets": "Цели развёртывания",
   Diagnostics: "Диагностика",
@@ -244,7 +248,8 @@ export const russianExtended: Record<string, string> = {
   "Export non-secret settings": "Экспортировать несекретные настройки",
   "Export settings": "Экспортировать настройки",
   "GitHub connection": "Подключение GitHub",
-  "GitHub releases could not be synchronized.": "Не удалось синхронизировать выпуски GitHub.",
+  "GitHub releases could not be synchronized.":
+    "Не удалось синхронизировать выпуски GitHub.",
   "Import settings": "Импортировать настройки",
   "It has never been deployed, so the release and its cached file are both removed.":
     "Этот выпуск не развёртывался, поэтому он и его файл в кэше будут удалены.",
@@ -260,16 +265,19 @@ export const russianExtended: Record<string, string> = {
   "Open GitHub": "Открыть GitHub",
   "Open a deployment to read the status of each screen it reaches. Waiting for approval means the TV still needs someone to accept the installer; it is not a failure.":
     "Откройте развёртывание, чтобы увидеть состояние каждого экрана. Ожидание подтверждения означает, что на телевизоре ещё нужно принять установку; это не ошибка.",
-  "Owner or Administrator access is required.": "Требуются права владельца или администратора.",
+  "Owner or Administrator access is required.":
+    "Требуются права владельца или администратора.",
   "Player deployment history": "История развёртываний проигрывателя",
-  "Player deployments have been created.": "Развёртывания проигрывателя созданы.",
+  "Player deployments have been created.":
+    "Развёртывания проигрывателя созданы.",
   "Player releases": "Выпуски проигрывателя",
   "Player update verification is not configured.":
     "Проверка обновлений проигрывателя не настроена.",
   "Players install at or after this local time on each screen.":
     "Проигрыватели начнут установку не раньше указанного местного времени каждого экрана.",
   "Ready to deploy": "Готово к развёртыванию",
-  "Reconcile player configuration": "Синхронизировать конфигурацию проигрывателей",
+  "Reconcile player configuration":
+    "Синхронизировать конфигурацию проигрывателей",
   "Release file validation": "Проверка файлов выпуска",
   "Remaining targets wait until every canary reconnects. Use 0 to deploy to all targets at once.":
     "Остальные цели ждут повторного подключения всех тестовых экранов. Укажите 0, чтобы развернуть сразу на все цели.",
@@ -287,7 +295,8 @@ export const russianExtended: Record<string, string> = {
   Showing: "Показано",
   Size: "Размер",
   Source: "Источник",
-  "System diagnostics could not be loaded.": "Не удалось загрузить диагностику системы.",
+  "System diagnostics could not be loaded.":
+    "Не удалось загрузить диагностику системы.",
   "Target screens and Display Groups": "Целевые экраны и группы экранов",
   "The release could not be cached.": "Не удалось сохранить выпуск в кэше.",
   "The release could not be removed.": "Не удалось удалить выпуск.",
@@ -306,7 +315,8 @@ export const russianExtended: Record<string, string> = {
   Verifying: "Проверка",
   "Waiting for authorization…": "Ожидание авторизации…",
   "What this needs": "Что для этого требуется",
-  "enters Tilecast&apos;s private update cache.": "попадёт в закрытый кэш обновлений Tilecast.",
+  "enters Tilecast&apos;s private update cache.":
+    "попадёт в закрытый кэш обновлений Tilecast.",
   "group policies and": "групповые политики и",
   "of server storage.": "хранилища сервера.",
   offline: "не в сети",
@@ -337,7 +347,8 @@ export const russianExtended: Record<string, string> = {
     "Резервные назначения действуют до начала расписания.",
   "Latest deployment result.": "Результат последнего развёртывания.",
   "Loading player status…": "Загрузка состояния проигрывателей…",
-  "Next enabled playback transition.": "Следующее активное изменение воспроизведения.",
+  "Next enabled playback transition.":
+    "Следующее активное изменение воспроизведения.",
   "Next schedule change": "Следующее изменение расписания",
   "No deployments yet": "Развёртываний пока нет",
   "No upcoming change": "Предстоящих изменений нет",
@@ -345,7 +356,8 @@ export const russianExtended: Record<string, string> = {
   "Open schedule": "Открыть расписание",
   "Pair the first screen": "Подключить первый экран",
   "Player fleet": "Парк проигрывателей",
-  "Player status could not be loaded": "Не удалось загрузить состояние проигрывателей",
+  "Player status could not be loaded":
+    "Не удалось загрузить состояние проигрывателей",
   "Player updates": "Обновления проигрывателей",
   "Players below are not currently reporting an online connection.":
     "Указанные ниже проигрыватели сейчас не сообщают о подключении.",
@@ -358,7 +370,8 @@ export const russianExtended: Record<string, string> = {
   Succeeded: "Успешно",
   "System overview": "Обзор системы",
   "Update center": "Центр обновлений",
-  "Update status could not be loaded": "Не удалось загрузить состояние обновлений",
+  "Update status could not be loaded":
+    "Не удалось загрузить состояние обновлений",
   on: "на",
 
   // Settings, users and account security.
@@ -372,12 +385,14 @@ export const russianExtended: Record<string, string> = {
     "Контент, ожидающий проверки, находится в разделе «Проверка контента» главного меню.",
   "Emergency Alerts": "Экстренные оповещения",
   "Loading settings…": "Загрузка настроек…",
-  "Local setup is required on every player.": "На каждом проигрывателе требуется локальная настройка.",
+  "Local setup is required on every player.":
+    "На каждом проигрывателе требуется локальная настройка.",
   "NWS monitoring, alert rules, and active emergencies are configured in the":
     "Мониторинг NWS, правила оповещений и активные чрезвычайные ситуации настраиваются в",
   "Nobody is signed out. An account in scope that has not enrolled is asked to set up an authenticator app or a passkey at its next sign-in, and cannot use the rest of Studio until it does. An Owner or Administrator can clear a locked-out account’s factors from Settings → Users.":
     "Текущие сеансы не завершаются. При следующем входе подходящей учётной записи без настроенной защиты потребуется настроить аутентификатор или ключ доступа; до этого остальные функции Studio будут недоступны. Владелец или администратор может сбросить факторы заблокированной учётной записи в разделе «Настройки → Пользователи».",
-  "Passkeys are unavailable on this installation.": "Ключи доступа недоступны в этой установке.",
+  "Passkeys are unavailable on this installation.":
+    "Ключи доступа недоступны в этой установке.",
   "Player preview": "Предпросмотр проигрывателя",
   "Start and end times are identical. Choose a distinct range; an earlier end time is treated as overnight.":
     "Время начала и окончания совпадает. Выберите другой диапазон; более раннее время окончания считается переходом через полночь.",
@@ -395,7 +410,8 @@ export const russianExtended: Record<string, string> = {
   "No two-step verification": "Двухэтапная проверка не настроена",
   "Owner or Administrator access is required to manage Studio users.":
     "Для управления пользователями Studio требуются права владельца или администратора.",
-  "Passwords must contain at least 12 characters.": "Пароль должен содержать не менее 12 символов.",
+  "Passwords must contain at least 12 characters.":
+    "Пароль должен содержать не менее 12 символов.",
   Role: "Роль",
   "Screen scope": "Область доступных экранов",
   "Temporary password": "Временный пароль",
@@ -407,7 +423,8 @@ export const russianExtended: Record<string, string> = {
   "Add a passkey": "Добавить ключ доступа",
   Added: "Добавлен",
   "Authenticator app": "Приложение-аутентификатор",
-  "Cannot scan? Enter this key by hand:": "Не удаётся отсканировать? Введите ключ вручную:",
+  "Cannot scan? Enter this key by hand:":
+    "Не удаётся отсканировать? Введите ключ вручную:",
   "Copy all": "Копировать всё",
   Enrolled: "Настроено",
   "I have saved them": "Я сохранил коды",
@@ -420,9 +437,11 @@ export const russianExtended: Record<string, string> = {
   "Scan the code with your authenticator app, then enter the six-digit code it shows.":
     "Отсканируйте код приложением-аутентификатором и введите показанный шестизначный код.",
   "Set up": "Настроить",
-  "Sign-in security could not be loaded.": "Не удалось загрузить настройки безопасности входа.",
+  "Sign-in security could not be loaded.":
+    "Не удалось загрузить настройки безопасности входа.",
   "These codes are shown once.": "Эти коды показываются только один раз.",
-  "This browser does not support passkeys.": "Этот браузер не поддерживает ключи доступа.",
+  "This browser does not support passkeys.":
+    "Этот браузер не поддерживает ключи доступа.",
   "Back to sign in": "Вернуться ко входу",
   "Create the first owner account for this installation.":
     "Создайте первую учётную запись владельца этой установки.",
@@ -488,7 +507,8 @@ export const russianExtended: Record<string, string> = {
   "Nothing has been sent yet. Deliveries appear here when a condition is reported.":
     "Пока ничего не отправлено. Доставки появятся здесь после возникновения соответствующего события.",
   "Recent deliveries": "Недавние доставки",
-  "Select none to receive every category.": "Не выбирайте ничего, чтобы получать все категории.",
+  "Select none to receive every category.":
+    "Не выбирайте ничего, чтобы получать все категории.",
   Test: "Проверить",
   "Tilecast does not show it again, and there is no way to read it back.":
     "Tilecast не покажет его повторно, и прочитать его впоследствии невозможно.",
@@ -514,7 +534,8 @@ export const russianExtended: Record<string, string> = {
   "Last successful backup:": "Последняя успешная копия:",
   "Loading backups…": "Загрузка резервных копий…",
   "No backups have been created yet.": "Резервные копии ещё не создавались.",
-  "Only the Owner may manage backups.": "Управлять резервными копиями может только владелец.",
+  "Only the Owner may manage backups.":
+    "Управлять резервными копиями может только владелец.",
   "Recent backup activity": "Недавние операции резервного копирования",
   Restore: "Восстановить",
   Verify: "Проверить",
@@ -537,7 +558,8 @@ export const russianExtended: Record<string, string> = {
   "Advanced details": "Дополнительные сведения",
   "Automatic return behavior and safe maintenance exclusions.":
     "Автоматический возврат и безопасные исключения для обслуживания.",
-  "Default presentation and volume behavior.": "Презентация и громкость по умолчанию.",
+  "Default presentation and volume behavior.":
+    "Презентация и громкость по умолчанию.",
   "Effective configuration revision": "Версия действующей конфигурации",
   "Local cache limits and content delivery behavior.":
     "Ограничения локального кэша и правила доставки контента.",
@@ -912,17 +934,24 @@ export const russianExtended: Record<string, string> = {
   "NWS event names": "Названия событий NWS",
   "No NWS alerts are currently active.": "Сейчас нет активных оповещений NWS.",
   "No locations selected.": "Местоположения не выбраны.",
-  "Only non-empty playlists can be activated.": "Можно включать только непустые плейлисты.",
-  "Optional: manage custom playlists": "Необязательно: управление своими плейлистами",
-  "Overlay — the bar covers the bottom edge": "Наложение — полоса закрывает нижний край",
+  "Only non-empty playlists can be activated.":
+    "Можно включать только непустые плейлисты.",
+  "Optional: manage custom playlists":
+    "Необязательно: управление своими плейлистами",
+  "Overlay — the bar covers the bottom edge":
+    "Наложение — полоса закрывает нижний край",
   "Poll interval": "Интервал опроса",
-  "Prepare automatic emergency content": "Подготовить автоматический экстренный контент",
-  "Push content up — nothing is covered": "Сдвиг контента вверх — ничего не перекрывается",
+  "Prepare automatic emergency content":
+    "Подготовить автоматический экстренный контент",
+  "Push content up — nothing is covered":
+    "Сдвиг контента вверх — ничего не перекрывается",
   "Rule name": "Название правила",
   "Select a playlist": "Выберите плейлист",
-  "Select a pre-made emergency playlist.": "Выберите заранее подготовленный экстренный плейлист.",
+  "Select a pre-made emergency playlist.":
+    "Выберите заранее подготовленный экстренный плейлист.",
   "Select a state": "Выберите штат",
-  "Select at least one screen or group.": "Выберите хотя бы один экран или группу.",
+  "Select at least one screen or group.":
+    "Выберите хотя бы один экран или группу.",
   "Standard — 96px": "Стандартная — 96 пикс.",
   "Start a Takeover now": "Запустить временный показ сейчас",
   "State or territory": "Штат или территория",
@@ -935,24 +964,31 @@ export const russianExtended: Record<string, string> = {
   "Ticker speed": "Скорость бегущей строки",
   "Tilecast can generate a fullscreen alert directly from live NWS data. A custom playlist remains optional for organizations with their own response content. This plugin configures automatic responses; a manual Takeover is the separate “show this now” action on Screens, and its defaults live in Settings.":
     "Tilecast может создавать полноэкранное оповещение непосредственно из данных NWS. Организации со своим контентом могут дополнительно выбрать собственный плейлист. Этот плагин настраивает автоматические реакции; ручной временный показ запускается отдельным действием «Показать сейчас» на странице экранов, а его настройки находятся в разделе настроек.",
-  "Tilecast live NWS alert — fullscreen": "Оповещение Tilecast NWS — весь экран",
-  "Tilecast live NWS alert — ticker bar": "Оповещение Tilecast NWS — бегущая строка",
-  "Use a custom playlist — fullscreen": "Использовать свой плейлист — весь экран",
+  "Tilecast live NWS alert — fullscreen":
+    "Оповещение Tilecast NWS — весь экран",
+  "Tilecast live NWS alert — ticker bar":
+    "Оповещение Tilecast NWS — бегущая строка",
+  "Use a custom playlist — fullscreen":
+    "Использовать свой плейлист — весь экран",
   "Weather event rules": "Правила погодных событий",
   "14 days": "14 дней",
   "Background countdown": "Обратный отсчёт на фоне",
   "Brand Bug / Watermark": "Логотип / водяной знак",
   "Brand bugs could not be loaded.": "Не удалось загрузить логотипы.",
-  "Choose a logo image, enter text, or both.": "Выберите логотип, введите текст или используйте оба варианта.",
+  "Choose a logo image, enter text, or both.":
+    "Выберите логотип, введите текст или используйте оба варианта.",
   "Choose a start time.": "Выберите время начала.",
-  "Choose a target time and at least one day.": "Выберите целевое время и хотя бы один день.",
+  "Choose a target time and at least one day.":
+    "Выберите целевое время и хотя бы один день.",
   "Choose an end time.": "Выберите время окончания.",
   "Choose at least one day.": "Выберите хотя бы один день.",
   "Choose at least one target.": "Выберите хотя бы одну цель.",
   "Choose targets": "Выбрать цели",
-  "Choose the one-time target date and time.": "Выберите однократные целевые дату и время.",
+  "Choose the one-time target date and time.":
+    "Выберите однократные целевые дату и время.",
   "Countdown Bar": "Полоса обратного отсчёта",
-  "Countdown bars could not be loaded.": "Не удалось загрузить полосы обратного отсчёта.",
+  "Countdown bars could not be loaded.":
+    "Не удалось загрузить полосы обратного отсчёта.",
   "Create instance": "Создать экземпляр",
   "Days of the week": "Дни недели",
   "Drain right to left": "Убывание справа налево",
@@ -1051,7 +1087,8 @@ export const russianExtended: Record<string, string> = {
   "4K landscape": "4K, альбомный",
   "4K portrait": "4K, портретный",
   Announcement: "Объявление",
-  "Begin with an accent bar and headline.": "Начните с акцентной полосы и заголовка.",
+  "Begin with an accent bar and headline.":
+    "Начните с акцентной полосы и заголовка.",
   "Draft only": "Только черновик",
   "Draft r": "Черновик, версия",
   "Full HD landscape": "Full HD, альбомный",

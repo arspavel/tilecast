@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, RefreshCw, RotateCw, Search, Sun, Volume2, VolumeX } from "lucide-react";
+import {
+  AlertTriangle,
+  RefreshCw,
+  RotateCw,
+  Search,
+  Sun,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { api } from "../api/client";
@@ -27,15 +35,15 @@ const statusNames: Record<ScreenStatus, string> = {
 function hasError(screen: Screen) {
   const activeWebsiteError =
     ["failed", "timed_out", "showing_fallback"].includes(
-      screen.websiteState ?? ""
+      screen.websiteState ?? "",
     ) && Boolean(screen.websiteFailureCategory);
 
   return Boolean(
     screen.lastPlaybackError ||
-      screen.lastSynchronizationError ||
-      activeWebsiteError ||
-      screen.configurationError ||
-      screen.updateError
+    screen.lastSynchronizationError ||
+    activeWebsiteError ||
+    screen.configurationError ||
+    screen.updateError,
   );
 }
 
@@ -105,12 +113,13 @@ function playbackName(value?: string) {
 }
 
 function errorText(screen: Screen) {
-  const activeWebsiteError =
-    ["failed", "timed_out", "showing_fallback"].includes(
-      screen.websiteState ?? ""
-    )
-      ? screen.websiteFailureCategory
-      : undefined;
+  const activeWebsiteError = [
+    "failed",
+    "timed_out",
+    "showing_fallback",
+  ].includes(screen.websiteState ?? "")
+    ? screen.websiteFailureCategory
+    : undefined;
 
   return (
     screen.lastPlaybackError ||
@@ -227,8 +236,7 @@ export function ScreenMonitoringPage() {
   });
 
   const volumeFor = (screen: Screen) => volumeValues[screen.id] ?? 50;
-  const brightnessFor = (screen: Screen) =>
-    brightnessValues[screen.id] ?? 100;
+  const brightnessFor = (screen: Screen) => brightnessValues[screen.id] ?? 100;
 
   const restartPlayer = (screen: Screen) => {
     if (
@@ -243,13 +251,13 @@ export function ScreenMonitoringPage() {
     });
   };
 
-  const screens = query.data?.items ?? [];
+  const screens = useMemo(() => query.data?.items ?? [], [query.data]);
   const counts = {
     total: screens.length,
     online: screens.filter((item) => item.status === "online").length,
     idle: screens.filter(isIdle).length,
     offline: screens.filter((item) =>
-      ["offline", "stale"].includes(item.status)
+      ["offline", "stale"].includes(item.status),
     ).length,
     errors: screens.filter(hasError).length,
   };
@@ -281,7 +289,7 @@ export function ScreenMonitoringPage() {
       .sort(
         (left, right) =>
           statusRank(left) - statusRank(right) ||
-          left.name.localeCompare(right.name, "ru")
+          left.name.localeCompare(right.name, "ru"),
       );
   }, [filter, screens, search]);
 
@@ -385,7 +393,11 @@ export function ScreenMonitoringPage() {
               <tr
                 key={screen.id}
                 className={
-                  hasError(screen) ? "has-error" : isIdle(screen) ? "is-idle" : ""
+                  hasError(screen)
+                    ? "has-error"
+                    : isIdle(screen)
+                      ? "is-idle"
+                      : ""
                 }
               >
                 <th scope="row">
@@ -400,7 +412,9 @@ export function ScreenMonitoringPage() {
                 <td>
                   <StatusDot
                     tone={statusTone(screen)}
-                    label={isIdle(screen) ? "Простой" : statusNames[screen.status]}
+                    label={
+                      isIdle(screen) ? "Простой" : statusNames[screen.status]
+                    }
                   />
                   <small>
                     {isIdle(screen)
@@ -429,7 +443,7 @@ export function ScreenMonitoringPage() {
                 <td>
                   <strong>
                     {relativeTime(
-                      screen.lastHeartbeatAt ?? screen.lastContactAt
+                      screen.lastHeartbeatAt ?? screen.lastContactAt,
                     )}
                   </strong>
                   {screen.lastHealthyPlaybackAt && (
@@ -479,9 +493,7 @@ export function ScreenMonitoringPage() {
                       )}
                     </>
                   ) : (
-                    <span className="monitoring-ok">
-                      Только для Android
-                    </span>
+                    <span className="monitoring-ok">Только для Android</span>
                   )}
                 </td>
                 <td>
@@ -512,8 +524,7 @@ export function ScreenMonitoringPage() {
                           variant="secondary"
                           compact
                           disabled={
-                            screen.status !== "online" ||
-                            sendControl.isPending
+                            screen.status !== "online" || sendControl.isPending
                           }
                           onClick={() =>
                             sendControl.mutate({
@@ -586,8 +597,7 @@ export function ScreenMonitoringPage() {
                           variant="secondary"
                           compact
                           disabled={
-                            screen.status !== "online" ||
-                            sendControl.isPending
+                            screen.status !== "online" || sendControl.isPending
                           }
                           onClick={() =>
                             sendControl.mutate({
@@ -606,8 +616,7 @@ export function ScreenMonitoringPage() {
                           variant="danger"
                           compact
                           disabled={
-                            screen.status !== "online" ||
-                            sendControl.isPending
+                            screen.status !== "online" || sendControl.isPending
                           }
                           onClick={() => restartPlayer(screen)}
                         >
@@ -621,9 +630,7 @@ export function ScreenMonitoringPage() {
                       </div>
                     </details>
                   ) : (
-                    <span className="monitoring-ok">
-                      Только для Android
-                    </span>
+                    <span className="monitoring-ok">Только для Android</span>
                   )}
                 </td>
                 <td>
