@@ -92,17 +92,17 @@ type telemetryRollup struct {
 	SyncDriftP95MS      *int32 `json:"syncDriftP95Ms,omitempty"`
 	SyncDriftMaxMS      *int32 `json:"syncDriftMaxMs,omitempty"`
 
-	HTTPRequestCount                int64  `json:"httpRequestCount"`
-	HTTPFailureCount                int64  `json:"httpFailureCount"`
-	HTTPClientErrorCount            int64  `json:"httpClientErrorCount"`
-	HTTPServerErrorCount            int64  `json:"httpServerErrorCount"`
-	RequestRetryCount               int64  `json:"requestRetryCount"`
-	SocketReconnectCount            int64  `json:"socketReconnectCount"`
-	NetworkInterfaceChangeCount     int64  `json:"networkInterfaceChangeCount"`
-	DNSResolveP95MS                 *int32 `json:"dnsResolveP95Ms,omitempty"`
-	TLSHandshakeP95MS               *int32 `json:"tlsHandshakeP95Ms,omitempty"`
-	TimeToFirstByteP95MS            *int32 `json:"timeToFirstByteP95Ms,omitempty"`
-	AverageThroughputBytesPerSecond *int64 `json:"averageThroughputBytesPerSecond,omitempty"`
+	HTTPRequestCount                int64    `json:"httpRequestCount"`
+	HTTPFailureCount                int64    `json:"httpFailureCount"`
+	HTTPClientErrorCount            int64    `json:"httpClientErrorCount"`
+	HTTPServerErrorCount            int64    `json:"httpServerErrorCount"`
+	RequestRetryCount               int64    `json:"requestRetryCount"`
+	SocketReconnectCount            int64    `json:"socketReconnectCount"`
+	NetworkInterfaceChangeCount     int64    `json:"networkInterfaceChangeCount"`
+	DNSResolveP95MS                 *int32   `json:"dnsResolveP95Ms,omitempty"`
+	TLSHandshakeP95MS               *int32   `json:"tlsHandshakeP95Ms,omitempty"`
+	TimeToFirstByteP95MS            *int32   `json:"timeToFirstByteP95Ms,omitempty"`
+	AverageThroughputBytesPerSecond *float64 `json:"averageThroughputBytesPerSecond,omitempty"`
 
 	FrameTimeP95MS          *float32 `json:"frameTimeP95Ms,omitempty"`
 	FrameTimeP99MS          *float32 `json:"frameTimeP99Ms,omitempty"`

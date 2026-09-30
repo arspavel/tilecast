@@ -51,6 +51,7 @@ import { CreateFormDataSourcePage } from "./pages/CreateFormDataSourcePage";
 import { FormDataSourcePage } from "./pages/FormDataSourcePage";
 import { DependencyGraphPage } from "./pages/DependencyGraphPage";
 import { CampaignsPage } from "./pages/CampaignsPage";
+import { ScreenMonitoringPage } from "./pages/ScreenMonitoringPage";
 
 const search = (
   label: string,
@@ -93,6 +94,19 @@ export const studioRoutes: RouteObject[] = [
         },
         children: [
           { index: true, element: <ScreensPage /> },
+          {
+            path: "monitoring",
+            element: <ScreenMonitoringPage />,
+            handle: {
+              breadcrumb: "Мониторинг",
+              search: search(
+                "Мониторинг экранов",
+                "Состояние устройств и воспроизведения",
+                "/screens/monitoring",
+                ["экраны", "ошибки", "онлайн", "heartbeat"],
+              ),
+            },
+          },
           {
             path: "bulk",
             element: <FleetBulkPage />,

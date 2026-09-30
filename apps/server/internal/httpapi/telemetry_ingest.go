@@ -119,10 +119,10 @@ type telemetryIntervalInput struct {
 	NetworkInterfaceChangeCount int64 `json:"networkInterfaceChangeCount"`
 	// Connection setup, split from transfer: a slow resolver and a slow link
 	// both present as "the screen is slow to update".
-	DNSResolveP95MS                 *int32 `json:"dnsResolveP95Ms,omitempty"`
-	TLSHandshakeP95MS               *int32 `json:"tlsHandshakeP95Ms,omitempty"`
-	TimeToFirstByteP95MS            *int32 `json:"timeToFirstByteP95Ms,omitempty"`
-	AverageThroughputBytesPerSecond *int64 `json:"averageThroughputBytesPerSecond,omitempty"`
+	DNSResolveP95MS                 *int32   `json:"dnsResolveP95Ms,omitempty"`
+	TLSHandshakeP95MS               *int32   `json:"tlsHandshakeP95Ms,omitempty"`
+	TimeToFirstByteP95MS            *int32   `json:"timeToFirstByteP95Ms,omitempty"`
+	AverageThroughputBytesPerSecond *float64 `json:"averageThroughputBytesPerSecond,omitempty"`
 
 	// Render timing. A screen can hold its frame rate and still visibly
 	// stutter, which dropped-frame counts alone do not show.

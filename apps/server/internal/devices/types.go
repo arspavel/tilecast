@@ -134,6 +134,20 @@ type Screen struct {
 	UpdateDownloadedBytes     *int64     `json:"updateDownloadedBytes,omitempty"`
 	UpdateExpectedBytes       *int64     `json:"updateExpectedBytes,omitempty"`
 	UpdateError               *string    `json:"updateError,omitempty"`
+	CurrentItemID             *uuid.UUID `json:"currentItemId,omitempty"`
+	CurrentAssetID            *uuid.UUID `json:"currentAssetId,omitempty"`
+	PlaybackState             *string    `json:"playbackState,omitempty"`
+	LastSynchronizationError  *string    `json:"lastSynchronizationError,omitempty"`
+	LastPlaybackError         *string    `json:"lastPlaybackError,omitempty"`
+	CurrentScheduleID         *uuid.UUID `json:"currentScheduleId,omitempty"`
+	CurrentPlaylistID         *uuid.UUID `json:"currentPlaylistId,omitempty"`
+	SelectionSource           *string    `json:"selectionSource,omitempty"`
+	WebsiteState              *string    `json:"websiteState,omitempty"`
+	WebsiteFailureCategory    *string    `json:"websiteFailureCategory,omitempty"`
+	WebsiteCurrentHost        *string    `json:"websiteCurrentHost,omitempty"`
+	LastHealthyPlaybackAt     *time.Time `json:"lastHealthyPlaybackAt,omitempty"`
+	LastSuccessfulSyncAt      *time.Time `json:"lastSuccessfulSyncAt,omitempty"`
+	ConfigurationError        *string    `json:"configurationError,omitempty"`
 	ScreenWidth               int        `json:"screenWidth"`
 	ScreenHeight              int        `json:"screenHeight"`
 	Density                   float32    `json:"density"`

@@ -22,7 +22,7 @@ import (
 //     violates a CHECK or overflows the bucket, turning one bad sample into a
 //     failed request for a screen that is otherwise reporting fine.
 type telemetryNumber interface {
-	~int32 | ~int64 | ~float32
+	~int32 | ~int64 | ~float32 | ~float64
 }
 
 // Dropped rather than clamped: see rule 2.
@@ -219,7 +219,7 @@ func sanitizeTelemetryCounters(interval *telemetryIntervalInput) {
 	// Above 100 is normal: the figure is summed across cores.
 	interval.AverageCPUPercent = telemetryWithin(interval.AverageCPUPercent, 0, 6_400)
 	interval.AverageThroughputBytesPerSecond =
-		telemetryWithin(interval.AverageThroughputBytesPerSecond, 0, telemetryMaxBytes)
+		telemetryWithin(interval.AverageThroughputBytesPerSecond, 0, float64(telemetryMaxBytes))
 
 	interval.SyncDriftP50MS = telemetryMagnitude(interval.SyncDriftP50MS, math.MaxInt32)
 	interval.SyncDriftP95MS = telemetryMagnitude(interval.SyncDriftP95MS, math.MaxInt32)

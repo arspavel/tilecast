@@ -174,7 +174,7 @@ func TestTelemetryDiagnosticsRoundTripThroughTheReport(t *testing.T) {
 				DNSResolveP95MS:                 pointer(int32(24)),
 				TLSHandshakeP95MS:               pointer(int32(90)),
 				TimeToFirstByteP95MS:            pointer(int32(180)),
-				AverageThroughputBytesPerSecond: pointer(int64(2_500_000)),
+				AverageThroughputBytesPerSecond: pointer(float64(2_500_000)),
 				FrameTimeP95MS:                  pointer(float32(18.5)),
 				FrameTimeP99MS:                  pointer(float32(44)),
 				JankFrameCount:                  12, RendererCrashCount: 1, SurfaceLostCount: 2,

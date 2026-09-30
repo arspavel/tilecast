@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Ellipsis,
   Home,
+  Gauge,
   Layers3,
   Library,
   LogOut,
@@ -51,6 +52,7 @@ type NavItem = readonly [
 const primaryNav = [
   ["Overview", "/", Home],
   ["Screens", "/screens", Monitor],
+  ["Мониторинг", "/screens/monitoring", Gauge],
   ["Content", "/assets", Library, contentTabs.map((tab) => tab.to)],
   [
     "Presentations",
@@ -75,13 +77,17 @@ const sidebarCompactKey = "tilecast.sidebar.compact";
 
 function SidebarLink({ item }: { item: NavItem }) {
   const [label, to, Icon] = item;
+  const location = useLocation();
+  const monitoringOpen = location.pathname.startsWith("/screens/monitoring");
   return (
     <NavLink
       to={to}
       end={to === "/"}
       aria-label={label}
       title={label}
-      className={({ isActive }) => (isActive ? "active" : "")}
+      className={({ isActive }) =>
+        isActive && !(to === "/screens" && monitoringOpen) ? "active" : ""
+      }
     >
       <Icon size={20} strokeWidth={1.8} aria-hidden="true" />
       <span>{label}</span>
