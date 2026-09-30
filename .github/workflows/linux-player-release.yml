@@ -120,7 +120,6 @@ jobs:
           echo "This stable release does not contain the following commits already merged to main:" >&2
           git log --oneline --no-decorate HEAD..refs/remotes/origin/${DEFAULT_BRANCH} >&2
           if [ "${ALLOW_BEHIND_MAIN:-false}" = "true" ]; then
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
             echo "allow_behind_main was set; publishing anyway." >&2
             exit 0
           fi
