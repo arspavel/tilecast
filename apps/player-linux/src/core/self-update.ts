@@ -153,6 +153,32 @@ function readPayload(command: PlayerCommand): UpdatePayload | null {
   };
 }
 
+/**
+ * Refuse an update fetched over an insecure transport. The Linux self-updater
+ * trusts the server-supplied SHA-256, so the connection that carries that hash
+ * and the AppImage must be authenticated: a plain-HTTP update could be swapped
+ * in transit and would then run as code on every Linux screen. Loopback is
+ * permitted for local development only.
+ */
+export function assertSecureUpdateURL(rawUrl: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error("update server URL is invalid");
+  }
+  if (parsed.protocol === "https:") {
+    return;
+  }
+  const host = parsed.hostname.replace(/^\[|\]$/g, "");
+  const loopback =
+    host === "localhost" || host === "127.0.0.1" || host === "::1";
+  if (parsed.protocol === "http:" && loopback) {
+    return;
+  }
+  throw new Error("refusing to install an update over an insecure connection");
+}
+
 export class SelfUpdater {
   constructor(private readonly deps: SelfUpdateDeps) {}
 
@@ -204,6 +230,10 @@ export class SelfUpdater {
         return;
       }
 
+      assertSecureUpdateURL(
+        this.deps.buildUrl(`/api/v1/player/updates/${payload.releaseId}`),
+      );
+
       const resumedBytes = await existingFileSize(
         `${this.deps.stagePath}.part`,
       );
@@ -229,8 +259,10 @@ export class SelfUpdater {
         throw new Error("artifact hash does not match the deployment");
       }
 
+      const artifactURL = this.deps.buildUrl(meta.artifactPath);
+      assertSecureUpdateURL(artifactURL);
       await this.deps.download({
-        url: this.deps.buildUrl(meta.artifactPath),
+        url: artifactURL,
         headers: this.deps.authHeaders(),
         destination: this.deps.stagePath,
         expectedSha256: meta.artifactSha256,
