@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import {
   SelfUpdater,
+  assertSecureUpdateURL,
   parseVersionCode,
   promoteAppImage,
   type SelfUpdateDeps,
@@ -345,5 +346,32 @@ describe("SelfUpdater", () => {
     );
     expect(promote).toHaveBeenCalledOnce();
     expect(restart).toHaveBeenCalledOnce();
+  });
+});
+
+describe("assertSecureUpdateURL", () => {
+  it("accepts https and loopback http, rejects public http", () => {
+    expect(() => assertSecureUpdateURL("https://server/x")).not.toThrow();
+    expect(() =>
+      assertSecureUpdateURL("http://localhost:8080/x"),
+    ).not.toThrow();
+    expect(() => assertSecureUpdateURL("http://127.0.0.1/x")).not.toThrow();
+    expect(() => assertSecureUpdateURL("http://[::1]/x")).not.toThrow();
+    expect(() => assertSecureUpdateURL("http://server/x")).toThrow();
+    expect(() => assertSecureUpdateURL("http://198.51.100.7/x")).toThrow();
+  });
+});
+
+describe("SelfUpdater insecure transport", () => {
+  it("refuses to install over plain HTTP and does not download", async () => {
+    const { d, states, download, promote, restart } = deps({
+      buildUrl: (path) => `http://server${path}`,
+    });
+    await new SelfUpdater(d).run(command());
+    expect(states).toContain("failed");
+    expect(states).not.toContain("installing");
+    expect(download).not.toHaveBeenCalled();
+    expect(promote).not.toHaveBeenCalled();
+    expect(restart).not.toHaveBeenCalled();
   });
 });
