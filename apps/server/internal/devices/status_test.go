@@ -7,6 +7,7 @@ import (
 
 func TestComputeStatus(t *testing.T) {
 	now := time.Now()
+	fresh := now.Add(-20 * time.Second)
 	recent := now.Add(-time.Minute)
 	stale := now.Add(-5 * time.Minute)
 	offline := now.Add(-time.Hour)
@@ -17,6 +18,7 @@ func TestComputeStatus(t *testing.T) {
 		want                        Status
 	}{
 		{"online", true, true, true, nil, StatusOnline},
+		{"online-heartbeat", false, true, true, &fresh, StatusOnline},
 		{"recent", false, true, true, &recent, StatusRecent},
 		{"stale", false, true, true, &stale, StatusStale},
 		{"offline", false, true, true, &offline, StatusOffline},

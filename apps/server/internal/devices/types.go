@@ -10,6 +10,7 @@ import (
 const (
 	PairingLifetime  = 10 * time.Minute
 	PollingInterval  = 3 * time.Second
+	OnlineThreshold  = 45 * time.Second
 	RecentThreshold  = 2 * time.Minute
 	OfflineThreshold = 15 * time.Minute
 )

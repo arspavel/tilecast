@@ -16,6 +16,12 @@ func ComputeStatus(now time.Time, socketConnected, enabled, activeCredential boo
 		return StatusOffline
 	}
 	age := now.Sub(*lastContact)
+	// A player that contacted us within this window is treated as online even
+	// without a live socket: HTTP-only players (webOS) heartbeat frequently and
+	// would otherwise never leave "recent".
+	if age <= OnlineThreshold {
+		return StatusOnline
+	}
 	if age <= RecentThreshold {
 		return StatusRecent
 	}
