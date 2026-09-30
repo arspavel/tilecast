@@ -175,32 +175,42 @@ type DevicePrincipal struct {
 }
 
 type Heartbeat struct {
-	ScreenWidth                       int               `json:"screenWidth"`
-	ScreenHeight                      int               `json:"screenHeight"`
-	AvailableStorageBytes             *int64            `json:"availableStorageBytes,omitempty"`
-	UptimeSeconds                     *int64            `json:"uptimeSeconds,omitempty"`
-	PlayerVersion                     string            `json:"playerVersion"`
-	PlayerVersionCode                 *int64            `json:"playerVersionCode,omitempty"`
-	PresentationSchemaVersions        []int             `json:"presentationSchemaVersions,omitempty"`
-	NativePresentationCapabilities    map[string]int    `json:"nativePresentationCapabilities,omitempty"`
-	WebRuntimeVersion                 int               `json:"webRuntimeVersion,omitempty"`
-	WebBundleLimitBytes               int64             `json:"webBundleLimitBytes,omitempty"`
-	AndroidSDK                        *int              `json:"androidSdk,omitempty"`
-	InstallerSource                   string            `json:"installerSource,omitempty"`
-	InstallPermissionStatus           string            `json:"installPermissionStatus,omitempty"`
-	ActiveManifestVersion             *int64            `json:"activeManifestVersion,omitempty"`
-	PendingManifestVersion            *int64            `json:"pendingManifestVersion,omitempty"`
-	AssignedPlaylistID                *uuid.UUID        `json:"assignedPlaylistId,omitempty"`
-	CurrentItemID                     *uuid.UUID        `json:"currentItemId,omitempty"`
-	CurrentAssetID                    *uuid.UUID        `json:"currentAssetId,omitempty"`
-	PlaybackState                     string            `json:"playbackState,omitempty"`
-	DownloadQueueCount                *int              `json:"downloadQueueCount,omitempty"`
-	DownloadedBytes                   *int64            `json:"downloadedBytes,omitempty"`
-	RequiredBytes                     *int64            `json:"requiredBytes,omitempty"`
-	CacheUsedBytes                    *int64            `json:"cacheUsedBytes,omitempty"`
-	CacheLimitBytes                   *int64            `json:"cacheLimitBytes,omitempty"`
-	LastSynchronizationError          string            `json:"lastSynchronizationError,omitempty"`
-	LastPlaybackError                 string            `json:"lastPlaybackError,omitempty"`
+	ScreenWidth                    int            `json:"screenWidth"`
+	ScreenHeight                   int            `json:"screenHeight"`
+	AvailableStorageBytes          *int64         `json:"availableStorageBytes,omitempty"`
+	UptimeSeconds                  *int64         `json:"uptimeSeconds,omitempty"`
+	PlayerVersion                  string         `json:"playerVersion"`
+	PlayerVersionCode              *int64         `json:"playerVersionCode,omitempty"`
+	PresentationSchemaVersions     []int          `json:"presentationSchemaVersions,omitempty"`
+	NativePresentationCapabilities map[string]int `json:"nativePresentationCapabilities,omitempty"`
+	WebRuntimeVersion              int            `json:"webRuntimeVersion,omitempty"`
+	WebBundleLimitBytes            int64          `json:"webBundleLimitBytes,omitempty"`
+	AndroidSDK                     *int           `json:"androidSdk,omitempty"`
+	InstallerSource                string         `json:"installerSource,omitempty"`
+	InstallPermissionStatus        string         `json:"installPermissionStatus,omitempty"`
+	ActiveManifestVersion          *int64         `json:"activeManifestVersion,omitempty"`
+	PendingManifestVersion         *int64         `json:"pendingManifestVersion,omitempty"`
+	AssignedPlaylistID             *uuid.UUID     `json:"assignedPlaylistId,omitempty"`
+	CurrentItemID                  *uuid.UUID     `json:"currentItemId,omitempty"`
+	CurrentAssetID                 *uuid.UUID     `json:"currentAssetId,omitempty"`
+	PlaybackState                  string         `json:"playbackState,omitempty"`
+	DownloadQueueCount             *int           `json:"downloadQueueCount,omitempty"`
+	DownloadedBytes                *int64         `json:"downloadedBytes,omitempty"`
+	RequiredBytes                  *int64         `json:"requiredBytes,omitempty"`
+	CacheUsedBytes                 *int64         `json:"cacheUsedBytes,omitempty"`
+	CacheLimitBytes                *int64         `json:"cacheLimitBytes,omitempty"`
+	LastSynchronizationError       string         `json:"lastSynchronizationError,omitempty"`
+	LastPlaybackError              string         `json:"lastPlaybackError,omitempty"`
+	// Render-progress facts reported by the Linux and Windows players. They are
+	// distinct from playbackState: a player can be running with a live renderer
+	// over a frozen screen.
+	LastMeaningfulProgressAt          *time.Time        `json:"lastMeaningfulProgressAt,omitempty"`
+	StallStartedAt                    *time.Time        `json:"stallStartedAt,omitempty"`
+	StallDurationMs                   *int64            `json:"stallDurationMs,omitempty"`
+	StallReason                       string            `json:"stallReason,omitempty"`
+	ExpectedMotion                    *bool             `json:"expectedMotion,omitempty"`
+	RendererResponding                *bool             `json:"rendererResponding,omitempty"`
+	CurrentItemStartedAt              *time.Time        `json:"currentItemStartedAt,omitempty"`
 	CurrentScheduleID                 *uuid.UUID        `json:"currentScheduleId,omitempty"`
 	CurrentPlaylistID                 *uuid.UUID        `json:"currentPlaylistId,omitempty"`
 	SelectionSource                   string            `json:"selectionSource,omitempty"`
