@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/tilecast/tilecast/apps/server/internal/approvals"
 	"github.com/tilecast/tilecast/apps/server/internal/auth"
 	"github.com/tilecast/tilecast/apps/server/internal/devices"
@@ -310,8 +311,17 @@ func (s *server) playerManifest(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"data": manifest})
 }
 
+func isForeignKeyViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23503"
+}
+
 func (s *server) writePlaylistError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
+	case isForeignKeyViolation(err):
+		// A referenced asset or Layout vanished (e.g. deleted between validation
+		// and insert): a client-fixable 422, not a server fault.
+		writeError(w, http.StatusUnprocessableEntity, "playlist_validation_failed", "The playlist item references content that no longer exists.")
 	case errors.Is(err, approvals.ErrNotApproved):
 		// A refusal an operator can act on, not a server fault: the content
 		// exists and the request was well formed, it just has not been reviewed.
