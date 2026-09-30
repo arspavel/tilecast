@@ -3,9 +3,11 @@ package httpapi
 import (
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/netip"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -86,7 +88,22 @@ func (r *rateLimiter) allow(key string, now time.Time) bool {
 }
 
 func (s *server) authRateLimit(next http.Handler) http.Handler {
-	return s.rateLimit(s.authLimiter, false, next)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		key := s.clientIP(r)
+		now := time.Now()
+		if !s.authLimiter.permitted(key, now) {
+			writeRateLimited(w, s.authLimiter)
+			return
+		}
+		wrapped := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+		next.ServeHTTP(wrapped, r)
+		// Only failed attempts count toward the limit, so a successful sign-in
+		// or a background probe (passkey and MFA options fetched when the login
+		// page loads) never consumes the budget.
+		if wrapped.Status() >= 400 {
+			s.authLimiter.record(key, now)
+		}
+	})
 }
 
 func (s *server) pairingRateLimit(next http.Handler) http.Handler {
@@ -117,12 +134,7 @@ func (s *server) rateLimit(limiter *rateLimiter, includeUser bool, next http.Han
 			}
 		}
 		if !limiter.allow(key, time.Now()) {
-			retryAfter := int(limiter.duration / time.Second)
-			if limiter.duration%time.Second != 0 {
-				retryAfter++
-			}
-			w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
-			writeError(w, http.StatusTooManyRequests, "rate_limited", "Too many authentication attempts. Try again later.")
+			writeRateLimited(w, limiter)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -247,4 +259,82 @@ func (s *server) authorizeScreenList(w http.ResponseWriter, r *http.Request, scr
 		return false
 	}
 	return true
+}
+
+// permitted reports whether key is currently under the limit without counting a
+// hit against it.
+func (r *rateLimiter) permitted(key string, now time.Time) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	entry, ok := r.entries[key]
+	if !ok || !now.Before(entry.resetAt) {
+		return true
+	}
+	return entry.count < r.limit
+}
+
+// record counts one hit against key, starting a fresh window when the previous
+// one has expired.
+func (r *rateLimiter) record(key string, now time.Time) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	entry, ok := r.entries[key]
+	if !ok || !now.Before(entry.resetAt) {
+		r.entries[key] = rateEntry{count: 1, resetAt: now.Add(r.duration)}
+		return
+	}
+	entry.count++
+	r.entries[key] = entry
+}
+
+func writeRateLimited(w http.ResponseWriter, limiter *rateLimiter) {
+	retryAfter := int(limiter.duration / time.Second)
+	if limiter.duration%time.Second != 0 {
+		retryAfter++
+	}
+	w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+	writeError(w, http.StatusTooManyRequests, "rate_limited", "Too many authentication attempts. Try again later.")
+}
+
+// clientIP returns the caller's address, reading it from X-Forwarded-For only
+// when the immediate peer is a trusted proxy. This keeps per-IP rate limits
+// meaningful behind the installation's reverse proxy while ignoring a header
+// that a direct, untrusted client could forge.
+func (s *server) clientIP(r *http.Request) string {
+	host := r.RemoteAddr
+	if ap, err := netip.ParseAddrPort(r.RemoteAddr); err == nil {
+		host = ap.Addr().String()
+	} else if h, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		host = h
+	}
+	addr, err := netip.ParseAddr(host)
+	if err != nil {
+		return host
+	}
+	addr = addr.Unmap()
+	if !s.isTrustedProxy(addr) {
+		return addr.String()
+	}
+	parts := strings.Split(r.Header.Get("X-Forwarded-For"), ",")
+	for i := len(parts) - 1; i >= 0; i-- {
+		candidate, err := netip.ParseAddr(strings.TrimSpace(parts[i]))
+		if err != nil {
+			continue
+		}
+		candidate = candidate.Unmap()
+		if s.isTrustedProxy(candidate) {
+			continue
+		}
+		return candidate.String()
+	}
+	return addr.String()
+}
+
+func (s *server) isTrustedProxy(addr netip.Addr) bool {
+	for _, prefix := range s.trustedProxies {
+		if prefix.Contains(addr) {
+			return true
+		}
+	}
+	return false
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"net/netip"
 	"os"
 	"strconv"
 	"strings"
@@ -35,6 +36,9 @@ type Config struct {
 	// deliberately environment-only, like the SMTP password, so it never lands in
 	// the schema, a backup, or the configuration export.
 	PresentationNetworkKey string
+	// TrustedProxies are the source networks whose X-Forwarded-For header is
+	// believed when deriving the real client IP for rate limiting.
+	TrustedProxies []netip.Prefix
 }
 
 // NotificationsConfig carries the SMTP relay. These are environment values
@@ -147,6 +151,12 @@ func Load() (Config, error) {
 			Origins: get("TILECAST_WEBAUTHN_ORIGINS", ""),
 		},
 	}
+
+	trustedProxies, err := trustedProxiesFromEnv()
+	if err != nil {
+		return Config{}, err
+	}
+	cfg.TrustedProxies = trustedProxies
 
 	if cfg.DatabaseURL == "" {
 		return Config{}, errors.New("TILECAST_DATABASE_URL is required")
@@ -357,4 +367,41 @@ func get(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+// defaultTrustedProxyCIDRs are trusted when TILECAST_TRUSTED_PROXIES is unset.
+// They cover loopback and the private ranges a reverse proxy typically occupies
+// (including the Docker bridge), so the real client IP is read from
+// X-Forwarded-For behind the installation's own proxy while staying unspoofable
+// from the public internet.
+var defaultTrustedProxyCIDRs = []string{
+	"127.0.0.0/8", "::1/128",
+	"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10",
+	"169.254.0.0/16", "fe80::/10", "fc00::/7",
+}
+
+// trustedProxiesFromEnv parses TILECAST_TRUSTED_PROXIES (comma-separated CIDRs
+// or bare IPs) and falls back to defaultTrustedProxyCIDRs when it is unset.
+func trustedProxiesFromEnv() ([]netip.Prefix, error) {
+	entries := defaultTrustedProxyCIDRs
+	if raw := strings.TrimSpace(os.Getenv("TILECAST_TRUSTED_PROXIES")); raw != "" {
+		entries = strings.Split(raw, ",")
+	}
+	prefixes := make([]netip.Prefix, 0, len(entries))
+	for _, entry := range entries {
+		entry = strings.TrimSpace(entry)
+		if entry == "" {
+			continue
+		}
+		if prefix, err := netip.ParsePrefix(entry); err == nil {
+			prefixes = append(prefixes, prefix.Masked())
+			continue
+		}
+		addr, err := netip.ParseAddr(entry)
+		if err != nil {
+			return nil, fmt.Errorf("TILECAST_TRUSTED_PROXIES: invalid entry %q", entry)
+		}
+		prefixes = append(prefixes, netip.PrefixFrom(addr, addr.BitLen()))
+	}
+	return prefixes, nil
 }
