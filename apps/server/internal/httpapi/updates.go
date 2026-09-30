@@ -412,9 +412,11 @@ func (s *server) createUpdateDeployment(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	// Screens report a specific platform string (e.g. "fire-tv", "android-tv",
-	// "linux"); a release targets a family. Everything that is not Linux is
-	// treated as Android so future Android form factors stay eligible.
-	rows, err := tx.Query(r.Context(), `SELECT DISTINCT s.id,ps.player_version_code,ps.android_sdk,COALESCE(ps.install_permission_status,'unknown'),COALESCE(s.last_heartbeat_at>now()-interval '15 minutes',false) FROM screens s LEFT JOIN screen_player_status ps ON ps.screen_id=s.id WHERE s.deleted_at IS NULL AND (CASE WHEN s.platform='linux' THEN 'linux' ELSE 'android' END)=$3 AND (s.id=ANY($1) OR EXISTS(SELECT 1 FROM screen_group_memberships m WHERE m.screen_id=s.id AND m.screen_group_id=ANY($2))) ORDER BY s.id`, input.ScreenIDs, input.GroupIDs, platform)
+	// "linux", "windows"); a release targets a family. Windows is its own
+	// family; every other non-Linux platform is treated as Android so future
+	// Android form factors stay eligible. A Windows screen therefore never
+	// receives an Android (APK) or Linux release.
+	rows, err := tx.Query(r.Context(), `SELECT DISTINCT s.id,ps.player_version_code,ps.android_sdk,COALESCE(ps.install_permission_status,'unknown'),COALESCE(s.last_heartbeat_at>now()-interval '15 minutes',false) FROM screens s LEFT JOIN screen_player_status ps ON ps.screen_id=s.id WHERE s.deleted_at IS NULL AND (CASE WHEN s.platform='linux' THEN 'linux' WHEN s.platform='windows' THEN 'windows' ELSE 'android' END)=$3 AND (s.id=ANY($1) OR EXISTS(SELECT 1 FROM screen_group_memberships m WHERE m.screen_id=s.id AND m.screen_group_id=ANY($2))) ORDER BY s.id`, input.ScreenIDs, input.GroupIDs, platform)
 	if err != nil {
 		s.internalError(w, r, err)
 		return
