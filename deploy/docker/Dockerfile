@@ -21,6 +21,9 @@ COPY apps/server/go.mod apps/server/go.sum ./
 RUN go mod download
 COPY apps/server .
 COPY --from=dashboard /src/apps/dashboard/dist/ internal/web/static/
+# Serve the webOS player from the server itself (tracked source of truth),
+# rather than a separately hosted, drift-prone copy on an external domain.
+COPY apps/player-webos/index.html apps/player-webos/app.js apps/player-webos/styles.css apps/player-webos/icon.png internal/web/static/webos/
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/tilecast-server ./cmd/tilecast
 
 FROM alpine:3.24
