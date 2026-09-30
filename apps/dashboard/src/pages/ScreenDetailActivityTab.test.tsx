@@ -93,6 +93,10 @@ function stubApi() {
     proofNote: "Captured from Tilecast Player.",
   });
   vi.spyOn(api, "playlistAssignment").mockResolvedValue(empty);
+  vi.spyOn(api, "presentationOverrides").mockResolvedValue({
+    items: [],
+    total: 0,
+  } as never);
   vi.spyOn(api, "screen").mockResolvedValue(screenRecord as never);
   vi.spyOn(api, "screens").mockResolvedValue({
     items: [screenRecord],
