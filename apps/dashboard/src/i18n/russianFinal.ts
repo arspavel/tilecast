@@ -25,12 +25,14 @@ export const russianFinal: Record<string, string> = {
   "Active hours and power": "Часы работы и питание",
   "Accessibility control": "Управление доступностью",
   "Player updates": "Обновления проигрывателей",
-  "Organization identity, regional formats, and support details.": "Сведения об организации, региональные форматы и контакты поддержки.",
+  "Organization identity, regional formats, and support details.":
+    "Сведения об организации, региональные форматы и контакты поддержки.",
   "Organization identity": "Сведения об организации",
   "Regional formats": "Региональные форматы",
   "Support details": "Контакты поддержки",
   "Organization name": "Название организации",
-  "Name shown throughout Tilecast Studio": "Название, отображаемое во всём Tilecast Studio",
+  "Name shown throughout Tilecast Studio":
+    "Название, отображаемое во всём Tilecast Studio",
   "Short name": "Краткое название",
   "Compact organization name": "Сокращённое название организации",
   "Default timezone": "Часовой пояс по умолчанию",
@@ -50,52 +52,73 @@ export const russianFinal: Record<string, string> = {
   "Need attention": "Требуют внимания",
   "Active schedules": "Активные расписания",
   "Update actions": "Действия с обновлениями",
-  "Live player state, items requiring attention, and what changes next.": "Текущее состояние проигрывателей, проблемы и ближайшие изменения.",
-  "Measured player time spent connected and playing.": "Измеренное время подключения и воспроизведения.",
+  "Live player state, items requiring attention, and what changes next.":
+    "Текущее состояние проигрывателей, проблемы и ближайшие изменения.",
+  "Measured player time spent connected and playing.":
+    "Измеренное время подключения и воспроизведения.",
   "Screens with downtime": "Экраны с простоем",
   "Scheduled backups": "Резервное копирование по расписанию",
-  "Create full backups automatically on a schedule": "Автоматически создавать полные резервные копии по расписанию",
+  "Create full backups automatically on a schedule":
+    "Автоматически создавать полные резервные копии по расписанию",
   "Backup frequency": "Периодичность резервного копирования",
   "Backup day": "День резервного копирования",
-  "Day of the week for weekly backups": "День недели для еженедельных резервных копий",
+  "Day of the week for weekly backups":
+    "День недели для еженедельных резервных копий",
   "Backup time": "Время резервного копирования",
   "Backup timezone": "Часовой пояс резервного копирования",
   "Scheduled backups to keep": "Количество хранимых резервных копий",
-  "Maximum scheduled backup age (days)": "Максимальный срок хранения резервной копии (дни)",
+  "Maximum scheduled backup age (days)":
+    "Максимальный срок хранения резервной копии (дни)",
   "Send notifications": "Отправлять уведомления",
-  "Email needs TILECAST_SMTP_HOST on the server. Without it, notifications stay off and nothing fails.": "Для электронной почты на сервере требуется TILECAST_SMTP_HOST. Без него уведомления останутся выключенными, но ошибок не возникнет.",
+  "Email needs TILECAST_SMTP_HOST on the server. Without it, notifications stay off and nothing fails.":
+    "Для электронной почты на сервере требуется TILECAST_SMTP_HOST. Без него уведомления останутся выключенными, но ошибок не возникнет.",
   "From address": "Адрес отправителя",
-  "Address that notification email is sent from": "Адрес, с которого отправляются уведомления",
+  "Address that notification email is sent from":
+    "Адрес, с которого отправляются уведомления",
   "From name": "Имя отправителя",
-  "Conditions below this severity are recorded in Activity but are not sent": "События ниже этого уровня записываются в журнал, но не отправляются",
+  "Conditions below this severity are recorded in Activity but are not sent":
+    "События ниже этого уровня записываются в журнал, но не отправляются",
   "Daily digest time": "Время ежедневной сводки",
   "Notification timezone": "Часовой пояс уведомлений",
-  "Applies to the digest time and to quiet hours": "Применяется ко времени сводки и периоду тишины",
+  "Applies to the digest time and to quiet hours":
+    "Применяется ко времени сводки и периоду тишины",
   "Quiet hours": "Период тишины",
-  "Holds notifications until quiet hours end. Critical conditions are always sent immediately.": "Откладывает уведомления до окончания периода тишины. Критические уведомления всегда отправляются немедленно.",
+  "Holds notifications until quiet hours end. Critical conditions are always sent immediately.":
+    "Откладывает уведомления до окончания периода тишины. Критические уведомления всегда отправляются немедленно.",
   "Quiet hours start": "Начало периода тишины",
   "Quiet hours end": "Окончание периода тишины",
   "Delivery log retention": "Хранение журнала доставки",
   "Stale Data Source after": "Считать источник данных устаревшим через",
-  "Hours without a successful refresh before a Data Source counts as stale. A weekly calendar tolerates far more than a weather feed.": "Количество часов без успешного обновления, после которого источник считается устаревшим. Для недельного календаря допустим больший срок, чем для прогноза погоды.",
+  "Hours without a successful refresh before a Data Source counts as stale. A weekly calendar tolerates far more than a weather feed.":
+    "Количество часов без успешного обновления, после которого источник считается устаревшим. Для недельного календаря допустим больший срок, чем для прогноза погоды.",
   "Warn about expiring media": "Предупреждать об истечении срока медиа",
-  "How far ahead the content health report lists media that is about to expire": "За сколько дней показывать медиа с приближающимся сроком окончания",
+  "How far ahead the content health report lists media that is about to expire":
+    "За сколько дней показывать медиа с приближающимся сроком окончания",
   "Keep a snapshot history": "Хранить историю снимков",
-  "Stores periodic screen images so you can see what a screen showed earlier. Snapshots are held in the database and are included in every backup.": "Периодически сохраняет изображения экрана, чтобы можно было увидеть показанный ранее контент. Снимки хранятся в базе данных и входят в каждую резервную копию.",
+  "Stores periodic screen images so you can see what a screen showed earlier. Snapshots are held in the database and are included in every backup.":
+    "Периодически сохраняет изображения экрана, чтобы можно было увидеть показанный ранее контент. Снимки хранятся в базе данных и входят в каждую резервную копию.",
   "Capture every": "Делать снимок каждые",
   "Keep snapshots for": "Хранить снимки",
   "Snapshots to keep per screen": "Снимков на один экран",
-  "The oldest are removed once a screen reaches this many, whatever the retention period says": "При достижении этого количества самые старые снимки удаляются независимо от срока хранения",
+  "The oldest are removed once a screen reaches this many, whatever the retention period says":
+    "При достижении этого количества самые старые снимки удаляются независимо от срока хранения",
   "Legacy approval switch": "Устаревший переключатель согласования",
-  "Retained for compatibility. New installations should use the content review policy.": "Сохранён для совместимости. В новых установках используйте политику проверки контента.",
+  "Retained for compatibility. New installations should use the content review policy.":
+    "Сохранён для совместимости. В новых установках используйте политику проверки контента.",
   "Content review policy": "Политика проверки контента",
-  "Choose whether no content, Contributor work, or every publication requires approval.": "Укажите, требуется ли согласование материалов авторов или всех публикаций.",
+  "Choose whether no content, Contributor work, or every publication requires approval.":
+    "Укажите, требуется ли согласование материалов авторов или всех публикаций.",
   "Allow self-approval": "Разрешить самостоятельное согласование",
-  "Allow a reviewer to approve their own submission.": "Разрешить проверяющему согласовывать собственные материалы.",
-  "Automatically publish approved submissions": "Автоматически публиковать согласованные материалы",
-  "Publish immediately or schedule the requested time when a submission is approved.": "Публиковать сразу или в запрошенное время после согласования материала.",
-  "Require multi-factor authentication": "Требовать многофакторную аутентификацию",
-  "Accounts in scope must enroll an authenticator app or a passkey before they can use Tilecast Studio.": "Выбранные учётные записи должны настроить приложение-аутентификатор или ключ доступа перед использованием Tilecast Studio.",
+  "Allow a reviewer to approve their own submission.":
+    "Разрешить проверяющему согласовывать собственные материалы.",
+  "Automatically publish approved submissions":
+    "Автоматически публиковать согласованные материалы",
+  "Publish immediately or schedule the requested time when a submission is approved.":
+    "Публиковать сразу или в запрошенное время после согласования материала.",
+  "Require multi-factor authentication":
+    "Требовать многофакторную аутентификацию",
+  "Accounts in scope must enroll an authenticator app or a passkey before they can use Tilecast Studio.":
+    "Выбранные учётные записи должны настроить приложение-аутентификатор или ключ доступа перед использованием Tilecast Studio.",
   Logo: "Логотип",
   "Square icon": "Квадратный значок",
   "Primary color": "Основной цвет",
@@ -123,9 +146,12 @@ export const russianFinal: Record<string, string> = {
   "Clear website data on restart": "Очищать данные веб-сайта при перезапуске",
   "Show location when identifying": "Показывать расположение при идентификации",
   "Player update channel": "Канал обновлений проигрывателя",
-  "Stable is the hardened default. Beta releases still require an explicit deployment.": "Стабильный канал используется по умолчанию. Бета-версии требуют явного развёртывания.",
-  "Managed Kiosk becomes effective only when Android confirms device-policy capability.": "Управляемый киоск включается только после подтверждения Android возможности управления устройством.",
-  "Android only. Linux players start at boot from a systemd user service, installed per screen from the screen's Reliability tab.": "Только Android. Проигрыватели Linux запускаются при загрузке службой systemd, настраиваемой для каждого экрана на вкладке «Надёжность».",
+  "Stable is the hardened default. Beta releases still require an explicit deployment.":
+    "Стабильный канал используется по умолчанию. Бета-версии требуют явного развёртывания.",
+  "Managed Kiosk becomes effective only when Android confirms device-policy capability.":
+    "Управляемый киоск включается только после подтверждения Android возможности управления устройством.",
+  "Android only. Linux players start at boot from a systemd user service, installed per screen from the screen's Reliability tab.":
+    "Только Android. Проигрыватели Linux запускаются при загрузке службой systemd, настраиваемой для каждого экрана на вкладке «Надёжность».",
   "Immersive fullscreen": "Полноэкранный режим",
   "Foreground watchdog": "Контроль активности приложения",
   "Playback stall threshold": "Порог зависания воспроизведения",
@@ -137,27 +163,38 @@ export const russianFinal: Record<string, string> = {
   "Start time": "Время начала",
   "End time": "Время окончания",
   "Startup grace": "Задержка после запуска",
-  "Android Power Assist only; Linux startup and process recovery are managed by systemd.": "Только Android Power Assist; запуск и восстановление процессов Linux управляются systemd.",
+  "Android Power Assist only; Linux startup and process recovery are managed by systemd.":
+    "Только Android Power Assist; запуск и восстановление процессов Linux управляются systemd.",
   "Shutdown preparation": "Подготовка к выключению",
-  "Android Power Assist and status reporting only; Linux uses its systemd/display-control integration.": "Только Android Power Assist и отчёты о состоянии; Linux использует интеграцию systemd и управления дисплеем.",
+  "Android Power Assist and status reporting only; Linux uses its systemd/display-control integration.":
+    "Только Android Power Assist и отчёты о состоянии; Linux использует интеграцию systemd и управления дисплеем.",
   "Keep screen awake during active hours": "Не выключать экран в часы работы",
-  "Android active-hours wake policy; Linux uses linux_kiosk.prevent_display_sleep for the host display-sleep blocker.": "Политика бодрствования Android в часы работы; Linux использует linux_kiosk.prevent_display_sleep.",
-  "Request sleep outside active hours": "Запрашивать спящий режим вне часов работы",
-  "Android Power Assist only; Linux shows its configured branded off-hours surface and does not request operating-system sleep.": "Только Android Power Assist; Linux показывает настроенный экран вне рабочих часов и не переводит ОС в спящий режим.",
+  "Android active-hours wake policy; Linux uses linux_kiosk.prevent_display_sleep for the host display-sleep blocker.":
+    "Политика бодрствования Android в часы работы; Linux использует linux_kiosk.prevent_display_sleep.",
+  "Request sleep outside active hours":
+    "Запрашивать спящий режим вне часов работы",
+  "Android Power Assist only; Linux shows its configured branded off-hours surface and does not request operating-system sleep.":
+    "Только Android Power Assist; Linux показывает настроенный экран вне рабочих часов и не переводит ОС в спящий режим.",
   "Outside active hours": "Вне часов работы",
-  "Choose what remains visible when the player is outside active hours and the display does not sleep.": "Выберите, что показывать вне часов работы, если дисплей не переходит в спящий режим.",
+  "Choose what remains visible when the player is outside active hours and the display does not sleep.":
+    "Выберите, что показывать вне часов работы, если дисплей не переходит в спящий режим.",
   "Custom text": "Собственный текст",
-  "Centered text shown outside active hours. When empty, Tilecast uses the branding footer text.": "Текст по центру экрана вне часов работы. Если поле пустое, используется текст из оформления.",
+  "Centered text shown outside active hours. When empty, Tilecast uses the branding footer text.":
+    "Текст по центру экрана вне часов работы. Если поле пустое, используется текст из оформления.",
   "Lock task": "Закрепление приложения",
   "Block overlays where supported": "Блокировать наложения, где поддерживается",
   "Allow Settings during maintenance": "Разрешать настройки при обслуживании",
   "Maintenance session duration": "Длительность сеанса обслуживания",
   "Kiosk fullscreen": "Полноэкранный киоск",
-  "Keeps Tilecast in a frameless fullscreen kiosk window on Linux. TILECAST_WINDOWED=1 remains a local development override.": "Запускает Tilecast в полноэкранном окне без рамки в Linux. TILECAST_WINDOWED=1 остаётся локальной настройкой разработки.",
+  "Keeps Tilecast in a frameless fullscreen kiosk window on Linux. TILECAST_WINDOWED=1 remains a local development override.":
+    "Запускает Tilecast в полноэкранном окне без рамки в Linux. TILECAST_WINDOWED=1 остаётся локальной настройкой разработки.",
   "Prevent display sleep": "Запретить отключение дисплея",
-  "Asks the Linux desktop session to keep the display awake while Tilecast Player is running.": "Запрещает отключение дисплея Linux во время работы Tilecast Player.",
-  "Accessibility Control Assist": "Помощник управления специальных возможностей",
-  "Hardened players request this behavior by default, but the Android service still requires deliberate local enablement.": "Защищённые проигрыватели запрашивают эту функцию по умолчанию, но службу Android необходимо включить на устройстве вручную.",
+  "Asks the Linux desktop session to keep the display awake while Tilecast Player is running.":
+    "Запрещает отключение дисплея Linux во время работы Tilecast Player.",
+  "Accessibility Control Assist":
+    "Помощник управления специальных возможностей",
+  "Hardened players request this behavior by default, but the Android service still requires deliberate local enablement.":
+    "Защищённые проигрыватели запрашивают эту функцию по умолчанию, но службу Android необходимо включить на устройстве вручную.",
   "Return delay": "Задержка возврата",
   "Maintenance applications": "Приложения обслуживания",
   "Pause during player updates": "Приостанавливать во время обновлений",
@@ -213,13 +250,17 @@ export const russianFinal: Record<string, string> = {
   "Remember filters": "Запоминать фильтры",
   "Hide completed uploads after": "Скрывать завершённые загрузки через",
   "Notify me": "Уведомлять меня",
-  "Immediate sends each condition as it happens. Digest collects them into one daily message.": "Немедленный режим отправляет каждое событие сразу. Сводка объединяет их в одно ежедневное сообщение.",
+  "Immediate sends each condition as it happens. Digest collects them into one daily message.":
+    "Немедленный режим отправляет каждое событие сразу. Сводка объединяет их в одно ежедневное сообщение.",
   "Send to": "Отправлять на адрес",
-  "Your email address. Notifications are not sent until this is set.": "Ваш адрес электронной почты. Пока он не задан, уведомления не отправляются.",
+  "Your email address. Notifications are not sent until this is set.":
+    "Ваш адрес электронной почты. Пока он не задан, уведомления не отправляются.",
   "Screen problems": "Проблемы экранов",
-  "A screen stops reporting, playback fails, or a Player enters safe mode": "Экран перестал отвечать, произошёл сбой воспроизведения или проигрыватель перешёл в безопасный режим",
+  "A screen stops reporting, playback fails, or a Player enters safe mode":
+    "Экран перестал отвечать, произошёл сбой воспроизведения или проигрыватель перешёл в безопасный режим",
   "Content problems": "Проблемы контента",
-  "A Data Source is serving stale data, or a playlist has nothing available to play": "Источник данных устарел или в плейлисте нет доступного контента",
+  "A Data Source is serving stale data, or a playlist has nothing available to play":
+    "Источник данных устарел или в плейлисте нет доступного контента",
   Backups: "Резервные копии",
   "Standard reliability": "Стандартная надёжность",
   "First-party cookies": "Основные cookie",
@@ -273,7 +314,8 @@ export const russianFinal: Record<string, string> = {
   "Security and operational history": "Безопасность и история работы",
   "Cleanup periods": "Сроки очистки",
   "Diagnostic limits": "Ограничения диагностики",
-  "Automatic backup schedule": "Расписание автоматического резервного копирования",
+  "Automatic backup schedule":
+    "Расписание автоматического резервного копирования",
   "Scheduled backup retention": "Хранение резервных копий по расписанию",
   Delivery: "Доставка",
   Timing: "Время",
@@ -320,14 +362,16 @@ export const russianFinal: Record<string, string> = {
   "Leave without saving?": "Выйти без сохранения?",
   Stay: "Остаться",
   Leave: "Выйти",
-  "This view has unsaved changes.": "В этом представлении есть несохранённые изменения.",
+  "This view has unsaved changes.":
+    "В этом представлении есть несохранённые изменения.",
   "View not saved": "Представление не сохранено",
   "View name": "Название представления",
   "Included states": "Включённые состояния",
   "Output fields & order": "Поля вывода и порядок",
   "Add an output field": "Добавить поле вывода",
   "Add a field…": "Добавить поле…",
-  "All available fields (none selected).": "Все доступные поля (ничего не выбрано).",
+  "All available fields (none selected).":
+    "Все доступные поля (ничего не выбрано).",
   "Field filters": "Фильтры полей",
   "Field…": "Поле…",
   "Sort field": "Поле сортировки",
@@ -337,7 +381,8 @@ export const russianFinal: Record<string, string> = {
   "Add sort rule": "Добавить правило сортировки",
   "Time window": "Временной интервал",
   "Save view": "Сохранить представление",
-  "No records match this view.": "Нет записей, соответствующих этому представлению.",
+  "No records match this view.":
+    "Нет записей, соответствующих этому представлению.",
   Average: "Среднее",
   Peak: "Пиковое",
   "Too loud": "Слишком громко",
@@ -350,7 +395,8 @@ export const russianFinal: Record<string, string> = {
   "10-second records": "10-секундные записи",
   "1-minute summaries": "Поминутные сводки",
   "Daily summaries": "Ежедневные сводки",
-  "Export the selected range and screen": "Экспортировать выбранный период и экран",
+  "Export the selected range and screen":
+    "Экспортировать выбранный период и экран",
   "Export CSV": "Экспорт CSV",
   "History could not be loaded.": "Не удалось загрузить историю.",
   Combining: "Объединяется",
@@ -359,7 +405,8 @@ export const russianFinal: Record<string, string> = {
   "No measurements to draw yet.": "Пока нет измерений для графика.",
   "Daily comparison": "Сравнение по дням",
   "No days with measurements yet.": "Пока нет дней с измерениями.",
-  "The workflow has unsaved changes.": "В процессе есть несохранённые изменения.",
+  "The workflow has unsaved changes.":
+    "В процессе есть несохранённые изменения.",
   "Workflow not saved": "Процесс не сохранён",
   "Fix these before saving": "Исправьте перед сохранением",
   "Add state": "Добавить состояние",
@@ -374,13 +421,15 @@ export const russianFinal: Record<string, string> = {
   "Move transition up": "Переместить переход вверх",
   "Move transition down": "Переместить переход вниз",
   "Delete transition": "Удалить переход",
-  "This change affects output or submission paths": "Это изменение влияет на вывод или маршруты отправки",
+  "This change affects output or submission paths":
+    "Это изменение влияет на вывод или маршруты отправки",
   "Review again": "Проверить ещё раз",
   "Save anyway": "Всё равно сохранить",
   "Save workflow": "Сохранить процесс",
   Action: "Действие",
   "Select a Layout": "Выберите макет",
-  "Only published Layouts can be assigned.": "Можно назначать только опубликованные макеты.",
+  "Only published Layouts can be assigned.":
+    "Можно назначать только опубликованные макеты.",
   "Enable playback": "Включить воспроизведение",
   "Disable playback": "Отключить воспроизведение",
   Command: "Команда",
@@ -413,7 +462,8 @@ export const russianFinal: Record<string, string> = {
   "Back to the form": "Вернуться к форме",
   "Submission state": "Состояние материала",
   "Loading submissions…": "Загрузка материалов…",
-  "No submissions match this view.": "Нет материалов, соответствующих этому представлению.",
+  "No submissions match this view.":
+    "Нет материалов, соответствующих этому представлению.",
   "Draft revision": "Черновая версия",
   "Published revision": "Опубликованная версия",
   "Snapshot SHA-256": "SHA-256 снимка",
@@ -430,7 +480,8 @@ export const russianFinal: Record<string, string> = {
   "Add the first network": "Добавить первую сеть",
   "Assigned Linux players": "Назначенные проигрыватели Linux",
   "Loading Linux players…": "Загрузка проигрывателей Linux…",
-  "No Linux players are available for assignment.": "Нет проигрывателей Linux, доступных для назначения.",
+  "No Linux players are available for assignment.":
+    "Нет проигрывателей Linux, доступных для назначения.",
   "Could not load this network.": "Не удалось загрузить эту сеть.",
   "Save network": "Сохранить сеть",
   "Loading form…": "Загрузка формы…",
@@ -463,15 +514,18 @@ export const russianFinal: Record<string, string> = {
   "Direct dependencies": "Прямые зависимости",
   "Direct consumers": "Прямые потребители",
   "Checking content health…": "Проверка состояния контента…",
-  "Content health could not be loaded.": "Не удалось загрузить состояние контента.",
+  "Content health could not be loaded.":
+    "Не удалось загрузить состояние контента.",
   "Nothing needs attention.": "Всё в порядке.",
   "Playlists with nothing to play": "Плейлисты без доступного контента",
   "Nothing available": "Нет доступного контента",
-  "Data Sources that are not refreshing": "Источники данных, которые не обновляются",
+  "Data Sources that are not refreshing":
+    "Источники данных, которые не обновляются",
   "Media expiring soon": "Срок действия медиа скоро истечёт",
   "Screens with nothing assigned": "Экраны без назначенного контента",
   "No playlist": "Нет плейлиста",
-  "Only the Owner may manage integration tokens.": "Только владелец может управлять токенами интеграций.",
+  "Only the Owner may manage integration tokens.":
+    "Только владелец может управлять токенами интеграций.",
   "Copy this token now.": "Скопируйте этот токен сейчас.",
   "Shown once.": "Он отображается только один раз.",
   "Loading tokens…": "Загрузка токенов…",
@@ -482,10 +536,13 @@ export const russianFinal: Record<string, string> = {
   "Expires on": "Действует до",
   "Limit to Data Sources": "Ограничить источниками данных",
   "Loading Data Sources…": "Загрузка источников данных…",
-  "No Manual Table Data Sources exist yet.": "Источников типа «Ручная таблица» пока нет.",
+  "No Manual Table Data Sources exist yet.":
+    "Источников типа «Ручная таблица» пока нет.",
   "Presentation Network": "Сеть для презентаций",
-  "Loading Presentation Network status…": "Загрузка состояния сети для презентаций…",
-  "Could not load Presentation Network status.": "Не удалось загрузить состояние сети для презентаций.",
+  "Loading Presentation Network status…":
+    "Загрузка состояния сети для презентаций…",
+  "Could not load Presentation Network status.":
+    "Не удалось загрузить состояние сети для презентаций.",
   "Assigned network": "Назначенная сеть",
   "Player status": "Состояние проигрывателя",
   "Wi-Fi adapter": "Адаптер Wi-Fi",
@@ -516,7 +573,8 @@ export const russianFinal: Record<string, string> = {
   "No screens to measure": "Нет экранов для измерения",
   "No player state recorded yet": "Состояние проигрывателя ещё не записано",
   "No comparable earlier window": "Нет сопоставимого предыдущего периода",
-  "Unchanged from the previous window": "Без изменений относительно предыдущего периода",
+  "Unchanged from the previous window":
+    "Без изменений относительно предыдущего периода",
   "Submitted by": "Отправил",
   "Action failed": "Не удалось выполнить действие",
   "Display metadata": "Метаданные показа",
@@ -580,14 +638,16 @@ export const russianFinal: Record<string, string> = {
   "cached records": "записей в кеше",
   "Data Source unavailable": "Источник данных недоступен",
   "Back to Data Sources": "Вернуться к источникам данных",
-  "Recent Player-confirmed playback and technical screen events.": "Недавнее подтверждённое проигрывателем воспроизведение и технические события экрана.",
+  "Recent Player-confirmed playback and technical screen events.":
+    "Недавнее подтверждённое проигрывателем воспроизведение и технические события экрана.",
   "Open filtered Activity": "Открыть отфильтрованный журнал",
   "Loading screen Activity…": "Загрузка событий экрана…",
   "Current presentation": "Текущая презентация",
   "Last manifest activation": "Последняя активация манифеста",
   "Playback gaps": "Пропуски воспроизведения",
   "Recent proof of play": "Недавние подтверждения воспроизведения",
-  "No proof of play has been reported.": "Подтверждений воспроизведения ещё нет.",
+  "No proof of play has been reported.":
+    "Подтверждений воспроизведения ещё нет.",
   "Recent technical events": "Недавние технические события",
   "No technical events have been reported.": "Технических событий ещё нет.",
   "Could not load outputs": "Не удалось загрузить выходные данные",
@@ -631,7 +691,8 @@ export const russianFinal: Record<string, string> = {
   "Widget unavailable": "Виджет недоступен",
   "Back to Widgets": "Вернуться к виджетам",
   "Cancel deployment": "Отменить развёртывание",
-  "Screen statuses could not be loaded.": "Не удалось загрузить состояния экранов.",
+  "Screen statuses could not be loaded.":
+    "Не удалось загрузить состояния экранов.",
   Rollout: "Развёртывание",
   "Rollout paused": "Развёртывание приостановлено",
   "Search screens": "Поиск экранов",

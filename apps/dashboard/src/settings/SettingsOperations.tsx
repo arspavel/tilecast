@@ -694,7 +694,7 @@ export function PlayerUpdatesPanel({
         )}
         {managedPlatform && showUpload && (
           <PlayerReleaseUpload
-            platform={platform as PlayerPlatform}
+            platform={platform}
             csrfToken={auth.status?.csrfToken ?? ""}
             onImported={() => {
               void client.invalidateQueries({ queryKey: ["player-releases"] });
@@ -734,68 +734,68 @@ export function PlayerUpdatesPanel({
         </div>
         {releaseItems.length === 0 ? (
           <div className="player-updates__empty">
-            {releases.isLoading
-              ? "Loading releases…"
-              : releases.error
-                ? `Releases could not be loaded. ${mutationError(releases.error)}`
-                : platform === "windows" ? (
-                  <>
-                    <strong>Tilecast Player для Windows 0.18.0</strong>
-                    <p>
-                      Windows-клиент устанавливается локально. Удалённое
-                      обновление будет добавлено после реализации безопасной
-                      замены работающего приложения.
-                    </p>
-                    <a
-                      className="button button--primary"
-                      href="https://github.com/arspavel/tilecast/releases/download/player-windows-v0.18.0/tilecast-player-windows-0.18.0-x64.exe"
-                    >
-                      <Download size={16} aria-hidden="true" />
-                      Скачать EXE
-                    </a>
-                  </>
-                ) : platform === "webos" ? (
-                  <>
-                    <strong>Tilecast Player для LG webOS Signage</strong>
-                    <p>
-                      Рекомендуемый вариант — запуск плеера через URL. Он не
-                      требует установки IPK и автоматически получает обновления
-                      с сервера Tilecast.
-                    </p>
-                    <p>
-                      На панели откройте <strong>Настройка Ez → Play via URL</strong>{" "}
-                      и укажите адрес:
-                    </p>
-                    <code className="technical">
-                      {`${window.location.origin}/webos/`}
-                    </code>
-                    <div className="settings-inline-actions player-updates__webos-actions">
-                      <a
-                        className="button button--primary"
-                        href={`${window.location.origin}/webos/`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        <ExternalLink size={16} aria-hidden="true" />
-                        Открыть webOS-плеер
-                      </a>
-                      <a
-                        className="button button--secondary"
-                        href="https://github.com/arspavel/tilecast/releases/download/player-webos-v0.1.1/org.tilecast.player.webos_0.1.1_all.ipk"
-                      >
-                        <Download size={16} aria-hidden="true" />
-                        Скачать IPK 0.1.1
-                      </a>
-                    </div>
-                    <p>
-                      Установка IPK через SI Server или USB может потребовать
-                      сертификат подписи LG webOS Signage. Удалённое обновление
-                      webOS-плеера пока не поддерживается.
-                    </p>
-                  </>
-                ) : (
-                  `No ${platformLabel} Player releases have been imported. Tilecast checks GitHub automatically; use Sync from GitHub to retry immediately.`
-                )}
+            {releases.isLoading ? (
+              "Loading releases…"
+            ) : releases.error ? (
+              `Releases could not be loaded. ${mutationError(releases.error)}`
+            ) : platform === "windows" ? (
+              <>
+                <strong>Tilecast Player для Windows 0.18.0</strong>
+                <p>
+                  Windows-клиент устанавливается локально. Удалённое обновление
+                  будет добавлено после реализации безопасной замены работающего
+                  приложения.
+                </p>
+                <a
+                  className="button button--primary"
+                  href="https://github.com/arspavel/tilecast/releases/download/player-windows-v0.18.0/tilecast-player-windows-0.18.0-x64.exe"
+                >
+                  <Download size={16} aria-hidden="true" />
+                  Скачать EXE
+                </a>
+              </>
+            ) : platform === "webos" ? (
+              <>
+                <strong>Tilecast Player для LG webOS Signage</strong>
+                <p>
+                  Рекомендуемый вариант — запуск плеера через URL. Он не требует
+                  установки IPK и автоматически получает обновления с сервера
+                  Tilecast.
+                </p>
+                <p>
+                  На панели откройте{" "}
+                  <strong>Настройка Ez → Play via URL</strong> и укажите адрес:
+                </p>
+                <code className="technical">
+                  {`${window.location.origin}/webos/`}
+                </code>
+                <div className="settings-inline-actions player-updates__webos-actions">
+                  <a
+                    className="button button--primary"
+                    href={`${window.location.origin}/webos/`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink size={16} aria-hidden="true" />
+                    Открыть webOS-плеер
+                  </a>
+                  <a
+                    className="button button--secondary"
+                    href="https://github.com/arspavel/tilecast/releases/download/player-webos-v0.1.1/org.tilecast.player.webos_0.1.1_all.ipk"
+                  >
+                    <Download size={16} aria-hidden="true" />
+                    Скачать IPK 0.1.1
+                  </a>
+                </div>
+                <p>
+                  Установка IPK через SI Server или USB может потребовать
+                  сертификат подписи LG webOS Signage. Удалённое обновление
+                  webOS-плеера пока не поддерживается.
+                </p>
+              </>
+            ) : (
+              `No ${platformLabel} Player releases have been imported. Tilecast checks GitHub automatically; use Sync from GitHub to retry immediately.`
+            )}
           </div>
         ) : (
           <>
@@ -884,34 +884,34 @@ export function PlayerUpdatesPanel({
                                 </a>
                               )}
                             {owner && readiness.cacheable && (
-                                <ReleaseCacheButton
-                                  downloading={
-                                    cache.isPending &&
-                                    cache.variables === release.id
-                                  }
-                                  onDownload={() => cache.mutate(release.id)}
-                                />
+                              <ReleaseCacheButton
+                                downloading={
+                                  cache.isPending &&
+                                  cache.variables === release.id
+                                }
+                                onDownload={() => cache.mutate(release.id)}
+                              />
                             )}
                             {owner && purgeAction(release) && (
-                                <Button
-                                  variant="quiet"
-                                  compact
-                                  title={
-                                    purgeAction(release) === "delete"
-                                      ? "Delete this release and free its cached file"
-                                      : "Free the cached file and keep the deployment history"
-                                  }
-                                  loading={
-                                    purge.isPending &&
-                                    purge.variables?.id === release.id
-                                  }
-                                  onClick={() => setPurging(release)}
-                                >
-                                  <Trash2 size={15} aria-hidden="true" />
-                                  {purgeAction(release) === "delete"
-                                    ? "Delete"
-                                    : "Free file"}
-                                </Button>
+                              <Button
+                                variant="quiet"
+                                compact
+                                title={
+                                  purgeAction(release) === "delete"
+                                    ? "Delete this release and free its cached file"
+                                    : "Free the cached file and keep the deployment history"
+                                }
+                                loading={
+                                  purge.isPending &&
+                                  purge.variables?.id === release.id
+                                }
+                                onClick={() => setPurging(release)}
+                              >
+                                <Trash2 size={15} aria-hidden="true" />
+                                {purgeAction(release) === "delete"
+                                  ? "Delete"
+                                  : "Free file"}
+                              </Button>
                             )}
                           </div>
                         </td>
