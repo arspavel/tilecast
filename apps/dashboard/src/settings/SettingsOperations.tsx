@@ -767,12 +767,12 @@ export function PlayerUpdatesPanel({
                       и укажите адрес:
                     </p>
                     <code className="technical">
-                      https://arspavel.ru/tilecast/webos/app/index.html?build=012
+                      {`${window.location.origin}/webos/index.html`}
                     </code>
                     <div className="settings-inline-actions player-updates__webos-actions">
                       <a
                         className="button button--primary"
-                        href="https://arspavel.ru/tilecast/webos/app/index.html?build=012"
+                        href={`${window.location.origin}/webos/index.html`}
                         target="_blank"
                         rel="noreferrer"
                       >
