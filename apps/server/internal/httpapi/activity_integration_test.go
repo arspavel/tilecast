@@ -837,3 +837,40 @@ func TestScreenTimelineMergesEverySource(t *testing.T) {
 		}
 	})
 }
+
+func TestAuditContributorSeesContentOnly(t *testing.T) {
+	withActivityDatabase(t, func(env activityTestEnvironment) {
+		if _, err := env.pool.Exec(context.Background(), `INSERT INTO audit_logs(id,user_id,action,resource_type,resource_id,resource_name,result,summary) VALUES($1,$2,'layouts.published','layout',$3,'Morning Layout','success','published layout')`, uuid.New(), env.owner.User.ID, uuid.NewString()); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := env.pool.Exec(context.Background(), `INSERT INTO audit_logs(id,user_id,action,resource_type,result,summary) VALUES($1,$2,'auth.login','session','success','signed in')`, uuid.New(), env.owner.User.ID); err != nil {
+			t.Fatal(err)
+		}
+		contributor := auth.Session{User: auth.User{ID: uuid.New(), Role: "contributor", Active: true}}
+		request := httptest.NewRequest(http.MethodGet, "/api/v1/activity/audit", nil)
+		request = request.WithContext(context.WithValue(request.Context(), sessionContextKey, contributor))
+		response := httptest.NewRecorder()
+		env.server.listAuditActivity(response, request)
+		if response.Code != http.StatusOK {
+			t.Fatalf("audit status=%d body=%s", response.Code, response.Body.String())
+		}
+		var envelope struct {
+			Data auditActivityPage `json:"data"`
+		}
+		if err := json.Unmarshal(response.Body.Bytes(), &envelope); err != nil {
+			t.Fatal(err)
+		}
+		sawContent := false
+		for _, item := range envelope.Data.Items {
+			if item.ResourceType == "session" || item.Action == "auth.login" {
+				t.Fatalf("contributor saw non-content audit entry: %#v", item)
+			}
+			if item.ResourceType == "layout" {
+				sawContent = true
+			}
+		}
+		if !sawContent {
+			t.Fatalf("contributor did not see the content audit entry: %s", response.Body.String())
+		}
+	})
+}
