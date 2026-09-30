@@ -9,6 +9,7 @@ import {
 import { russianCore } from "./russianCore";
 import { russianExtended } from "./russianExtended";
 import { russianFinal } from "./russianFinal";
+import { russianAuto } from "./russianAuto";
 
 export type AppLanguage = "en" | "ru";
 
@@ -182,6 +183,7 @@ const russian: Record<string, string> = {
   No: "Нет",
   Never: "Никогда",
   None: "Нет",
+  ...russianAuto,
   ...russianCore,
   ...russianExtended,
   ...russianFinal,
@@ -232,7 +234,8 @@ function translateEnglish(english: string): string {
   if (match) return `Открыть ${match[1]}`;
 
   match = english.match(/^Configure (.+) for Tilecast\.$/);
-  if (match) return `Настройте параметр «${translateEnglish(match[1]!)}» для Tilecast.`;
+  if (match)
+    return `Настройте параметр «${translateEnglish(match[1]!)}» для Tilecast.`;
 
   match = english.match(/^(\d+) of (\d+) selected$/);
   if (match) return `Выбрано ${match[1]} из ${match[2]}`;
