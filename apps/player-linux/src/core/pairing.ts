@@ -62,14 +62,14 @@ export async function loadOrCreateInstallationId(
 export async function loadCredential(
   store: StateStore,
 ): Promise<CredentialRecord | null> {
-  return store.readJson<CredentialRecord>(CREDENTIAL_FILE);
+  return store.readSecretJson<CredentialRecord>(CREDENTIAL_FILE);
 }
 
 export async function saveCredential(
   store: StateStore,
   record: CredentialRecord,
 ): Promise<void> {
-  await store.writeJson(CREDENTIAL_FILE, record);
+  await store.writeSecretJson(CREDENTIAL_FILE, record);
 }
 
 /** Only call after the server confirmed the credential invalid/revoked. */

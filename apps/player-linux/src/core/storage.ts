@@ -13,6 +13,35 @@ import * as fsSync from "fs";
 import * as path from "path";
 import * as os from "os";
 import { randomUUID } from "crypto";
+import { logger } from "./log";
+
+const log = logger("storage");
+
+/**
+ * Encrypts and decrypts a bearer secret at rest. The Electron main process
+ * backs this with safeStorage (DPAPI on Windows, Keychain on macOS, the
+ * platform keyring on Linux); tests and unpackaged runs may pass none, in
+ * which case secrets fall back to plaintext.
+ */
+export interface CredentialCipher {
+  available(): boolean;
+  encrypt(plaintext: string): Buffer;
+  decrypt(data: Buffer): string;
+}
+
+interface SecretEnvelope {
+  v: number;
+  enc: string;
+}
+
+function isSecretEnvelope(value: unknown): value is SecretEnvelope {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { enc?: unknown }).enc === "string" &&
+    typeof (value as { v?: unknown }).v === "number"
+  );
+}
 
 export function defaultDataDir(): string {
   if (process.platform === "win32") {
@@ -29,7 +58,10 @@ export function defaultDataDir(): string {
 }
 
 export class StateStore {
-  constructor(readonly dataDir: string) {}
+  constructor(
+    readonly dataDir: string,
+    private readonly cipher?: CredentialCipher,
+  ) {}
 
   async init(): Promise<void> {
     await fs.mkdir(this.dataDir, { recursive: true, mode: 0o700 });
@@ -94,6 +126,62 @@ export class StateStore {
     } catch {
       // Directory fsync is best-effort (not supported on all filesystems).
     }
+  }
+
+  /**
+   * Read a secret written by writeSecretJson. Encrypted-at-rest records are
+   * decrypted with the configured cipher; a legacy plaintext record is
+   * returned and, when a cipher is available, transparently migrated to
+   * encrypted form. An encrypted record with no cipher, or one that fails to
+   * decrypt, is treated as absent so the caller re-establishes it.
+   */
+  async readSecretJson<T>(name: string): Promise<T | null> {
+    const stored = await this.readJson<SecretEnvelope | T>(name);
+    if (stored === null) {
+      return null;
+    }
+    if (isSecretEnvelope(stored)) {
+      if (!this.cipher?.available()) {
+        return null;
+      }
+      try {
+        const plaintext = this.cipher.decrypt(
+          Buffer.from(stored.enc, "base64"),
+        );
+        return JSON.parse(plaintext) as T;
+      } catch {
+        try {
+          await fs.rename(
+            this.filePath(name),
+            this.filePath(name + ".corrupt"),
+          );
+        } catch {
+          // Treat as missing.
+        }
+        return null;
+      }
+    }
+    // Legacy plaintext record: migrate it to encrypted-at-rest when possible.
+    if (this.cipher?.available()) {
+      await this.writeSecretJson(name, stored);
+    }
+    return stored as T;
+  }
+
+  /**
+   * Persist a bearer secret, encrypting it at rest when a cipher is available.
+   * Without one (e.g. a headless Linux box with no keyring) it falls back to
+   * plaintext so the player still runs, and records that it did so.
+   */
+  async writeSecretJson(name: string, value: unknown): Promise<void> {
+    if (this.cipher?.available()) {
+      const enc = this.cipher.encrypt(JSON.stringify(value)).toString("base64");
+      const envelope: SecretEnvelope = { v: 1, enc };
+      await this.writeJson(name, envelope);
+      return;
+    }
+    log.warn("storing secret without encryption at rest", { name });
+    await this.writeJson(name, value);
   }
 
   async delete(name: string): Promise<void> {

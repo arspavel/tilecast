@@ -16,6 +16,7 @@ import {
   net,
   powerSaveBlocker,
   protocol,
+  safeStorage,
   screen,
   session,
   type Session,
@@ -32,7 +33,11 @@ import {
 } from "../core/outside-hours";
 import { PlayerRuntime, type Presentation } from "../core/player";
 import type { ManifestPlugin } from "../core/types";
-import { StateStore, defaultDataDir } from "../core/storage";
+import {
+  StateStore,
+  defaultDataDir,
+  type CredentialCipher,
+} from "../core/storage";
 import { normalizeServerUrl } from "../core/server-url";
 import { applyLowEndTuning } from "./hardware";
 import { LanDiscovery, type DiscoveredServer } from "./discovery";
@@ -869,7 +874,21 @@ async function startRuntime(serverUrl: string): Promise<void> {
 
 app.whenReady().then(async () => {
   configureWindowsAutostart();
-  store = new StateStore(process.env.TILECAST_DATA_DIR ?? defaultDataDir());
+  const credentialCipher: CredentialCipher = {
+    available: () => {
+      try {
+        return safeStorage.isEncryptionAvailable();
+      } catch {
+        return false;
+      }
+    },
+    encrypt: (plaintext) => safeStorage.encryptString(plaintext),
+    decrypt: (data) => safeStorage.decryptString(data),
+  };
+  store = new StateStore(
+    process.env.TILECAST_DATA_DIR ?? defaultDataDir(),
+    credentialCipher,
+  );
   await store.init();
 
   // Keep the off-hours overlay in sync even when a policy changes while the
