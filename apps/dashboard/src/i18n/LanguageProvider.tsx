@@ -9,6 +9,7 @@ import {
 import { russianCore } from "./russianCore";
 import { russianExtended } from "./russianExtended";
 import { russianFinal } from "./russianFinal";
+import { russianAuto } from "./russianAuto";
 
 export type AppLanguage = "en" | "ru";
 
@@ -182,6 +183,7 @@ const russian: Record<string, string> = {
   No: "Нет",
   Never: "Никогда",
   None: "Нет",
+  ...russianAuto,
   ...russianCore,
   ...russianExtended,
   ...russianFinal,
