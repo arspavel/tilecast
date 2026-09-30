@@ -380,7 +380,18 @@
     stage.appendChild(video);
     var promise = video.play();
     if (promise && promise.catch) promise.catch(function () { video.muted = true; video.play(); });
-    armNext(duration);
+    // A video plays to its natural end (video.onended). Only cut it short when
+    // the playlist item sets an explicit positive duration; the generic default
+    // must never truncate and restart a longer video.
+    var cap = Number(item.durationMs);
+    if (isFinite(cap) && cap > 0) {
+      armNext(cap);
+    } else {
+      clearTimeout(state.itemTimer);
+      state.itemTimer = setTimeout(function () {
+        if (state.playbackState !== "playing") itemFailed("Видео не запустилось", 10000);
+      }, 30000);
+    }
   }
 
   function itemHealthy() {
