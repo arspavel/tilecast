@@ -32,7 +32,6 @@ export const russianExtended: Record<string, string> = {
   "Configured behavior is reported separately from capabilities confirmed by this device. Platform-specific controls appear only when the player reports support.":
     "Настроенное поведение показывается отдельно от возможностей, подтверждённых устройством. Элементы управления для конкретной платформы отображаются только при наличии поддержки.",
   "Create new location": "Создать местоположение",
-  Current: "Текущее",
   "Current player state and the settings that affect it.":
     "Текущее состояние проигрывателя и влияющие на него настройки.",
   "Description (optional)": "Описание (необязательно)",
@@ -160,7 +159,6 @@ export const russianExtended: Record<string, string> = {
   "Each asset lives in one folder. Use folders for broad areas like buildings or departments.":
     "Каждый файл находится в одной папке. Используйте папки для крупных разделов, например зданий или отделов.",
   "Expires at": "Доступно до",
-  "Failure behavior": "Действие при ошибке",
   "Fallback image": "Резервное изображение",
   "First- and third-party": "Собственные и сторонние",
   "First-party only": "Только собственные",
@@ -532,7 +530,6 @@ export const russianExtended: Record<string, string> = {
   days: "дней",
   hours: "часов",
   minutes: "минут",
-  "Accessibility control": "Управление доступностью",
   "Active hours and power": "Часы работы и питание",
   "Advanced details": "Дополнительные сведения",
   "Automatic return behavior and safe maintenance exclusions.":
@@ -545,7 +542,6 @@ export const russianExtended: Record<string, string> = {
     "Часы работы, запросы сна и резервный чёрный экран.",
   "Overridden only": "Только переопределённые",
   "Player settings saved.": "Настройки проигрывателя сохранены.",
-  "Reliability and kiosk": "Надёжность и режим киоска",
   "Reset all overrides": "Сбросить все переопределения",
   Revert: "Вернуть",
   "Screen-specific update download and installation behavior.":
@@ -737,8 +733,6 @@ export const russianExtended: Record<string, string> = {
     "Выберите поле подключённых данных, которое предоставляет это значение.",
   Colors: "Цвета",
   "Column presentation": "Отображение столбцов",
-  Comfortable: "Удобный",
-  Compact: "Компактный",
   "Completion behavior": "Действие по завершении",
   "Completion text": "Текст завершения",
   "Content and behavior": "Контент и поведение",
@@ -781,7 +775,6 @@ export const russianExtended: Record<string, string> = {
     "Ограничивает количество одновременно отображаемых строк или событий.",
   "Live preview": "Предпросмотр в реальном времени",
   Local: "Местное",
-  Locations: "Местоположения",
   Long: "Полный",
   "Long date": "Полная дата",
   Low: "Низкая",
