@@ -8,10 +8,10 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { api } from "../api/client";
-import type { Screen, ScreenStatus } from "../api/types";
+import type { PresentationOverride, Screen, ScreenStatus } from "../api/types";
 import { useAuth } from "../auth/AuthProvider";
 import {
   Button,
@@ -47,7 +47,8 @@ function hasError(screen: Screen) {
   );
 }
 
-function isIdle(screen: Screen) {
+function isIdle(screen: Screen, presenting = false) {
+  if (presenting) return false;
   const playbackIdle =
     !screen.playbackState ||
     ["idle", "stopped", "no_content"].includes(screen.playbackState);
@@ -59,18 +60,18 @@ function isIdle(screen: Screen) {
   );
 }
 
-function statusTone(screen: Screen) {
+function statusTone(screen: Screen, presenting = false) {
   if (hasError(screen)) return "danger" as const;
-  if (isIdle(screen)) return "warning" as const;
+  if (isIdle(screen, presenting)) return "warning" as const;
   if (screen.status === "online") return "success" as const;
   if (screen.status === "recent") return "info" as const;
   if (screen.status === "stale") return "warning" as const;
   return "neutral" as const;
 }
 
-function statusRank(screen: Screen) {
+function statusRank(screen: Screen, presenting = false) {
   if (hasError(screen)) return 0;
-  if (isIdle(screen)) return 1;
+  if (isIdle(screen, presenting)) return 1;
   if (screen.status === "offline" || screen.status === "stale") return 2;
   if (screen.status === "recent") return 2;
   if (screen.status === "online") return 3;
@@ -252,10 +253,41 @@ export function ScreenMonitoringPage() {
   };
 
   const screens = useMemo(() => query.data?.items ?? [], [query.data]);
+
+  // "Show now" (Quick Present) content is a presentation override rather than an
+  // assigned playlist, so a screen playing it has no nowPlayingName and would
+  // otherwise read as idle. Surface the override's content instead.
+  const overridesQuery = useQuery({
+    queryKey: ["presentation-overrides"],
+    queryFn: api.presentationOverrides,
+    refetchInterval: 10_000,
+  });
+  const overrideByScreen = useMemo(() => {
+    const byScreen = new Map<string, PresentationOverride>();
+    const byGroup = new Map<string, PresentationOverride>();
+    for (const item of overridesQuery.data?.items ?? []) {
+      if (item.stoppedAt) continue;
+      if (item.targetType === "screen") byScreen.set(item.targetId, item);
+      else if (item.targetType === "group") byGroup.set(item.targetId, item);
+    }
+    return { byScreen, byGroup };
+  }, [overridesQuery.data]);
+  const presentName = useCallback(
+    (screen: Screen): string | undefined => {
+      const override =
+        overrideByScreen.byScreen.get(screen.id) ??
+        (screen.syncGroupId
+          ? overrideByScreen.byGroup.get(screen.syncGroupId)
+          : undefined);
+      return override?.contentName;
+    },
+    [overrideByScreen],
+  );
   const counts = {
     total: screens.length,
     online: screens.filter((item) => item.status === "online").length,
-    idle: screens.filter(isIdle).length,
+    idle: screens.filter((item) => isIdle(item, Boolean(presentName(item))))
+      .length,
     offline: screens.filter((item) =>
       ["offline", "stale"].includes(item.status),
     ).length,
@@ -267,7 +299,8 @@ export function ScreenMonitoringPage() {
     return screens
       .filter((screen) => {
         if (filter === "online" && screen.status !== "online") return false;
-        if (filter === "idle" && !isIdle(screen)) return false;
+        if (filter === "idle" && !isIdle(screen, Boolean(presentName(screen))))
+          return false;
         if (
           filter === "offline" &&
           !["offline", "stale"].includes(screen.status)
@@ -288,10 +321,11 @@ export function ScreenMonitoringPage() {
       })
       .sort(
         (left, right) =>
-          statusRank(left) - statusRank(right) ||
+          statusRank(left, Boolean(presentName(left))) -
+            statusRank(right, Boolean(presentName(right))) ||
           left.name.localeCompare(right.name, "ru"),
       );
-  }, [filter, screens, search]);
+  }, [filter, screens, search, presentName]);
 
   const cards: Array<[Filter, string, number]> = [
     ["all", "Всего", counts.total],
@@ -389,155 +423,224 @@ export function ScreenMonitoringPage() {
             </tr>
           </thead>
           <tbody>
-            {visible.map((screen) => (
-              <tr
-                key={screen.id}
-                className={
-                  hasError(screen)
-                    ? "has-error"
-                    : isIdle(screen)
-                      ? "is-idle"
-                      : ""
-                }
-              >
-                <th scope="row">
-                  <Link to={`/screens/${screen.id}`}>{screen.name}</Link>
-                  <small>
-                    {[screen.location, screen.roomName]
-                      .filter(Boolean)
-                      .join(" · ") || "Расположение не указано"}
-                  </small>
-                  <small>{screen.lastKnownIp || "IP не сообщён"}</small>
-                </th>
-                <td>
-                  <StatusDot
-                    tone={statusTone(screen)}
-                    label={
-                      isIdle(screen) ? "Простой" : statusNames[screen.status]
-                    }
-                  />
-                  <small>
-                    {isIdle(screen)
-                      ? "Контент не назначен"
-                      : playbackName(screen.playbackState)}
-                  </small>
-                </td>
-                <td>
-                  <strong>{screen.nowPlayingName || "Не назначено"}</strong>
-                  {screen.websiteCurrentHost && (
-                    <small>{screen.websiteCurrentHost}</small>
-                  )}
-                  {screen.websiteState && (
-                    <small>Сайт: {screen.websiteState}</small>
-                  )}
-                </td>
-                <td>
-                  <strong>{platformName(screen.platform)}</strong>
-                  <small>
-                    {[screen.deviceManufacturer, screen.deviceModel]
-                      .filter(Boolean)
-                      .join(" ") || "Модель не сообщена"}
-                  </small>
-                  <small>Версия {screen.playerVersion || "не сообщена"}</small>
-                </td>
-                <td>
-                  <strong>
-                    {relativeTime(
-                      screen.lastHeartbeatAt ?? screen.lastContactAt,
-                    )}
-                  </strong>
-                  {screen.lastHealthyPlaybackAt && (
+            {visible.map((screen) => {
+              const present = presentName(screen);
+              const presenting = Boolean(present);
+              return (
+                <tr
+                  key={screen.id}
+                  className={
+                    hasError(screen)
+                      ? "has-error"
+                      : isIdle(screen, presenting)
+                        ? "is-idle"
+                        : ""
+                  }
+                >
+                  <th scope="row">
+                    <Link to={`/screens/${screen.id}`}>{screen.name}</Link>
                     <small>
-                      Успешный показ:{" "}
-                      {relativeTime(screen.lastHealthyPlaybackAt)}
+                      {[screen.location, screen.roomName]
+                        .filter(Boolean)
+                        .join(" · ") || "Расположение не указано"}
                     </small>
-                  )}
-                </td>
-                <td>
-                  {screen.platform.toLowerCase().includes("android") ? (
-                    <>
-                      <strong>
-                        {latestAndroidRelease
-                          ? (screen.playerVersionCode ?? 0) <
-                            latestAndroidRelease.versionCode
-                            ? `Доступна ${latestAndroidRelease.versionName}`
-                            : "Установлена актуальная версия"
-                          : "Выпуск недоступен"}
-                      </strong>
-                      {screen.updateState && (
-                        <small>
-                          Этап: {screen.updateState.replaceAll("_", " ")}
-                        </small>
+                    <small>{screen.lastKnownIp || "IP не сообщён"}</small>
+                  </th>
+                  <td>
+                    <StatusDot
+                      tone={statusTone(screen, presenting)}
+                      label={
+                        isIdle(screen, presenting)
+                          ? "Простой"
+                          : presenting
+                            ? "Показывается"
+                            : statusNames[screen.status]
+                      }
+                    />
+                    <small>
+                      {isIdle(screen, presenting)
+                        ? "Контент не назначен"
+                        : presenting
+                          ? `Показать сейчас: ${present}`
+                          : playbackName(screen.playbackState)}
+                    </small>
+                  </td>
+                  <td>
+                    <strong>
+                      {screen.nowPlayingName || present || "Не назначено"}
+                    </strong>
+                    {screen.websiteCurrentHost && (
+                      <small>{screen.websiteCurrentHost}</small>
+                    )}
+                    {screen.websiteState && (
+                      <small>Сайт: {screen.websiteState}</small>
+                    )}
+                  </td>
+                  <td>
+                    <strong>{platformName(screen.platform)}</strong>
+                    <small>
+                      {[screen.deviceManufacturer, screen.deviceModel]
+                        .filter(Boolean)
+                        .join(" ") || "Модель не сообщена"}
+                    </small>
+                    <small>
+                      Версия {screen.playerVersion || "не сообщена"}
+                    </small>
+                  </td>
+                  <td>
+                    <strong>
+                      {relativeTime(
+                        screen.lastHeartbeatAt ?? screen.lastContactAt,
                       )}
-                      {latestAndroidRelease &&
-                        (screen.playerVersionCode ?? 0) <
-                          latestAndroidRelease.versionCode && (
-                          <Button
-                            variant="secondary"
-                            compact
-                            disabled={
-                              screen.status !== "online" ||
-                              deployUpdate.isPending
-                            }
-                            onClick={() => requestUpdate(screen)}
-                          >
-                            {deployUpdate.isPending
-                              ? "Запуск…"
-                              : `Обновить до ${latestAndroidRelease.versionName}`}
-                          </Button>
+                    </strong>
+                    {screen.lastHealthyPlaybackAt && (
+                      <small>
+                        Успешный показ:{" "}
+                        {relativeTime(screen.lastHealthyPlaybackAt)}
+                      </small>
+                    )}
+                  </td>
+                  <td>
+                    {screen.platform.toLowerCase().includes("android") ? (
+                      <>
+                        <strong>
+                          {latestAndroidRelease
+                            ? (screen.playerVersionCode ?? 0) <
+                              latestAndroidRelease.versionCode
+                              ? `Доступна ${latestAndroidRelease.versionName}`
+                              : "Установлена актуальная версия"
+                            : "Выпуск недоступен"}
+                        </strong>
+                        {screen.updateState && (
+                          <small>
+                            Этап: {screen.updateState.replaceAll("_", " ")}
+                          </small>
                         )}
-                      {screen.installPermissionStatus === "required" && (
-                        <small className="monitoring-update-warning">
-                          Потребуется подтверждение на устройстве
-                        </small>
-                      )}
-                    </>
-                  ) : (
-                    <span className="monitoring-ok">Только для Android</span>
-                  )}
-                </td>
-                <td>
-                  {screen.platform.toLowerCase().includes("android") ? (
-                    <details className="monitoring-controls">
-                      <summary>Управление</summary>
-                      <div className="monitoring-controls__panel">
-                        <label>
-                          <span>
-                            <Volume2 size={15} aria-hidden="true" />
-                            Громкость: {volumeFor(screen)}%
-                          </span>
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            step="5"
-                            value={volumeFor(screen)}
-                            onChange={(event) =>
-                              setVolumeValues((values) => ({
-                                ...values,
-                                [screen.id]: Number(event.target.value),
-                              }))
+                        {latestAndroidRelease &&
+                          (screen.playerVersionCode ?? 0) <
+                            latestAndroidRelease.versionCode && (
+                            <Button
+                              variant="secondary"
+                              compact
+                              disabled={
+                                screen.status !== "online" ||
+                                deployUpdate.isPending
+                              }
+                              onClick={() => requestUpdate(screen)}
+                            >
+                              {deployUpdate.isPending
+                                ? "Запуск…"
+                                : `Обновить до ${latestAndroidRelease.versionName}`}
+                            </Button>
+                          )}
+                        {screen.installPermissionStatus === "required" && (
+                          <small className="monitoring-update-warning">
+                            Потребуется подтверждение на устройстве
+                          </small>
+                        )}
+                      </>
+                    ) : (
+                      <span className="monitoring-ok">Только для Android</span>
+                    )}
+                  </td>
+                  <td>
+                    {screen.platform.toLowerCase().includes("android") ? (
+                      <details className="monitoring-controls">
+                        <summary>Управление</summary>
+                        <div className="monitoring-controls__panel">
+                          <label>
+                            <span>
+                              <Volume2 size={15} aria-hidden="true" />
+                              Громкость: {volumeFor(screen)}%
+                            </span>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              step="5"
+                              value={volumeFor(screen)}
+                              onChange={(event) =>
+                                setVolumeValues((values) => ({
+                                  ...values,
+                                  [screen.id]: Number(event.target.value),
+                                }))
+                              }
+                            />
+                          </label>
+                          <Button
+                            variant="secondary"
+                            compact
+                            disabled={
+                              screen.status !== "online" ||
+                              sendControl.isPending
                             }
-                          />
-                        </label>
-                        <Button
-                          variant="secondary"
-                          compact
-                          disabled={
-                            screen.status !== "online" || sendControl.isPending
-                          }
-                          onClick={() =>
-                            sendControl.mutate({
-                              screen,
-                              type: "display_set_volume",
-                              payload: { volume: volumeFor(screen) },
-                            })
-                          }
-                        >
-                          Применить громкость
-                        </Button>
+                            onClick={() =>
+                              sendControl.mutate({
+                                screen,
+                                type: "display_set_volume",
+                                payload: { volume: volumeFor(screen) },
+                              })
+                            }
+                          >
+                            Применить громкость
+                          </Button>
 
-                        <div className="monitoring-controls__row">
+                          <div className="monitoring-controls__row">
+                            <Button
+                              variant="secondary"
+                              compact
+                              disabled={
+                                screen.status !== "online" ||
+                                sendControl.isPending
+                              }
+                              onClick={() =>
+                                sendControl.mutate({
+                                  screen,
+                                  type: "display_mute",
+                                })
+                              }
+                            >
+                              <VolumeX size={15} aria-hidden="true" />
+                              Выключить звук
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              compact
+                              disabled={
+                                screen.status !== "online" ||
+                                sendControl.isPending
+                              }
+                              onClick={() =>
+                                sendControl.mutate({
+                                  screen,
+                                  type: "display_unmute",
+                                })
+                              }
+                            >
+                              <Volume2 size={15} aria-hidden="true" />
+                              Включить звук
+                            </Button>
+                          </div>
+
+                          <label>
+                            <span>
+                              <Sun size={15} aria-hidden="true" />
+                              Яркость: {brightnessFor(screen)}%
+                            </span>
+                            <input
+                              type="range"
+                              min="1"
+                              max="100"
+                              step="5"
+                              value={brightnessFor(screen)}
+                              onChange={(event) =>
+                                setBrightnessValues((values) => ({
+                                  ...values,
+                                  [screen.id]: Number(event.target.value),
+                                }))
+                              }
+                            />
+                          </label>
                           <Button
                             variant="secondary"
                             compact
@@ -548,103 +651,51 @@ export function ScreenMonitoringPage() {
                             onClick={() =>
                               sendControl.mutate({
                                 screen,
-                                type: "display_mute",
+                                type: "display_set_brightness",
+                                payload: {
+                                  brightness: brightnessFor(screen),
+                                },
                               })
                             }
                           >
-                            <VolumeX size={15} aria-hidden="true" />
-                            Выключить звук
+                            Применить яркость
                           </Button>
+
                           <Button
-                            variant="secondary"
+                            variant="danger"
                             compact
                             disabled={
                               screen.status !== "online" ||
                               sendControl.isPending
                             }
-                            onClick={() =>
-                              sendControl.mutate({
-                                screen,
-                                type: "display_unmute",
-                              })
-                            }
+                            onClick={() => restartPlayer(screen)}
                           >
-                            <Volume2 size={15} aria-hidden="true" />
-                            Включить звук
+                            <RotateCw size={15} aria-hidden="true" />
+                            Перезапустить плеер
                           </Button>
+
+                          {screen.status !== "online" && (
+                            <small>Управление доступно только онлайн.</small>
+                          )}
                         </div>
-
-                        <label>
-                          <span>
-                            <Sun size={15} aria-hidden="true" />
-                            Яркость: {brightnessFor(screen)}%
-                          </span>
-                          <input
-                            type="range"
-                            min="1"
-                            max="100"
-                            step="5"
-                            value={brightnessFor(screen)}
-                            onChange={(event) =>
-                              setBrightnessValues((values) => ({
-                                ...values,
-                                [screen.id]: Number(event.target.value),
-                              }))
-                            }
-                          />
-                        </label>
-                        <Button
-                          variant="secondary"
-                          compact
-                          disabled={
-                            screen.status !== "online" || sendControl.isPending
-                          }
-                          onClick={() =>
-                            sendControl.mutate({
-                              screen,
-                              type: "display_set_brightness",
-                              payload: {
-                                brightness: brightnessFor(screen),
-                              },
-                            })
-                          }
-                        >
-                          Применить яркость
-                        </Button>
-
-                        <Button
-                          variant="danger"
-                          compact
-                          disabled={
-                            screen.status !== "online" || sendControl.isPending
-                          }
-                          onClick={() => restartPlayer(screen)}
-                        >
-                          <RotateCw size={15} aria-hidden="true" />
-                          Перезапустить плеер
-                        </Button>
-
-                        {screen.status !== "online" && (
-                          <small>Управление доступно только онлайн.</small>
-                        )}
-                      </div>
-                    </details>
-                  ) : (
-                    <span className="monitoring-ok">Только для Android</span>
-                  )}
-                </td>
-                <td>
-                  {errorText(screen) ? (
-                    <span className="monitoring-error">
-                      <AlertTriangle size={15} aria-hidden="true" />
-                      {errorText(screen)}
-                    </span>
-                  ) : (
-                    <span className="monitoring-ok">Ошибок нет</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+                      </details>
+                    ) : (
+                      <span className="monitoring-ok">Только для Android</span>
+                    )}
+                  </td>
+                  <td>
+                    {errorText(screen) ? (
+                      <span className="monitoring-error">
+                        <AlertTriangle size={15} aria-hidden="true" />
+                        {errorText(screen)}
+                      </span>
+                    ) : (
+                      <span className="monitoring-ok">Ошибок нет</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </TableContainer>
