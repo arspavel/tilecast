@@ -99,6 +99,7 @@ class ReliabilityController(private val context: Context) {
                 android.view.View.SYSTEM_UI_FLAG_FULLSCREEN or
                 android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
         }
+        ManagedKiosk.apply(context, config.reliability.mode == "managed_kiosk")
         val capability = kioskCapability(activity)
         var effective = "standard"
         if (
@@ -181,17 +182,7 @@ class ReliabilityController(private val context: Context) {
     }
 
     fun restartProcess() {
-        val alarm = context.getSystemService(AlarmManager::class.java)
-        val restartIntent = Intent()
-            .setClass(context, MainActivity::class.java)
-            .setPackage(context.packageName)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        val pending = PendingIntent.getActivity(context, 4040, restartIntent, PendingIntent.FLAG_IMMUTABLE)
-        alarm.setExact(
-            AlarmManager.ELAPSED_REALTIME_WAKEUP,
-            android.os.SystemClock.elapsedRealtime() + 1500,
-            pending,
-        )
+        PlayerRelaunch.schedule(context, delayMillis = 1500)
         Process.killProcess(Process.myPid())
     }
 
