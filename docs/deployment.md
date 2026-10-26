@@ -12,6 +12,18 @@ Set `TILECAST_PUBLIC_URL` to the external URL and `TILECAST_COOKIE_SECURE=true`.
 
 This is also what makes passkeys possible. Browsers refuse WebAuthn outside a secure context and reject an IP address as a relying party identifier, so a plain-HTTP LAN installation can offer authenticator apps and recovery codes but not passkeys. `TILECAST_PUBLIC_URL` must be the address browsers actually use. When the proxy's external hostname differs from what the server sees, set `TILECAST_WEBAUTHN_RP_ID` (a bare hostname) and `TILECAST_WEBAUTHN_ORIGINS` (comma-separated, with scheme) together. The server logs the reason at startup whenever passkeys are disabled. See [multi-factor-authentication.md](multi-factor-authentication.md).
 
+## Network without Internet access
+
+For a server in a corporate network that cannot reach the Internet, build an offline bundle on a computer that has Internet access and Docker:
+
+```sh
+bash scripts/build-offline-bundle.sh
+```
+
+The script writes `release-output/tilecast-offline-<tag>.tar.gz`. The bundle contains the server and PostgreSQL images, the compose file from `deploy/offline`, install, backup, and restore scripts, and the latest Android, webOS, and Windows players. Copy it to the server, unpack it, and run `sudo ./install.sh`. The administrator guide is `deploy/offline/INSTALL.md` (in Russian).
+
+The bundle sets `TILECAST_OFFLINE=true`. In this mode the server does not check GitHub for player releases and serves a local login background. Upload player releases in Studio. Widgets and data sources that need the Internet do not update.
+
 ## Cloudflare Tunnel
 
 Cloudflare is optional. Follow [`deploy/cloudflare/README.md`](../deploy/cloudflare/README.md) to enable the profile. The Tunnel route should target `http://server:8080`. Do not publish PostgreSQL.

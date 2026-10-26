@@ -44,7 +44,7 @@ if [ ! -f .env ]; then
 	cp env.example .env
 	chmod 600 .env
 	set_env POSTGRES_PASSWORD "$(random_secret)"
-	ADDRESS="$(hostname -I 2>/dev/null | awk '{print $1}')"
+	ADDRESS="$({ hostname -I 2>/dev/null || ip -4 route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p' || true; } | awk 'NF {print $1; exit}')"
 	PORT="$(env_value TILECAST_PORT)"
 	set_env TILECAST_PUBLIC_URL "http://${ADDRESS:-127.0.0.1}:${PORT:-8080}"
 fi
