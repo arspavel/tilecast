@@ -40,11 +40,12 @@ docker pull --platform "$PLATFORM" "$POSTGRES_IMAGE"
 echo "==> Saving images"
 docker save "tilecast/server:$TAG" "$POSTGRES_IMAGE" | gzip > "$STAGE/images/tilecast-images.tar.gz"
 
-cp "$ROOT/deploy/offline/compose.yml" "$ROOT/deploy/offline/env.example" "$ROOT/deploy/offline/INSTALL.md" "$STAGE/"
-for script in install.sh backup.sh restore.sh; do
-	tr -d '\r' < "$ROOT/deploy/offline/$script" > "$STAGE/$script"
-	chmod 755 "$STAGE/$script"
+# A Windows checkout can have CRLF line endings; Linux shells and .env
+# parsing need LF, so every text file is normalized.
+for file in compose.yml env.example INSTALL.md install.sh backup.sh restore.sh; do
+	tr -d '\r' < "$ROOT/deploy/offline/$file" > "$STAGE/$file"
 done
+chmod 755 "$STAGE/install.sh" "$STAGE/backup.sh" "$STAGE/restore.sh"
 printf '%s\n' "$TAG" > "$STAGE/VERSION"
 
 # Newest release whose tag starts with the prefix, from the public GitHub API.
