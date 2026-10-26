@@ -19,6 +19,8 @@ and the Git history before commit `3a4dea8`.
   lock task, persistent Home app, and disabled keyguard and status bar.
 - Bounded automatic relaunch of the Android player after a crash or process
   loss.
+- Unattended Android player updates on every supported Android version when
+  the player is the device owner.
 
 ### Changed
 

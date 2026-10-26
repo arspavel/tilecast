@@ -5,7 +5,11 @@ published releases at `Gibsonmb71/tilecast`. No Google Play, Amazon Developer,
 or paid Android developer account is required. Unknown-app installation remains
 a one-time local commissioning permission. On Android 12 and newer, eligible
 signed self-updates request Android's supported unattended-update mode. Older
-Android and Fire OS installers may still require local confirmation.
+Android and Fire OS installers may still require local confirmation. When
+Tilecast Player is the device owner (see
+[Managed Kiosk provisioning](reliability-and-power.md#provision-managed-kiosk-on-android)),
+Android installs every update without confirmation on all supported versions,
+and the unknown-app permission is not necessary.
 
 ## Release contract
 
