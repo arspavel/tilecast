@@ -68,3 +68,4 @@ Paired Player:
 
 - `GET /api/v1/player/live-stream-session`
 - binary `TCLS` version 1 frames on `/api/v1/player/socket`
+- `POST /api/v1/player/live-stream-frame` with one binary `TCLS` version 1 frame as the body, for browser players such as webOS that cannot authenticate a WebSocket with a header

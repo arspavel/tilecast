@@ -7,12 +7,14 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import org.tilecast.player.reliability.PlayerRelaunch
 import org.tilecast.player.work.HeartbeatWorker
 import java.util.concurrent.TimeUnit
 
 class TilecastApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        PlayerRelaunch.installCrashHandler(this)
         WebView.setWebContentsDebuggingEnabled(false)
         val request = PeriodicWorkRequestBuilder<HeartbeatWorker>(15, TimeUnit.MINUTES)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())

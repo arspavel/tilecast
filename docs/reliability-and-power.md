@@ -102,6 +102,36 @@ The default hidden sequence is Back, Back, Up, Down, Select. The first use creat
 
 Device-owner provisioning can require a factory reset plus ADB, QR, or firmware-specific enrollment during initial setup. Tilecast never attempts to silently convert an existing consumer TV. Installer and Settings access remain allowed only during deliberate update or maintenance flows, and kiosk state is restored afterward when the platform supports it.
 
+### Provision Managed Kiosk on Android
+
+1. Factory reset the device, or use a device that has no accounts.
+2. Install Tilecast Player and enable USB or network debugging.
+3. Make Tilecast Player the device owner:
+
+   ```sh
+   adb shell dpm set-device-owner org.tilecast.player/.reliability.TilecastDeviceAdminReceiver
+   ```
+
+4. In Studio, set **Reliability mode** to **Managed Kiosk** and turn on **Lock task** for the screen or group.
+
+When Tilecast Player is the device owner and Studio requests Managed Kiosk, the player:
+
+- allows only Tilecast Player in lock task, with Home, Recents, notifications, and the power menu blocked
+- registers Tilecast Player as the persistent Home app, so Android starts the player again if its process stops
+- disables the keyguard and the status bar
+
+When Studio requests Managed Kiosk but the device is not provisioned, Tilecast Player only becomes available as a Home app. An administrator can select it once in the Android Home chooser. Lock task stays inactive, and Studio reports Standard Reliability.
+
+To remove device-owner provisioning, factory reset the device.
+
+### Automatic relaunch after a crash
+
+On both Standard Reliability and Managed Kiosk, an uncaught error schedules a relaunch two seconds after the process stops. Relaunches are limited to three in ten minutes. After that limit, boot recovery, Accessibility Control Assist, and the Home role are the remaining paths back. The player does not schedule a relaunch during a maintenance session or a player update.
+
+When Accessibility Control Assist is enabled and the player process stops while the player is on screen, Android binds the service again in a new process. The service then opens Tilecast Player.
+
+Android cannot restart an app after **Force stop**. Use Managed Kiosk to block access to Settings.
+
 ## Telemetry
 
 Players report bounded telemetry alongside heartbeats: latest gauge values and counter deltas since the previous sample, on a fixed cadence. Raw high-frequency samples are never uploaded.

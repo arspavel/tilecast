@@ -18,6 +18,8 @@ class PlayerUpdateManagerTest {
     @Test fun rejectsInstalledCertificateMismatch(){assertThrows(IllegalArgumentException::class.java){PlayerUpdateVerifier.validate(update,5,35,ArchiveMetadata("org.tilecast.player",9,"b".repeat(64)),"c".repeat(64))}}
     @Test fun rejectsUnsupportedSdk(){assertThrows(IllegalArgumentException::class.java){PlayerUpdateVerifier.validate(update.copy(minimumSdk=36),5,35,ArchiveMetadata("org.tilecast.player",9,"b".repeat(64)),"b".repeat(64))}}
     @Test fun requestsUnattendedSelfUpdateOnAndroid12AndNewer(){assertFalse(PlayerUpdateInstallPolicy.canRequestUnattended(30));assertTrue(PlayerUpdateInstallPolicy.canRequestUnattended(31));assertTrue(PlayerUpdateInstallPolicy.canRequestUnattended(35))}
+    @Test fun deviceOwnerInstallsUnattendedOnEveryVersion(){assertTrue(PlayerUpdateInstallPolicy.canRequestUnattended(23,deviceOwner=true));assertTrue(PlayerUpdateInstallPolicy.canRequestUnattended(28,deviceOwner=true));assertFalse(PlayerUpdateInstallPolicy.canRequestUnattended(28,deviceOwner=false))}
+    @Test fun deviceOwnerDoesNotNeedUnknownAppPermission(){assertFalse(PlayerUpdateInstallPolicy.installPermissionRequired(28,canRequestPackageInstalls=false,deviceOwner=true));assertTrue(PlayerUpdateInstallPolicy.installPermissionRequired(28,canRequestPackageInstalls=false,deviceOwner=false));assertFalse(PlayerUpdateInstallPolicy.installPermissionRequired(28,canRequestPackageInstalls=true,deviceOwner=false))}
     @Test fun selectsTheExactRequestedArtifactWhenSeveralAreStaged(){
         val directory=Files.createTempDirectory("tilecast-updates").toFile()
         val older=File(directory,stagedArtifactName("release-old","android-tv"));older.writeText("old")

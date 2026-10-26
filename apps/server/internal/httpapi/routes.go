@@ -83,6 +83,7 @@ func (s *server) routes() http.Handler {
 		api.With(s.requireDevice).Post("/player/heartbeat", s.playerHeartbeat)
 		api.With(s.requireDevice).Get("/player/socket", s.playerSocket)
 		api.With(s.requireDevice).Get("/player/live-stream-session", s.playerLiveStreamSession)
+		api.With(s.requireDevice).Post("/player/live-stream-frame", s.uploadPlayerLiveStreamFrame)
 		api.With(s.requireDevice).Get("/player/assets/{assetId}/variants/{variantId}", s.playerAssetVariant)
 		api.With(s.requireDevice).Head("/player/assets/{assetId}/variants/{variantId}", s.playerAssetVariant)
 		api.With(s.requireDevice).Get("/player/span-panels/{id}", s.playerSpanPanel)

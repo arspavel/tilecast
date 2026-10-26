@@ -79,3 +79,55 @@ func TestLiveStreamBinaryFrameRelaysWithoutPersistence(t *testing.T) {
 		}
 	})
 }
+
+// Browser players post frames over HTTP because they cannot authenticate a
+// WebSocket with a header. The same frame must relay, and a frame for an
+// ended session must report not found so the player stops sending.
+func TestLiveStreamHTTPFrameRelays(t *testing.T) {
+	withActivityDatabase(t, func(env activityTestEnvironment) {
+		env.server.liveStreams = livestream.NewService(env.server.devices)
+		session := env.server.liveStreams.Start(env.screenID)
+		frames, _, cancelSubscription, err := env.server.liveStreams.Subscribe(env.screenID, session.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer cancelSubscription()
+
+		principal := devices.DevicePrincipal{ScreenID: env.screenID, ScreenName: "Lobby LG", Enabled: true}
+		jpeg := []byte{0xff, 0xd8, 4, 5, 6, 0xff, 0xd9}
+		payload := make([]byte, 33, 33+len(jpeg))
+		copy(payload[:4], "TCLS")
+		payload[4] = 1
+		copy(payload[5:21], session.ID[:])
+		binary.BigEndian.PutUint64(payload[21:29], uint64(time.Now().UTC().UnixMilli()))
+		binary.BigEndian.PutUint16(payload[29:31], 640)
+		binary.BigEndian.PutUint16(payload[31:33], 360)
+		payload = append(payload, jpeg...)
+
+		post := func() int {
+			request := httptest.NewRequest(http.MethodPost, "/api/v1/player/live-stream-frame", strings.NewReader(string(payload)))
+			request = request.WithContext(context.WithValue(request.Context(), deviceContextKey, principal))
+			recorder := httptest.NewRecorder()
+			env.server.uploadPlayerLiveStreamFrame(recorder, request)
+			return recorder.Code
+		}
+		if code := post(); code != http.StatusNoContent {
+			t.Fatalf("frame upload status = %d", code)
+		}
+		select {
+		case frame := <-frames:
+			if frame.Width != 640 || frame.Height != 360 || string(frame.JPEG) != string(jpeg) {
+				t.Fatalf("relayed frame = %+v", frame)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("timed out waiting for relayed live frame")
+		}
+
+		if err = env.server.liveStreams.End(env.screenID, session.ID); err != nil {
+			t.Fatal(err)
+		}
+		if code := post(); code != http.StatusNotFound {
+			t.Fatalf("frame upload after end status = %d", code)
+		}
+	})
+}

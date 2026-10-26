@@ -3,6 +3,7 @@ package httpapi
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -57,6 +58,29 @@ func (s *server) endLiveStream(w http.ResponseWriter, r *http.Request) {
 func (s *server) playerLiveStreamSession(w http.ResponseWriter, r *http.Request) {
 	principal := r.Context().Value(deviceContextKey).(devices.DevicePrincipal)
 	writeJSON(w, http.StatusOK, map[string]any{"data": s.liveStreams.Current(principal.ScreenID)})
+}
+
+// uploadPlayerLiveStreamFrame accepts one binary TCLS frame over HTTP. Browser
+// players such as webOS cannot send the Authorization header on a WebSocket,
+// so they post frames with their device credential instead. The frame format,
+// validation, and in-memory relay are identical to the socket path.
+func (s *server) uploadPlayerLiveStreamFrame(w http.ResponseWriter, r *http.Request) {
+	principal := r.Context().Value(deviceContextKey).(devices.DevicePrincipal)
+	payload, err := io.ReadAll(http.MaxBytesReader(w, r.Body, livestream.MaxFrameBytes+1024))
+	if err != nil {
+		writeError(w, http.StatusRequestEntityTooLarge, "live_stream_frame_too_large", "The live stream frame is too large.")
+		return
+	}
+	sessionID, frame, err := livestream.ParseBinaryFrame(payload)
+	if err != nil {
+		s.writeLiveStreamError(w, r, err)
+		return
+	}
+	if err = s.liveStreams.Publish(principal.ScreenID, sessionID, frame); err != nil {
+		s.writeLiveStreamError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *server) watchLiveStream(w http.ResponseWriter, r *http.Request) {

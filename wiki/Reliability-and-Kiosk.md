@@ -35,6 +35,14 @@ Provisioning may require a factory reset and ADB, QR enrollment, or manufacturer
 
 When Managed Kiosk is requested but not confirmed, Studio reports the effective mode as Standard Reliability.
 
+To provision a device, make Tilecast Player the device owner on a device that has no accounts:
+
+```sh
+adb shell dpm set-device-owner org.tilecast.player/.reliability.TilecastDeviceAdminReceiver
+```
+
+Then set **Reliability mode** to **Managed Kiosk** and turn on **Lock task** in Studio. The player locks itself on screen, becomes the Home app, and Android starts it again if its process stops. If the player stops because of an error, it relaunches automatically, up to three times in ten minutes.
+
 ### First-run commissioning (Android)
 
 Every newly paired Android player completes a local wizard. It verifies or configures:
