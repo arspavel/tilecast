@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.2.0";
-  var VERSION_CODE = 4;
+  var VERSION = "0.2.1";
+  var VERSION_CODE = 5;
   var STORE = "tilecast.webos.";
   // Media is kept in memory between playlist cycles so a loop does not
   // download every item again. Items on screen are never evicted.
@@ -523,6 +523,7 @@
   // the previous content on screen instead of a black frame.
   function renderItem(item) {
     var token = ++state.renderToken;
+    var previous = state.currentItem;
     clearTimeout(state.readyTimer);
     clearInterval(state.stallTimer);
     state.currentItem = item;
@@ -535,6 +536,16 @@
     if (item.assetType === "website") {
       var website = findWebsite(item.assetId);
       if (!website) return itemFailed("Website configuration is missing", token);
+      // The same website again (for example a one-item playlist) stays loaded
+      // instead of reloading at every cycle.
+      var visible = visibleElement();
+      if (visible && visible.tagName === "IFRAME" && visible.getAttribute("data-site") === website.url &&
+          previous && previous.assetType === "website" && previous.assetId === item.assetId) {
+        clearTimeout(state.readyTimer);
+        itemHealthy();
+        armNext(itemDuration(item), token);
+        return;
+      }
       var frame = document.createElement("iframe");
       frame.className = "website pending";
       frame.setAttribute("data-site", website.url);
