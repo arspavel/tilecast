@@ -71,7 +71,7 @@ services:
       TILECAST_SMTP_ALLOW_INSECURE: ${TILECAST_SMTP_ALLOW_INSECURE:-false}
       TILECAST_SMTP_ALLOW_PLAINTEXT_AUTH: ${TILECAST_SMTP_ALLOW_PLAINTEXT_AUTH:-false}
     ports:
-      - "${TILECAST_PORT:-8080}:8080"
+      - "127.0.0.1:${TILECAST_PORT:-8080}:8080"
     volumes:
       - tilecast_data:/data
     depends_on:
