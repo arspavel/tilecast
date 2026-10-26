@@ -43,6 +43,13 @@ func Handler() http.Handler {
 				return
 			}
 		}
+		// A missing build file is a 404, not the SPA page: answering 200 for
+		// any *.map or stale asset name looks like an exposed source map and
+		// hides broken references.
+		if strings.HasPrefix(name, "assets/") || strings.HasSuffix(name, ".map") {
+			http.NotFound(w, r)
+			return
+		}
 		r.URL.Path = "/"
 		http.ServeFileFS(w, r, static, "index.html")
 	})

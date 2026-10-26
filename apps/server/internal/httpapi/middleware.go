@@ -18,14 +18,40 @@ import (
 	"github.com/tilecast/tilecast/apps/server/internal/devices"
 )
 
-const dashboardContentSecurityPolicy = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com/beacon.min.js; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://images.unsplash.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+// No 'unsafe-inline' or 'unsafe-eval': Studio has no inline scripts or style
+// elements, and React applies style props through the CSSOM, which CSP does
+// not restrict. blob: images are local upload previews.
+const dashboardContentSecurityPolicy = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://images.unsplash.com; font-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+
+// The webOS player shows cached media from blob: URLs and website items in
+// frames, so it needs its own policy.
+const webOSPlayerContentSecurityPolicy = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src http: https:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+
+// Studio needs WebAuthn, clipboard, and fullscreen; nothing needs sensors,
+// cameras, location, or payment.
+const permissionsPolicy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=(), hid=(), magnetometer=(), gyroscope=(), accelerometer=()"
+const featurePolicy = "camera 'none'; microphone 'none'; geolocation 'none'; payment 'none'; usb 'none'; magnetometer 'none'; gyroscope 'none'; accelerometer 'none'"
 
 func (s *server) securityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Security-Policy", dashboardContentSecurityPolicy)
-		w.Header().Set("Referrer-Policy", "same-origin")
-		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("X-Frame-Options", "DENY")
+		header := w.Header()
+		if r.URL.Path == "/webos" || strings.HasPrefix(r.URL.Path, "/webos/") {
+			header.Set("Content-Security-Policy", webOSPlayerContentSecurityPolicy)
+		} else {
+			header.Set("Content-Security-Policy", dashboardContentSecurityPolicy)
+		}
+		header.Set("Referrer-Policy", "same-origin")
+		header.Set("X-Content-Type-Options", "nosniff")
+		header.Set("X-Frame-Options", "DENY")
+		header.Set("Permissions-Policy", permissionsPolicy)
+		header.Set("Feature-Policy", featurePolicy)
+		// Modern browsers rely on CSP; "0" turns off the legacy filter, which
+		// could itself be abused.
+		header.Set("X-XSS-Protection", "0")
+		// Secure cookies mean the installation is served over HTTPS.
+		if s.secureCookies {
+			header.Set("Strict-Transport-Security", "max-age=31536000")
+		}
 		next.ServeHTTP(w, r)
 	})
 }

@@ -1,0 +1,13 @@
+/* Page background before the app loads. A file instead of an inline style
+   element so the Content-Security-Policy needs no 'unsafe-inline'. */
+html {
+  background: #f6f8fa;
+}
+html[data-theme="dark"] {
+  background: #101820;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] {
+    background: #101820;
+  }
+}
