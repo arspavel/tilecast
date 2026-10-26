@@ -1,0 +1,54 @@
+# Tilecast for a server without Internet access.
+#
+# The images are loaded from the bundle by install.sh; nothing is built or
+# pulled here. Settings live in .env next to this file.
+name: tilecast
+
+services:
+  server:
+    image: tilecast/server:${TILECAST_IMAGE_TAG:?Set TILECAST_IMAGE_TAG in .env}
+    pull_policy: never
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TILECAST_ENV: production
+      TILECAST_OFFLINE: "true"
+      TILECAST_HTTP_ADDR: :8080
+      TILECAST_DATABASE_URL: postgres://${POSTGRES_USER:-tilecast}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-tilecast}?sslmode=disable
+      TILECAST_FFMPEG_PATH: /usr/bin/ffmpeg
+      TILECAST_FFPROBE_PATH: /usr/bin/ffprobe
+      TILECAST_UPDATE_ROOT: /data/updates
+    ports:
+      # Screens connect straight to this port in the corporate network.
+      - "${TILECAST_BIND_ADDRESS:-0.0.0.0}:${TILECAST_PORT:-8080}:8080"
+    volumes:
+      - tilecast_data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/readyz"]
+      interval: 15s
+      timeout: 4s
+      retries: 5
+      start_period: 20s
+
+  postgres:
+    image: postgres:17-alpine
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tilecast}
+      POSTGRES_USER: ${POSTGRES_USER:-tilecast}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  tilecast_data:
+  postgres_data:

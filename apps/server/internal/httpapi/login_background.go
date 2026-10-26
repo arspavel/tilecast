@@ -28,7 +28,7 @@ func (s *server) loginBackgroundImage(w http.ResponseWriter, r *http.Request) {
 	var assetID uuid.UUID
 	err := s.db.QueryRow(r.Context(), `SELECT background_asset_id FROM organization_login_branding WHERE background_asset_id IS NOT NULL LIMIT 1`).Scan(&assetID)
 	if errors.Is(err, pgx.ErrNoRows) {
-		http.Redirect(w, r, defaultLoginBackgroundURL, http.StatusTemporaryRedirect)
+		s.defaultLoginBackground(w, r)
 		return
 	}
 	if err != nil {
@@ -37,7 +37,7 @@ func (s *server) loginBackgroundImage(w http.ResponseWriter, r *http.Request) {
 	}
 	delivery, err := s.media.Preview(r.Context(), assetID)
 	if err != nil {
-		http.Redirect(w, r, defaultLoginBackgroundURL, http.StatusTemporaryRedirect)
+		s.defaultLoginBackground(w, r)
 		return
 	}
 	w.Header().Set("Cache-Control", "public, max-age=300")
@@ -108,4 +108,18 @@ func (s *server) deleteLoginBackground(w http.ResponseWriter, r *http.Request) {
 	}
 	_, _ = s.db.Exec(r.Context(), `INSERT INTO audit_logs(id,user_id,action,resource_type,resource_id,metadata) VALUES($1,$2,'branding.login_background_reset','organization',$3,'{}'::jsonb)`, uuid.New(), session.User.ID, "login-background")
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// offlineLoginBackground is a neutral local gradient for installations that
+// cannot load the default photograph from the Internet.
+const offlineLoginBackground = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e141b"/><stop offset="0.55" stop-color="#173040"/><stop offset="1" stop-color="#0f766e"/></linearGradient></defs><rect width="1600" height="900" fill="url(#g)"/></svg>`
+
+func (s *server) defaultLoginBackground(w http.ResponseWriter, r *http.Request) {
+	if !s.offline {
+		http.Redirect(w, r, defaultLoginBackgroundURL, http.StatusTemporaryRedirect)
+		return
+	}
+	w.Header().Set("Content-Type", "image/svg+xml")
+	w.Header().Set("Cache-Control", "public, max-age=300")
+	_, _ = w.Write([]byte(offlineLoginBackground))
 }

@@ -166,7 +166,11 @@ func serve() {
 	campaignService.SetScheduler(schedulingService)
 	campaignService.SetSchedulingLimits(scheduleLimits)
 	alertService := alerts.NewService(db, deviceService, playlistService, logger, cfg.PublicURL, time.Duration(cfg.Operations.MaxTakeoverDurationHours)*time.Hour)
-	updateService, updateErr := updates.NewService(db, updates.NewGitHubProviderForRepository(cfg.Updates.GitHubToken, cfg.Updates.GitHubOwner, cfg.Updates.GitHubRepo), updates.Config{Root: cfg.Updates.Root, TrustedPublicKey: cfg.Updates.TrustedPublicKey, MaxAPKBytes: cfg.Updates.MaxAPKBytes, GitHubClientID: cfg.Updates.GitHubClientID, GitHubTokenConfigured: strings.TrimSpace(cfg.Updates.GitHubToken) != ""})
+	var updateProvider updates.Provider = updates.NewGitHubProviderForRepository(cfg.Updates.GitHubToken, cfg.Updates.GitHubOwner, cfg.Updates.GitHubRepo)
+	if cfg.Offline {
+		updateProvider = updates.OfflineProvider{}
+	}
+	updateService, updateErr := updates.NewService(db, updateProvider, updates.Config{Root: cfg.Updates.Root, TrustedPublicKey: cfg.Updates.TrustedPublicKey, MaxAPKBytes: cfg.Updates.MaxAPKBytes, GitHubClientID: cfg.Updates.GitHubClientID, GitHubTokenConfigured: strings.TrimSpace(cfg.Updates.GitHubToken) != ""})
 	if updateErr != nil {
 		fail("initialize player update service", updateErr)
 	}
@@ -314,6 +318,7 @@ func serve() {
 		CookieName:           cfg.CookieName,
 		SecureCookies:        cfg.CookieSecure,
 		ReleasePublishToken:  cfg.Updates.PublishToken,
+		Offline:              cfg.Offline,
 		Backups:              backupService,
 		BackupWorker:         backupWorker,
 		BackupLimits:         backup.Limits{MaxFiles: cfg.Backup.MaxArchiveFiles, MaxExpandedBytes: cfg.Backup.MaxArchiveBytes},

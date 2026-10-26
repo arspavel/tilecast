@@ -12,15 +12,18 @@ import (
 )
 
 type Config struct {
-	Environment   string
-	HTTPAddr      string
-	DatabaseURL   string
-	PublicURL     string
-	CookieName    string
-	CookieSecure  bool
-	SessionTTL    time.Duration
-	LogLevel      string
-	MDNSEnabled   bool
+	Environment  string
+	HTTPAddr     string
+	DatabaseURL  string
+	PublicURL    string
+	CookieName   string
+	CookieSecure bool
+	SessionTTL   time.Duration
+	LogLevel     string
+	MDNSEnabled  bool
+	// Offline marks an installation without Internet access: GitHub release
+	// checks are disabled and no default content is loaded from the Internet.
+	Offline       bool
 	Media         MediaConfig
 	Scheduling    SchedulingConfig
 	Website       WebsiteConfig
@@ -173,6 +176,9 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("parse TILECAST_MDNS_ENABLED: %w", err)
 	}
 	cfg.MDNSEnabled = mdnsEnabled
+	if cfg.Offline, err = strconv.ParseBool(get("TILECAST_OFFLINE", "false")); err != nil {
+		return Config{}, fmt.Errorf("parse TILECAST_OFFLINE: %w", err)
+	}
 	values := []struct {
 		name, fallback string
 		max            int

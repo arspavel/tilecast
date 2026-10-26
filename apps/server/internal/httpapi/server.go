@@ -67,6 +67,7 @@ type Dependencies struct {
 	CookieName           string
 	SecureCookies        bool
 	ReleasePublishToken  string
+	Offline              bool
 	PublicURL            string
 	TrustedProxies       []netip.Prefix
 	Operations           OperationsConfig
@@ -118,6 +119,7 @@ type server struct {
 	liveStreams                   *livestream.Service
 	releasePublishTokenHash       [32]byte
 	releasePublishTokenConfigured bool
+	offline                       bool
 	startedAt                     time.Time
 	backups                       *backup.Service
 	backupWorker                  *backup.Worker
@@ -202,6 +204,7 @@ func New(deps Dependencies) *API {
 		// release the gateway immediately rather than wait for the periodic sweep.
 		s.devices.SetAirplayReconciler(s.reconcileAirplaySession)
 	}
+	s.offline = deps.Offline
 	if deps.ReleasePublishToken != "" {
 		s.releasePublishTokenHash = sha256.Sum256([]byte(deps.ReleasePublishToken))
 		s.releasePublishTokenConfigured = true

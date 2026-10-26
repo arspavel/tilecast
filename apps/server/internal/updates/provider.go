@@ -48,6 +48,25 @@ type Provider interface {
 	Open(context.Context, string) (*http.Response, error)
 }
 
+// ErrOffline is returned on an installation that has no Internet access by design.
+var ErrOffline = errors.New("offline installation: GitHub release checks are disabled; upload player releases in Studio")
+
+// OfflineProvider replaces GitHub when TILECAST_OFFLINE is set. Every call
+// fails at once instead of waiting for a network timeout.
+type OfflineProvider struct{}
+
+func (OfflineProvider) Releases(context.Context, string) (ProviderResult, error) {
+	return ProviderResult{}, ErrOffline
+}
+
+func (OfflineProvider) Download(context.Context, string, int64) ([]byte, error) {
+	return nil, ErrOffline
+}
+
+func (OfflineProvider) Open(context.Context, string) (*http.Response, error) {
+	return nil, ErrOffline
+}
+
 type GitHubProvider struct {
 	client    *http.Client
 	apiBase   string
