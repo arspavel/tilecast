@@ -9,7 +9,7 @@
   min-height: 100svh;
   padding: clamp(1rem, 4vw, 3rem);
   overflow: hidden;
-  background-color: #1b2430;
+  background-color: #111315;
   background-image: url("/api/v1/auth/background");
   background-position: center;
   background-size: cover;
@@ -48,7 +48,7 @@
 .auth-panel__logo .brand__studio-logo {
   width: min(11.75rem, 72%);
   height: auto;
-  filter: brightness(0);
+  filter: none;
 }
 
 .auth-form header {
@@ -58,7 +58,8 @@
 
 .auth-form h1 {
   margin: 0;
-  color: #101316;
+  color: var(--tc-text-primary);
+  font-family: var(--tc-font-display);
   font-size: 1.7rem;
   font-weight: 680;
   line-height: 1.18;
@@ -67,7 +68,7 @@
 
 .auth-form header p {
   margin: 0.5rem 0 0;
-  color: #687078;
+  color: var(--tc-text-secondary);
   font-size: 0.92rem;
 }
 
@@ -81,7 +82,7 @@
 }
 
 .auth-form .field__label {
-  color: #22272c;
+  color: var(--control-label);
   font-size: 0.82rem;
   font-weight: 650;
 }
@@ -89,19 +90,19 @@
 .auth-form .field input {
   height: 2.7rem;
   padding: 0.62rem 0.75rem;
-  background: #fff;
-  border-color: #cfd4d8;
+  background: var(--tc-input-bg);
+  border-color: var(--tc-input-border);
   border-radius: 0.5rem;
   box-shadow: 0 1px 1px rgb(0 0 0 / 3%);
 }
 
 .auth-form .field input:hover {
-  border-color: #aeb5bb;
+  border-color: var(--tc-border-strong);
 }
 
 .auth-form .field input:focus {
-  border-color: #4f738c;
-  box-shadow: 0 0 0 3px rgb(79 115 140 / 13%);
+  border-color: var(--tc-focus-ring);
+  box-shadow: 0 0 0 3px var(--tc-focus-ring-soft);
   outline: none;
 }
 
@@ -123,7 +124,7 @@
   gap: 0.7rem;
   align-items: center;
   margin: 1.05rem 0 0.9rem;
-  color: #91979d;
+  color: var(--tc-text-disabled);
   font-size: 0.74rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -133,7 +134,7 @@
 .auth-form__divider::after {
   flex: 1;
   height: 1px;
-  background: #e2e5e8;
+  background: var(--tc-border-default);
   content: "";
 }
 
@@ -149,7 +150,7 @@
 }
 
 .auth-loading {
-  background-color: #f3f4f5;
+  background-color: var(--tc-bg-canvas);
 }
 
 .auth-loading .auth-panel__logo {
@@ -178,5 +179,16 @@
 
   .auth-form__passwords {
     grid-template-columns: 1fr;
+  }
+}
+
+/* The Studio logo is drawn for dark surfaces; light panels need it black. */
+html[data-theme="light"] .auth-panel__logo .brand__studio-logo {
+  filter: brightness(0);
+}
+
+@media (prefers-color-scheme: light) {
+  html[data-theme="system"] .auth-panel__logo .brand__studio-logo {
+    filter: brightness(0);
   }
 }

@@ -4,9 +4,9 @@ const appearances = new Set(["light", "dark", "system"]);
 function readAppearance() {
   try {
     const value = window.localStorage.getItem(appearanceKey);
-    return value && appearances.has(value) ? value : "system";
+    return value && appearances.has(value) ? value : "dark";
   } catch {
-    return "system";
+    return "dark";
   }
 }
 

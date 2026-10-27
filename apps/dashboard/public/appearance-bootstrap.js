@@ -7,8 +7,8 @@
       "system",
     ].includes(value)
       ? value
-      : "system";
+      : "dark";
   } catch {
-    document.documentElement.dataset.theme = "system";
+    document.documentElement.dataset.theme = "dark";
   }
 })();

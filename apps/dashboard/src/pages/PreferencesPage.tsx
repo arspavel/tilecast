@@ -108,7 +108,7 @@ function applyPreferences(values: Record<string, unknown>) {
   root.dataset.theme =
     typeof values["preference.appearance"] === "string"
       ? String(values["preference.appearance"])
-      : "system";
+      : "dark";
   root.dataset.density =
     typeof values["preference.density"] === "string"
       ? String(values["preference.density"])

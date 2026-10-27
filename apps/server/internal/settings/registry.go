@@ -180,7 +180,7 @@ var definitions = []Definition{
 	{Key: "retention.deleted_media_metadata_days", Category: "retention", Type: "int", Default: 90.0, Min: number(1), Max: number(3650), Scope: ScopeOrganization, Title: "Deleted media metadata retention"},
 	{Key: "retention.takeover_history_days", Category: "retention", Type: "int", Default: 365.0, Min: number(1), Max: number(3650), Scope: ScopeOrganization, Title: "Takeover history retention"},
 	{Key: "retention.max_diagnostic_events_per_screen", Category: "retention", Type: "int", Default: 1000.0, Min: number(10), Max: number(100000), Scope: ScopeOrganization, Title: "Diagnostic event limit"},
-	{Key: "preference.appearance", Category: "interface", Type: "enum", Default: "system", Allowed: []string{"system", "light", "dark"}, Scope: ScopePreference, Title: "Appearance", Immediate: true},
+	{Key: "preference.appearance", Category: "interface", Type: "enum", Default: "dark", Allowed: []string{"system", "light", "dark"}, Scope: ScopePreference, Title: "Appearance", Immediate: true},
 	{Key: "preference.density", Category: "interface", Type: "enum", Default: "comfortable", Allowed: []string{"comfortable", "compact"}, Scope: ScopePreference, Title: "Interface density", Immediate: true},
 	{Key: "preference.reduced_motion", Category: "interface", Type: "bool", Default: false, Scope: ScopePreference, Title: "Reduced motion", Immediate: true},
 	{Key: "preference.time_format", Category: "interface", Type: "enum", Default: "organization", Allowed: []string{"organization", "12-hour", "24-hour"}, Scope: ScopePreference, Title: "Time format"},

@@ -10,6 +10,7 @@ import { installCommandPaletteFocus } from "./commandPaletteFocus";
 import { LanguageProvider } from "./i18n/LanguageProvider";
 import "./styles.css";
 import "./styles/layout-fonts.css";
+import "./styles/brand-fonts.css";
 import "./styles/signal.css";
 import "./styles/topbar.css";
 import "./styles/topbar-width-fixes.css";

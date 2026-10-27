@@ -235,7 +235,7 @@ export function DashboardShell() {
     root.dataset.theme =
       typeof values["preference.appearance"] === "string"
         ? values["preference.appearance"]
-        : "system";
+        : "dark";
     root.dataset.density =
       typeof values["preference.density"] === "string"
         ? values["preference.density"]
