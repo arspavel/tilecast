@@ -781,10 +781,10 @@ export function PlayerUpdatesPanel({
                   </a>
                   <a
                     className="button button--secondary"
-                    href="https://github.com/arspavel/tilecast/releases/download/player-webos-v0.2.1/org.tilecast.player.webos_0.2.1_all.ipk"
+                    href="https://github.com/arspavel/tilecast/releases/download/player-webos-v0.3.0/org.tilecast.player.webos_0.3.0_all.ipk"
                   >
                     <Download size={16} aria-hidden="true" />
-                    Скачать IPK 0.2.1
+                    Скачать IPK 0.3.0
                   </a>
                 </div>
                 <p>
