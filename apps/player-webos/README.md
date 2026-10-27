@@ -46,4 +46,8 @@ ares-install --device tv ./org.tilecast.player.webos_0.1.0_all.ipk
 ares-launch --device tv org.tilecast.player.webos
 ```
 
-On first launch, enter the externally reachable Tilecast server URL and approve the pairing code in Studio. Press the red remote key to clear pairing. Press Back to reopen server setup.
+On first launch, enter the externally reachable Tilecast server URL and approve the pairing code in Studio. Press the red remote key to clear pairing. Press Back to reopen server setup. Press Up to show or hide the service overlay (see below).
+
+## Service overlay
+
+Press Up on the remote to show faint service information in the lower-left corner. Press Up again to hide it; it also hides after 30 seconds. The overlay shows the screen name, server connection, round-trip time to the server, the most recent download speed, the current playlist and item, the next scheduled change, the media held in player memory, and a progress bar while content downloads. The player finds the next change from the cached manifest for the next 48 hours.

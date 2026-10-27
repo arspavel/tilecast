@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.2.1";
-  var VERSION_CODE = 5;
+  var VERSION = "0.3.0";
+  var VERSION_CODE = 6;
   var STORE = "tilecast.webos.";
   // Media is kept in memory between playlist cycles so a loop does not
   // download every item again. Items on screen are never evicted.
@@ -36,6 +36,9 @@
     lastError: null,
     lastHealthyPlaybackAt: null,
     lastConfigSyncAt: 0,
+    lastServerContactAt: 0,
+    lastDownloadBps: null,
+    downloads: {},
     startedAt: Date.now()
   };
   var media = { entries: {}, bytes: 0, clock: 0 };
@@ -112,6 +115,7 @@
           throw error;
         });
       }
+      state.lastServerContactAt = Date.now();
       if (expectBlob) return response.blob();
       if (response.status === 204) return null;
       return response.text().then(function (text) {
@@ -370,9 +374,13 @@
     return minute < end && days.indexOf(previous) >= 0;
   }
 
+  // Building an Intl formatter is slow on TV hardware; the next-change search
+  // evaluates schedules thousands of times, so formatters are reused.
+  var zoneFormatters = {};
+
   function zonedParts(date, timezone) {
     try {
-      var formatter = new Intl.DateTimeFormat("en-US", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false, weekday: "short" });
+      var formatter = zoneFormatters[timezone] || (zoneFormatters[timezone] = new Intl.DateTimeFormat("en-US", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false, weekday: "short" }));
       var parts = formatter.formatToParts(date), out = {};
       parts.forEach(function (p) { out[p.type] = p.value; });
       var dayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
@@ -450,17 +458,49 @@
 
   function downloadAsset(asset) {
     var path = asset.downloadPath;
-    if (/^https?:\/\//i.test(path)) {
-      return fetch(path, { headers: { Authorization: "Bearer " + state.credential.deviceCredential } }).then(function (response) {
-        if (!response.ok) {
+    var url = /^https?:\/\//i.test(path) ? path : state.serverUrl + path;
+    return fetch(url, { headers: { Authorization: "Bearer " + state.credential.deviceCredential }, cache: "no-store" }).then(function (response) {
+      if (!response.ok) {
+        return response.text().then(function (text) {
           var error = new Error("Media download failed: HTTP " + response.status);
           error.status = response.status;
+          try { error.code = JSON.parse(text).error.code || ""; } catch (_) {}
           throw error;
-        }
-        return response.blob();
+        });
+      }
+      state.lastServerContactAt = Date.now();
+      return readWithProgress(response, asset);
+    });
+  }
+
+  // Streams the body so the service overlay can show progress and speed.
+  function readWithProgress(response, asset) {
+    var transfer = {
+      key: mediaKey(asset),
+      total: Number(response.headers.get("Content-Length")) || Number(asset.fileSize) || 0,
+      loaded: 0,
+      startedAt: Date.now()
+    };
+    state.downloads[transfer.key] = transfer;
+    var finish = function (blob) {
+      var elapsed = Date.now() - transfer.startedAt;
+      if (elapsed > 300 && blob.size > 64 * 1024) state.lastDownloadBps = Math.round(blob.size * 1000 / elapsed);
+      delete state.downloads[transfer.key];
+      return blob;
+    };
+    var fail = function (error) { delete state.downloads[transfer.key]; throw error; };
+    if (!response.body || !response.body.getReader) return response.blob().then(finish, fail);
+    var reader = response.body.getReader();
+    var chunks = [];
+    var pump = function () {
+      return reader.read().then(function (result) {
+        if (result.done) return finish(new Blob(chunks, { type: response.headers.get("Content-Type") || asset.mimeType || "" }));
+        chunks.push(result.value);
+        transfer.loaded += result.value.byteLength;
+        return pump();
       });
-    }
-    return request("GET", path, null, {}, true);
+    };
+    return pump().catch(fail);
   }
 
   function pinMedia(key, change) {
@@ -1036,7 +1076,163 @@
     if (state.credential) runPaired(); else beginPairing();
   }
 
+  // ---- Service overlay (remote Up) ------------------------------------------
+
+  var info = { element: null, refreshTimer: null, latencyTimer: null, hideTimer: null, latencyMs: null, latencyError: null, nextChange: null, nextChangeAt: 0 };
+
+  function formatBytes(value) {
+    var units = ["Б", "КБ", "МБ", "ГБ", "ТБ"], size = Number(value) || 0, unit = 0;
+    if (size < 1024) return size + " Б";
+    while (size >= 1024 && unit < units.length - 1) { size /= 1024; unit++; }
+    return (size >= 100 ? size.toFixed(0) : size.toFixed(1)) + " " + units[unit];
+  }
+
+  function formatSpeed(bytesPerSecond) {
+    var bits = bytesPerSecond * 8;
+    return bits >= 1e6 ? (bits / 1e6).toFixed(1) + " Мбит/с" : Math.round(bits / 1e3) + " Кбит/с";
+  }
+
+  function formatDuration(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor(s / 3600) % 24, m = Math.floor(s / 60) % 60;
+    if (d > 0) return d + " д " + h + " ч";
+    if (h > 0) return h + " ч " + m + " мин";
+    if (m > 0) return m + " мин " + (s % 60) + " с";
+    return s + " с";
+  }
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+
+  // The webOS player has no transition list, so the next change is found by
+  // evaluating the cached manifest minute by minute for the next 48 hours.
+  function computeNextChange() {
+    if (!state.manifest) return null;
+    var now = Date.now();
+    var current = selectPlaylist(state.manifest, new Date(now));
+    var key = current ? current.id + ":" + current.revision : "";
+    var start = Math.floor(now / 60000) * 60000;
+    for (var minute = 1; minute <= 48 * 60; minute++) {
+      var at = new Date(start + minute * 60000);
+      var next = selectPlaylist(state.manifest, at);
+      if ((next ? next.id + ":" + next.revision : "") !== key) return at;
+    }
+    return null;
+  }
+
+  function nextChangeText() {
+    if (Date.now() - info.nextChangeAt > 60000) {
+      info.nextChange = computeNextChange();
+      info.nextChangeAt = Date.now();
+    }
+    var at = info.nextChange;
+    if (!at) return "не запланирована";
+    var today = new Date().toDateString() === at.toDateString();
+    var when = (today ? "" : pad(at.getDate()) + "." + pad(at.getMonth() + 1) + " ") + pad(at.getHours()) + ":" + pad(at.getMinutes());
+    var left = at.getTime() - Date.now();
+    return left > 0 ? when + " (через " + formatDuration(left) + ")" : when;
+  }
+
+  function activeDownload() {
+    var loaded = 0, total = 0, count = 0, startedAt = Date.now();
+    Object.keys(state.downloads).forEach(function (key) {
+      var t = state.downloads[key];
+      loaded += t.loaded;
+      total += t.total;
+      startedAt = Math.min(startedAt, t.startedAt);
+      count++;
+    });
+    if (!count) return null;
+    var elapsed = Date.now() - startedAt;
+    return { loaded: loaded, total: total, count: count, bytesPerSecond: elapsed > 500 && loaded > 0 ? Math.round(loaded * 1000 / elapsed) : null };
+  }
+
+  function infoLines() {
+    var lines = [];
+    var credential = state.credential || {};
+    var host = (/^https?:\/\/([^\/:]+)/i.exec(state.serverUrl || "") || [])[1] || "—";
+    lines.push("Экран: " + (credential.screenName || "не привязан") + " · Tilecast webOS " + VERSION);
+    var contactAge = state.lastServerContactAt ? Date.now() - state.lastServerContactAt : Infinity;
+    lines.push("Сервер: " + host + " · " + (contactAge < 45000 ? "на связи" : "нет связи" + (isFinite(contactAge) ? " " + formatDuration(contactAge) : "")));
+    var download = activeDownload();
+    var latency = info.latencyMs != null ? "задержка " + info.latencyMs + " мс" : info.latencyError ? "ошибка: " + info.latencyError : "задержка …";
+    var speed = download && download.bytesPerSecond ? "загрузка " + formatSpeed(download.bytesPerSecond) :
+      state.lastDownloadBps ? "последняя загрузка " + formatSpeed(state.lastDownloadBps) : null;
+    lines.push("Соединение: " + latency + (speed ? " · " + speed : ""));
+    var items = playlistItems();
+    if (state.currentPlaylist) {
+      lines.push("Плейлист: " + (state.currentPlaylist.name || state.currentPlaylist.id) + (items.length ? " (элемент " + (state.itemIndex + 1) + " из " + items.length + ")" : ""));
+    } else {
+      lines.push("Плейлист: нет активного контента");
+    }
+    lines.push("Следующая смена: " + nextChangeText());
+    lines.push("Хранилище: " + formatBytes(media.bytes) + " из " + formatBytes(MEDIA_CACHE_BYTES) + " (память плеера)");
+    if (download) {
+      var percent = download.total ? Math.min(100, Math.round(download.loaded * 100 / download.total)) : 0;
+      lines.push("Загрузка контента: " + percent + "% · " + formatBytes(download.loaded) + (download.total ? " из " + formatBytes(download.total) : "") + " · файлов " + download.count);
+    }
+    if (state.lastError) lines.push("Ошибка: " + state.lastError);
+    if (state.manifest && state.manifest.manifestVersion) lines.push("Версия манифеста: " + state.manifest.manifestVersion);
+    return { lines: lines, progress: download && download.total ? download.loaded / download.total : null };
+  }
+
+  function renderInfo() {
+    if (!info.element) return;
+    var data = infoLines();
+    info.element.textContent = "";
+    data.lines.forEach(function (line) {
+      var row = document.createElement("div");
+      row.textContent = line;
+      info.element.appendChild(row);
+    });
+    if (data.progress != null) {
+      // Width is set through the CSSOM: the player CSP blocks inline style attributes.
+      var bar = document.createElement("div");
+      var fill = document.createElement("span");
+      bar.className = "info-bar";
+      fill.style.width = Math.round(data.progress * 100) + "%";
+      bar.appendChild(fill);
+      info.element.appendChild(bar);
+    }
+  }
+
+  function measureLatency() {
+    if (!state.serverUrl) return;
+    var started = Date.now();
+    request("GET", "/api/v1/system/identity", null, {}, false).then(function () {
+      info.latencyMs = Date.now() - started;
+      info.latencyError = null;
+    }).catch(function (error) {
+      info.latencyMs = null;
+      info.latencyError = error.message || "нет ответа";
+    });
+  }
+
+  function hideInfo() {
+    clearInterval(info.refreshTimer);
+    clearInterval(info.latencyTimer);
+    clearTimeout(info.hideTimer);
+    if (info.element && info.element.parentNode) info.element.parentNode.removeChild(info.element);
+    info.element = null;
+  }
+
+  function toggleInfo() {
+    if (info.element) return hideInfo();
+    info.element = document.createElement("div");
+    info.element.className = "info";
+    document.body.appendChild(info.element);
+    info.nextChangeAt = 0;
+    measureLatency();
+    renderInfo();
+    info.refreshTimer = setInterval(renderInfo, 1000);
+    info.latencyTimer = setInterval(measureLatency, 5000);
+    info.hideTimer = setTimeout(hideInfo, 30000);
+  }
+
   document.addEventListener("keydown", function (event) {
+    if (event.keyCode === 38 && !document.getElementById("server-form")) {
+      toggleInfo();
+      event.preventDefault();
+      return;
+    }
     if (event.keyCode === 461 || event.keyCode === 27) {
       if (!document.getElementById("server-form")) showSetup("");
       event.preventDefault();

@@ -21,3 +21,7 @@ button { background: #14b8a6; color: #06201e; font-weight: 700; }
 .fit-stretch { object-fit: fill; }
 .status { position: absolute; right: 24px; bottom: 20px; z-index: 20; padding: 10px 15px; border-radius: 9px; background: rgba(0,0,0,.62); color: #cbd5e1; font-size: 18px; opacity: 0; transition: opacity .2s; }
 .status.show { opacity: 1; }
+/* Service overlay (remote Up): deliberately faint so it does not distract viewers. */
+.info { position: fixed; left: 36px; bottom: 28px; z-index: 30; max-width: 900px; color: #fff; opacity: .42; font-size: 21px; line-height: 1.45; text-shadow: 1px 1px 3px #000; pointer-events: none; }
+.info-bar { width: 420px; height: 5px; margin-top: 8px; background: rgba(255,255,255,.25); }
+.info-bar span { display: block; height: 100%; background: #fff; }
