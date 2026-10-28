@@ -111,7 +111,7 @@ func (s *server) recordHeartbeatActivity(r *http.Request, screenID uuid.UUID, sn
 				ID: uuid.New(), EventType: "heartbeat.gap_detected", Category: "connectivity", Severity: "warning",
 				OccurredAt: gapAt, PlayerTimezone: "UTC", Result: "unknown",
 				DurationMS: durationPointer(gap.Milliseconds()), FailureCode: "heartbeat_gap",
-				FailureMessage: "Player stopped reporting within the expected heartbeat window.", Priority: 9,
+				FailureMessage: "Плеер не вышел на связь в ожидаемое время.", Priority: 9,
 				Metadata: map[string]any{"lastHeartbeatAt": snapshot.previousHeartbeat.UTC(), "restoredAt": now},
 			})
 			s.recordServerTransition(r, tx, screenID, playerActivityEventInput{

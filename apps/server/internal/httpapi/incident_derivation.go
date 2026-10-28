@@ -44,61 +44,61 @@ func incidentSignalFor(event playerActivityEventInput) (incidentSignal, bool) {
 	case "heartbeat.gap_detected", "connection.lost", "player.disconnected":
 		return incidentSignal{
 			Type: incidentConnectivity, Opens: true, Severity: "error",
-			Title:       "Screen stopped reporting",
-			Description: "The Player stopped reporting within the expected heartbeat window.",
+			Title:       "Экран перестал выходить на связь",
+			Description: "Плеер не вышел на связь в ожидаемое время.",
 			// The server knows reporting stopped. It does not know why, and a
 			// network guess here would be shown to an operator as fact.
 			ProbableCause: "",
 		}, true
 	case "connection.restored", "player.connected":
-		return incidentSignal{Type: incidentConnectivity, ResolutionHint: "Connection restored."}, true
+		return incidentSignal{Type: incidentConnectivity, ResolutionHint: "Связь восстановлена."}, true
 
 	case "renderer.failure":
 		return incidentSignal{
 			Type: incidentPlayback, Opens: true, Severity: "error",
-			Title: "Playback is failing", Description: "The renderer reported a failure.",
-			ProbableCause: "Renderer failure reported by the Player.",
+			Title: "Сбой воспроизведения", Description: "Модуль показа сообщил об ошибке.",
+			ProbableCause: "Плеер сообщил об ошибке модуля показа.",
 		}, true
 	case "decoder.failure":
 		return incidentSignal{
 			Type: incidentPlayback, Opens: true, Severity: "error",
-			Title: "Playback is failing", Description: "Media decoding failed.",
-			ProbableCause: "Decoder failure reported by the Player.",
+			Title: "Сбой воспроизведения", Description: "Не удалось декодировать медиафайл.",
+			ProbableCause: "Плеер сообщил об ошибке декодера.",
 		}, true
 	case "foreground_playback.lost":
 		return incidentSignal{
 			Type: incidentPlayback, Opens: true, Severity: "warning",
-			Title: "Playback is not on screen", Description: "The Player is running in the background.",
-			ProbableCause: "Another application took the foreground.",
+			Title: "Показ не на экране", Description: "Плеер работает в фоне.",
+			ProbableCause: "На экране открыто другое приложение.",
 		}, true
 	case "renderer.recovered", "presentation.recovered", "presentation.started":
-		return incidentSignal{Type: incidentPlayback, ResolutionHint: "Playback resumed."}, true
+		return incidentSignal{Type: incidentPlayback, ResolutionHint: "Показ возобновился."}, true
 
 	case "storage.pressure":
 		return incidentSignal{
 			Type: incidentStorage, Opens: true, Severity: "warning",
-			Title: "Storage is nearly full", Description: "Cache use crossed the configured pressure threshold.",
-			ProbableCause: "Cached media exceeds the configured cache limit.",
+			Title: "Заканчивается место на устройстве", Description: "Кэш превысил заданный порог заполнения.",
+			ProbableCause: "Медиафайлы в кэше превышают заданный лимит.",
 		}, true
 	case "storage.recovered":
-		return incidentSignal{Type: incidentStorage, ResolutionHint: "Storage use fell below the recovery threshold."}, true
+		return incidentSignal{Type: incidentStorage, ResolutionHint: "Заполнение хранилища вернулось к норме."}, true
 
 	case "safe_mode.entered":
 		return incidentSignal{
 			Type: incidentSafeMode, Opens: true, Severity: "critical",
-			Title: "Player is in safe mode", Description: "The Player entered safe mode and is not playing assigned content.",
-			ProbableCause: "Repeated playback failures escalated to safe mode.",
+			Title: "Плеер в безопасном режиме", Description: "Плеер перешёл в безопасный режим и не показывает назначенный контент.",
+			ProbableCause: "Повторяющиеся сбои показа перевели плеер в безопасный режим.",
 		}, true
 	case "safe_mode.exited":
-		return incidentSignal{Type: incidentSafeMode, ResolutionHint: "Safe mode exited."}, true
+		return incidentSignal{Type: incidentSafeMode, ResolutionHint: "Безопасный режим выключен."}, true
 
 	case "update.installation_failed":
 		return incidentSignal{
 			Type: incidentUpdate, Opens: true, Severity: "error",
-			Title: "Player update failed", Description: "An update did not install.",
+			Title: "Не удалось обновить плеер", Description: "Обновление не установилось.",
 		}, true
 	case "update.installation_completed":
-		return incidentSignal{Type: incidentUpdate, ResolutionHint: "The expected Player version reconnected."}, true
+		return incidentSignal{Type: incidentUpdate, ResolutionHint: "Плеер вышел на связь с ожидаемой версией."}, true
 	}
 	return incidentSignal{}, false
 }
@@ -146,7 +146,7 @@ func openOrRepeatIncident(r *http.Request, tx pgx.Tx, screenID uuid.UUID, key st
 		return err
 	}
 	if tag.RowsAffected() > 0 {
-		return appendIncidentEvent(ctx, tx, key, event, "recurrence", "Condition reported again.")
+		return appendIncidentEvent(ctx, tx, key, event, "recurrence", "Проблема повторилась.")
 	}
 
 	// An incident that already recovered but was never closed does not block a
@@ -213,7 +213,7 @@ func (s *server) syncOfflineIncidents(ctx context.Context) error {
 			id,incident_type,severity,status,title,description,opened_at,last_seen_at,
 			primary_screen_id,location_id,group_id,device_model,player_version,dedupe_key,metadata)
 		SELECT gen_random_uuid(),$1,'error','open',$2,
-		       'The Player has not reported within the heartbeat grace period.',
+		       'Плеер не выходит на связь дольше допустимого интервала.',
 		       -- Opened when reporting actually stopped, not when the sweep
 		       -- noticed, so time-to-recover measures the outage.
 		       s.last_heartbeat_at + $3::interval, now(),
@@ -231,15 +231,32 @@ func (s *server) syncOfflineIncidents(ctx context.Context) error {
 	}
 	// Recover the ones whose screen is reporting again. The heartbeat is the
 	// evidence, so this is an automatic recovery.
-	_, err := s.db.Exec(ctx, `
+	if _, err := s.db.Exec(ctx, `
 		UPDATE incidents i SET status='recovered',recovered_at=s.last_heartbeat_at,
 			recovery_mode='automatic',
-			resolution_reason=COALESCE(NULLIF(i.resolution_reason,''),'Screen is reporting again.'),
+			resolution_reason=COALESCE(NULLIF(i.resolution_reason,''),'Экран снова на связи.'),
 			updated_at=now()
 		FROM screens s
 		WHERE s.id=i.primary_screen_id AND i.incident_type=$1 AND i.status IN('open','acknowledged')
 		  AND s.last_heartbeat_at IS NOT NULL AND s.last_heartbeat_at >= now()-$2::interval`,
-		incidentConnectivity, fleetHeartbeatGrace)
+		incidentConnectivity, fleetHeartbeatGrace); err != nil {
+		return err
+	}
+	return s.resolveRetiredScreenIncidents(ctx)
+}
+
+// resolveRetiredScreenIncidents closes every incident of any type whose screen
+// was archived, deleted or unpaired. Such a screen never reports again, so
+// nothing would ever recover the incident and it would stay open forever.
+func (s *server) resolveRetiredScreenIncidents(ctx context.Context) error {
+	_, err := s.db.Exec(ctx, `
+		UPDATE incidents i SET status='resolved',resolved_at=now(),
+			resolution_reason=COALESCE(NULLIF(i.resolution_reason,''),'Экран удалён, отправлен в архив или отвязан.'),
+			updated_at=now()
+		FROM screens s
+		WHERE s.id=i.primary_screen_id AND i.status IN('open','acknowledged')
+		  AND (s.archived_at IS NOT NULL OR s.deleted_at IS NOT NULL
+		       OR NOT EXISTS(SELECT 1 FROM device_credentials c WHERE c.screen_id=s.id AND c.revoked_at IS NULL))`)
 	return err
 }
 
@@ -248,15 +265,15 @@ func (s *server) syncOfflineIncidents(ctx context.Context) error {
 func incidentTitleForType(incidentType string) string {
 	switch incidentType {
 	case incidentConnectivity:
-		return "Screen stopped reporting"
+		return "Экран перестал выходить на связь"
 	case incidentPlayback:
-		return "Playback is failing"
+		return "Сбой воспроизведения"
 	case incidentStorage:
-		return "Storage is nearly full"
+		return "Заканчивается место на устройстве"
 	case incidentSafeMode:
-		return "Player is in safe mode"
+		return "Плеер в безопасном режиме"
 	case incidentUpdate:
-		return "Player update failed"
+		return "Не удалось обновить плеер"
 	default:
 		return strings.ReplaceAll(incidentType, "_", " ")
 	}

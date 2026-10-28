@@ -31,7 +31,7 @@ export const russianAuto: Record<string, string> = {
   "A whole number.": "Целое число.",
   "A wide organization logo for Tilecast Studio and supported player screens.":
     "Широкий логотип организации для Tilecast Studio и поддерживаемых экранов-плееров.",
-  Acknowledge: "Подтвердить",
+  Acknowledge: "Взять в работу",
   "Active filters": "Активные фильтры",
   "Active incidents": "Активные инциденты",
   "Activity pages": "Страницы активности",
@@ -840,7 +840,7 @@ export const russianAuto: Record<string, string> = {
   "Required when requesting changes.": "Обязательно при запросе изменений.",
   "Requires a CA certificate when set.": "Требует сертификат CA, когда задано.",
   "Reset to now": "Сбросить на текущий момент",
-  Resolve: "Разрешить",
+  Resolve: "Закрыть",
   "Resolving Layout data…": "Разрешение данных макета…",
   "Resolving playlist data…": "Разрешение данных плейлиста…",
   Resource: "Ресурс",
