@@ -396,6 +396,28 @@ const useTakeovers = () =>
     refetchInterval: 10_000,
   });
 
+const useScheduledTakeovers = () =>
+  useQuery({
+    queryKey: ["takeovers", "scheduled"],
+    queryFn: api.scheduledTakeovers,
+    refetchInterval: 15_000,
+  });
+
+/** A Date as the value a datetime-local input expects, in local time. */
+function toLocalInput(value: Date) {
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
+}
+
+function formatTakeoverTime(value: Date) {
+  return value.toLocaleString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 /* A takeover is rare, high-impact, and irreversible from the player's
    point of view, so it stays a quiet header action until one is actually running.
    While a takeover is active the banner below becomes the loudest thing on the
@@ -409,12 +431,54 @@ function ActiveTakeoverBanners({ canManage }: { canManage: boolean }) {
       api.cancelTakeover(id, reason, auth.status?.csrfToken ?? ""),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["takeovers"] }),
   });
+  const scheduled = useScheduledTakeovers();
+  const cancelScheduled = useMutation({
+    mutationFn: (id: string) =>
+      api.cancelScheduledTakeover(id, auth.status?.csrfToken ?? ""),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["takeovers"] }),
+  });
   const active = (takeovers.data?.items ?? []).filter(
     (item) => item.status === "active",
   );
-  if (active.length === 0) return null;
+  const upcoming = (scheduled.data?.items ?? []).filter(
+    (item) => item.status !== "activated" && item.status !== "cancelled",
+  );
+  if (active.length === 0 && upcoming.length === 0) return null;
   return (
     <div className="takeover-banners">
+      {upcoming.map((item) => (
+        <Notice
+          key={item.id}
+          variant={item.status === "failed" ? "danger" : "info"}
+          title={
+            item.status === "failed"
+              ? `Временный показ не начался — ${item.name}`
+              : `Запланирован временный показ — ${item.name}`
+          }
+          action={
+            canManage && item.status !== "starting" ? (
+              <button
+                className="button button--secondary"
+                type="button"
+                disabled={cancelScheduled.isPending}
+                onClick={() => {
+                  if (
+                    item.status === "failed" ||
+                    confirm("Отменить запланированный временный показ?")
+                  )
+                    cancelScheduled.mutate(item.id);
+                }}
+              >
+                {item.status === "failed" ? "Скрыть" : "Отменить"}
+              </button>
+            ) : undefined
+          }
+        >
+          {item.status === "failed"
+            ? item.failure
+            : `«${item.playlistName}» с ${formatTakeoverTime(new Date(item.startsAt))} до ${formatTakeoverTime(new Date(item.expiresAt))} · экранов: ${item.screenIds.length}, групп: ${item.groupIds.length}.`}
+        </Notice>
+      ))}
       {active.map((item) => (
         <Notice
           key={item.id}
@@ -463,7 +527,25 @@ function TakeoverAction({ screens }: { screens: Screen[] }) {
   const [playlistId, setPlaylistId] = useState("");
   const [screenIds, setScreenIds] = useState<string[]>([]);
   const [groupIds, setGroupIds] = useState<string[]>([]);
-  const [minutes, setMinutes] = useState(60);
+  const [startMode, setStartMode] = useState<"now" | "later">("now");
+  const [startAt, setStartAt] = useState(() =>
+    toLocalInput(new Date(Date.now() + 60 * 60_000)),
+  );
+  const [durationHours, setDurationHours] = useState(1);
+  const [durationMinutes, setDurationMinutes] = useState(0);
+  const minutes = durationHours * 60 + durationMinutes;
+  const startDate = startMode === "later" ? new Date(startAt) : null;
+  const timingError =
+    minutes <= 0
+      ? "Укажите длительность больше нуля."
+      : startDate &&
+          (Number.isNaN(startDate.getTime()) ||
+            startDate.getTime() < Date.now())
+        ? "Время начала должно быть в будущем."
+        : "";
+  const endDate = new Date(
+    (startDate?.getTime() ?? Date.now()) + minutes * 60_000,
+  );
   const takeovers = useTakeovers();
   const activeCount = (takeovers.data?.items ?? []).filter(
     (item) => item.status === "active",
@@ -492,7 +574,10 @@ function TakeoverAction({ screens }: { screens: Screen[] }) {
           playlistId,
           screenIds,
           groupIds,
-          expiresAt: new Date(Date.now() + minutes * 60_000).toISOString(),
+          ...(startDate ? { startsAt: startDate.toISOString() } : {}),
+          expiresAt: new Date(
+            (startDate?.getTime() ?? Date.now()) + minutes * 60_000,
+          ).toISOString(),
           password,
         },
         auth.status?.csrfToken ?? "",
@@ -503,6 +588,7 @@ function TakeoverAction({ screens }: { screens: Screen[] }) {
       setPlaylistId("");
       setScreenIds([]);
       setGroupIds([]);
+      setStartMode("now");
       await queryClient.invalidateQueries({ queryKey: ["takeovers"] });
     },
   });
@@ -516,7 +602,10 @@ function TakeoverAction({ screens }: { screens: Screen[] }) {
   const everyScreenSelected =
     screens.length > 0 && screens.every((item) => screenIds.includes(item.id));
   const ready = Boolean(
-    name && playlistId && (screenIds.length > 0 || groupIds.length > 0),
+    name &&
+    playlistId &&
+    (screenIds.length > 0 || groupIds.length > 0) &&
+    !timingError,
   );
   const beginActivation = (confirmed: boolean) => {
     const requiresPassword = Boolean(
@@ -531,7 +620,9 @@ function TakeoverAction({ screens }: { screens: Screen[] }) {
     if (
       confirmed ||
       confirm(
-        "Activate the selected playlist for these targets? Existing overlapping takeovers will be replaced.",
+        startDate
+          ? `Запланировать временный показ с ${formatTakeoverTime(startDate)} до ${formatTakeoverTime(endDate)}? В это время он заменит текущий временный показ на выбранных экранах.`
+          : "Activate the selected playlist for these targets? Existing overlapping takeovers will be replaced.",
       )
     )
       activate.mutate(password);
@@ -583,18 +674,115 @@ function TakeoverAction({ screens }: { screens: Screen[] }) {
               ))}
             </Select>
           </label>
-          <label className="field">
-            <span className="field__label">Expires in</span>
-            <Select
-              value={minutes}
-              onChange={(event) => setMinutes(Number(event.target.value))}
+          <fieldset className="takeover-timing">
+            <legend>Время показа</legend>
+            <div className="takeover-timing__start" role="radiogroup">
+              <label className="checkbox-control">
+                <input
+                  type="radio"
+                  name="takeover-start"
+                  checked={startMode === "now"}
+                  onChange={() => setStartMode("now")}
+                />
+                <span>Начать сейчас</span>
+              </label>
+              <label className="checkbox-control">
+                <input
+                  type="radio"
+                  name="takeover-start"
+                  checked={startMode === "later"}
+                  onChange={() => setStartMode("later")}
+                />
+                <span>Начать в указанное время</span>
+              </label>
+              {startMode === "later" && (
+                <input
+                  type="datetime-local"
+                  aria-label="Начало показа"
+                  value={startAt}
+                  min={toLocalInput(new Date())}
+                  onChange={(event) => setStartAt(event.target.value)}
+                />
+              )}
+            </div>
+            <div className="takeover-timing__duration">
+              <span className="field__label">Длительность</span>
+              <div className="takeover-timing__inputs">
+                <label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={720}
+                    value={durationHours}
+                    onChange={(event) =>
+                      setDurationHours(
+                        Math.max(
+                          0,
+                          Math.floor(Number(event.target.value) || 0),
+                        ),
+                      )
+                    }
+                  />
+                  <span>ч</span>
+                </label>
+                <label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={59}
+                    step={5}
+                    value={durationMinutes}
+                    onChange={(event) =>
+                      setDurationMinutes(
+                        Math.min(
+                          59,
+                          Math.max(
+                            0,
+                            Math.floor(Number(event.target.value) || 0),
+                          ),
+                        ),
+                      )
+                    }
+                  />
+                  <span>мин</span>
+                </label>
+              </div>
+              <div className="takeover-timing__presets">
+                {(
+                  [
+                    [15, "15 мин"],
+                    [30, "30 мин"],
+                    [60, "1 ч"],
+                    [120, "2 ч"],
+                    [240, "4 ч"],
+                    [480, "8 ч"],
+                    [1440, "24 ч"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className="button button--quiet button--compact"
+                    aria-pressed={minutes === value}
+                    onClick={() => {
+                      setDurationHours(Math.floor(value / 60));
+                      setDurationMinutes(value % 60);
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p
+              className={
+                timingError ? "field__error" : "takeover-timing__summary"
+              }
             >
-              <option value={15}>15 minutes</option>
-              <option value={60}>1 hour</option>
-              <option value={240}>4 hours</option>
-              <option value={1440}>24 hours</option>
-            </Select>
-          </label>
+              {timingError ||
+                `${startDate ? `С ${formatTakeoverTime(startDate)}` : "Сразу после запуска"} до ${formatTakeoverTime(endDate)}`}
+            </p>
+          </fieldset>
           <fieldset className="takeover-form__targets">
             <legend>Target screens</legend>
             <div className="takeover-form__targets-actions">
@@ -698,7 +886,9 @@ function TakeoverAction({ screens }: { screens: Screen[] }) {
               >
                 {activate.isPending
                   ? "Activating…"
-                  : "Hold to activate takeover"}
+                  : startDate
+                    ? "Удерживайте, чтобы запланировать"
+                    : "Hold to activate takeover"}
               </HoldButton>
             ) : (
               <button
@@ -707,7 +897,11 @@ function TakeoverAction({ screens }: { screens: Screen[] }) {
                 disabled={!ready || activate.isPending}
                 onClick={() => beginActivation(false)}
               >
-                {activate.isPending ? "Activating…" : "Activate takeover"}
+                {activate.isPending
+                  ? "Activating…"
+                  : startDate
+                    ? "Запланировать показ"
+                    : "Activate takeover"}
               </button>
             )}
           </div>
@@ -1018,7 +1212,17 @@ export function ScreenListContent({
     );
   return (
     <section className="screen-workspace" aria-label="Paired screens">
-      <ScreenSummary screens={screens} status={status} onStatus={setStatus} />
+      <ScreenSummary
+        screens={screens}
+        status={status}
+        onStatus={setStatus}
+        filtered={anyFilterActive}
+        onShowAll={clearFilters}
+        groupedByLocation={groupBy === "location"}
+        onGroupByLocation={(grouped) =>
+          setGroupBy(grouped ? "location" : "none")
+        }
+      />
       {/* One controls block, three deliberate bands: filters on the left, presentation
           utilities right-aligned, then the active-filter chips underneath. Filtering and
           presentation used to be interleaved, which is why the row order matters here. */}
@@ -1470,14 +1674,33 @@ function FilterSelect({
   );
 }
 
+/** «1 местоположение», «2 местоположения», «5 местоположений». */
+function locationsLabel(count: number) {
+  const tens = count % 100;
+  const ones = count % 10;
+  if (tens >= 11 && tens <= 14) return "Местоположений";
+  if (ones === 1) return "Местоположение";
+  if (ones >= 2 && ones <= 4) return "Местоположения";
+  return "Местоположений";
+}
+
 function ScreenSummary({
   screens,
   status,
   onStatus,
+  filtered,
+  onShowAll,
+  groupedByLocation,
+  onGroupByLocation,
 }: {
   screens: Screen[];
   status: string;
   onStatus: (value: string) => void;
+  /** Whether any filter narrows the list; "Screens" then clears them all. */
+  filtered: boolean;
+  onShowAll: () => void;
+  groupedByLocation: boolean;
+  onGroupByLocation: (grouped: boolean) => void;
 }) {
   const online = screens.filter((item) => item.status === "online").length;
   const attention = screens.filter(needsAttention).length;
@@ -1492,9 +1715,15 @@ function ScreenSummary({
       role="group"
       aria-label="Fleet summary"
     >
-      <div className="summary-bar__item">
+      <button
+        className="summary-bar__item"
+        type="button"
+        aria-pressed={!filtered}
+        title="Показать все экраны"
+        onClick={onShowAll}
+      >
         <strong>{screens.length}</strong> <span>Screens</span>
-      </div>
+      </button>
       <button
         className="summary-bar__item"
         type="button"
@@ -1511,10 +1740,15 @@ function ScreenSummary({
       >
         <strong>{attention}</strong> <span>Needs attention</span>
       </button>
-      <div className="summary-bar__item">
-        <strong>{locations}</strong>{" "}
-        <span>Location{locations === 1 ? "" : "s"}</span>
-      </div>
+      <button
+        className="summary-bar__item"
+        type="button"
+        aria-pressed={groupedByLocation}
+        title="Сгруппировать по местоположению"
+        onClick={() => onGroupByLocation(!groupedByLocation)}
+      >
+        <strong>{locations}</strong> <span>{locationsLabel(locations)}</span>
+      </button>
     </div>
   );
 }

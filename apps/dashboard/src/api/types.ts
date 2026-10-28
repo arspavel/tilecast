@@ -815,6 +815,21 @@ export type Takeover = {
   failedCount: number;
 };
 
+/** A Takeover prepared ahead of time; the server starts it at startsAt. */
+export type ScheduledTakeover = {
+  id: string;
+  name: string;
+  playlistId: string;
+  playlistName: string;
+  screenIds: string[];
+  groupIds: string[];
+  startsAt: string;
+  expiresAt: string;
+  status: "scheduled" | "starting" | "activated" | "cancelled" | "failed";
+  takeoverId?: string;
+  failure?: string;
+};
+
 export type PresentationOverride = {
   id: string;
   targetType: "screen" | "group";

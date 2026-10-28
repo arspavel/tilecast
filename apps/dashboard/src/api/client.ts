@@ -74,6 +74,7 @@ import type {
   DataSourceListResult,
   PlayerCommand,
   Takeover,
+  ScheduledTakeover,
   PresentationOverride,
   NWSAlertMonitor,
   NWSAlertRule,
@@ -1555,6 +1556,8 @@ export const api = {
       playlistId: string;
       screenIds: string[];
       groupIds: string[];
+      /** Omitted to start now; otherwise the server starts it then. */
+      startsAt?: string;
       expiresAt: string;
       password?: string;
     },
@@ -1563,12 +1566,22 @@ export const api = {
     request<{
       id: string;
       status: string;
-      affectedCount: number;
+      affectedCount?: number;
+      startsAt?: string;
       expiresAt: string;
     }>("/takeovers", {
       method: "POST",
       headers: { "X-CSRF-Token": csrfToken },
       body: JSON.stringify(input),
+    }),
+  scheduledTakeovers: () =>
+    request<{ items: ScheduledTakeover[]; total: number }>(
+      "/takeovers/scheduled",
+    ),
+  cancelScheduledTakeover: (id: string, csrfToken: string) =>
+    request<void>(`/takeovers/scheduled/${id}`, {
+      method: "DELETE",
+      headers: { "X-CSRF-Token": csrfToken },
     }),
   cancelTakeover: (id: string, reason: string, csrfToken: string) =>
     request<{ id: string; status: string }>(`/takeovers/${id}/cancel`, {

@@ -123,10 +123,78 @@
   border-radius: var(--tc-radius-panel);
 }
 
-.takeover-form__targets > legend {
+.takeover-form__targets > legend,
+.takeover-timing > legend {
   padding: 0 var(--tc-space-1);
   color: var(--tc-text-secondary);
   font: var(--tc-text-label);
+}
+
+/* When the Takeover runs: start now or at a chosen time, for any length. */
+.takeover-timing {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tc-space-3) var(--tc-space-4);
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--tc-space-3);
+  border: 1px solid var(--tc-border-default);
+  border-radius: var(--tc-radius-panel);
+}
+
+.takeover-timing__start,
+.takeover-timing__duration {
+  display: grid;
+  align-content: start;
+  gap: var(--tc-space-2);
+}
+
+.takeover-timing__start input[type="datetime-local"] {
+  max-width: 16rem;
+}
+
+.takeover-timing__inputs {
+  display: flex;
+  gap: var(--tc-space-3);
+}
+
+.takeover-timing__inputs label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tc-space-1);
+  color: var(--tc-text-secondary);
+}
+
+.takeover-timing__inputs input {
+  width: 5rem;
+}
+
+.takeover-timing__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tc-space-1);
+}
+
+.takeover-timing__presets [aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.takeover-timing__summary,
+.takeover-timing > .field__error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.takeover-timing__summary {
+  color: var(--tc-text-primary);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .takeover-timing {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* Select-the-whole-fleet sits above the list rather than in it, because it is a
@@ -445,17 +513,19 @@
   box-shadow: none;
 }
 
-/* One width for every filter, so the row does not read as a set of arbitrarily
-   sized fields. Long option text truncates inside the trigger. */
+/* Each filter is as wide as its current value, so labels such as "Требует
+   внимания" or "Все местоположения" read in full; the row wraps instead of
+   cutting them. A common minimum keeps short values from looking stray. */
 .screen-filter-select.signal-select {
   flex: 0 0 auto;
-  width: 10.5rem;
-  min-width: 10.5rem;
+  width: auto;
+  min-width: 9rem;
+  max-width: 20rem;
 }
 
 .screen-view-controls .screen-filter-select.signal-select {
-  width: 11.5rem;
-  min-width: 11.5rem;
+  width: auto;
+  min-width: 10rem;
 }
 
 .screen-filter-select--block.signal-select {

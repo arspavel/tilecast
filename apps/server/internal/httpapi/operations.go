@@ -50,8 +50,27 @@ type takeoverInput struct {
 	PlaylistID  uuid.UUID   `json:"playlistId"`
 	ScreenIDs   []uuid.UUID `json:"screenIds"`
 	GroupIDs    []uuid.UUID `json:"groupIds"`
-	ExpiresAt   time.Time   `json:"expiresAt"`
-	Password    string      `json:"password"`
+	// StartsAt schedules the Takeover; absent or not in the future means now.
+	StartsAt  *time.Time `json:"startsAt,omitempty"`
+	ExpiresAt time.Time  `json:"expiresAt"`
+	Password  string     `json:"password"`
+}
+
+// takeoverFailure is why a Takeover could not start: a 4xx the operator can
+// act on, or an internal error (status 500) to log.
+type takeoverFailure struct {
+	status  int
+	code    string
+	message string
+	err     error
+}
+
+func (s *server) writeTakeoverFailure(w http.ResponseWriter, r *http.Request, failure *takeoverFailure) {
+	if failure.status >= 500 {
+		s.internalError(w, r, failure.err)
+		return
+	}
+	writeError(w, failure.status, failure.code, failure.message)
 }
 
 type commandInput struct {
@@ -160,9 +179,19 @@ func (s *server) activateTakeover(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 422, "takeover_target_required", fmt.Sprintf("A takeover may have at most %d targets.", s.operations.MaxTakeoverTargets))
 		return
 	}
+	// A start a few seconds away is "now": the form fills in the current time.
+	start := now
+	scheduled := input.StartsAt != nil && input.StartsAt.After(now.Add(30*time.Second))
+	if scheduled {
+		start = input.StartsAt.UTC()
+		if start.Sub(now) > maxTakeoverScheduleAhead {
+			writeError(w, 422, "takeover_start_invalid", "Временный показ можно запланировать не более чем на 30 дней вперёд.")
+			return
+		}
+	}
 	maxTakeoverMinutes := s.runtimeInt(r, "takeover.maximum_duration_minutes", s.operations.MaxTakeoverDurationHours*60)
-	if !input.ExpiresAt.After(now) || input.ExpiresAt.Sub(now) > time.Duration(maxTakeoverMinutes)*time.Minute {
-		writeError(w, 422, "takeover_duration_exceeded", fmt.Sprintf("Takeover expiration must be within %d minutes.", maxTakeoverMinutes))
+	if !input.ExpiresAt.After(start) || input.ExpiresAt.Sub(start) > time.Duration(maxTakeoverMinutes)*time.Minute {
+		writeError(w, 422, "takeover_duration_exceeded", fmt.Sprintf("Длительность временного показа — до %d мин.", maxTakeoverMinutes))
 		return
 	}
 	var org uuid.UUID
@@ -176,7 +205,7 @@ func (s *server) activateTakeover(w http.ResponseWriter, r *http.Request) {
 	// Activation is immediate. Use the shared strict validator so a layout
 	// item, nested playlist, unavailable asset, or missing widget fallback
 	// cannot bypass readiness merely because playlist_items.asset_id is NULL.
-	if err := s.playlists.ValidatePresentationNow(r.Context(), "playlist", input.PlaylistID, now); err != nil {
+	if err := s.playlists.ValidatePresentationNow(r.Context(), "playlist", input.PlaylistID, start); err != nil {
 		writeError(w, 422, "takeover_playlist_not_ready", "Select a ready, non-empty playlist.")
 		return
 	}
@@ -189,118 +218,128 @@ func (s *server) activateTakeover(w http.ResponseWriter, r *http.Request) {
 		s.writePlaylistError(w, r, err)
 		return
 	}
-	tx, err := s.db.Begin(r.Context())
-	if err != nil {
-		s.internalError(w, r, err)
-		return
-	}
-	defer tx.Rollback(r.Context())
-	id := uuid.New()
-	if _, err = tx.Exec(r.Context(), `INSERT INTO takeovers(id,organization_id,name,description,playlist_id,status,activated_by,activated_at,expires_at)VALUES($1,$2,$3,$4,$5,'active',$6,$7,$8)`, id, org, input.Name, input.Description, input.PlaylistID, user.ID, now, input.ExpiresAt); err != nil {
-		s.internalError(w, r, err)
-		return
-	}
-	for _, screen := range uniqueUUIDs(input.ScreenIDs) {
-		if _, err = tx.Exec(r.Context(), `INSERT INTO takeover_targets(takeover_id,target_type,screen_id) SELECT $1,'screen',$2 WHERE EXISTS(SELECT 1 FROM screens WHERE id=$2 AND organization_id=$3)`, id, screen, org); err != nil {
+	if scheduled {
+		id := uuid.New()
+		if _, err := s.db.Exec(r.Context(), `INSERT INTO scheduled_takeovers(id,organization_id,name,description,playlist_id,screen_ids,group_ids,starts_at,expires_at,created_by)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+			id, org, input.Name, input.Description, input.PlaylistID, uniqueUUIDs(input.ScreenIDs), uniqueUUIDs(input.GroupIDs), start, input.ExpiresAt, user.ID); err != nil {
 			s.internalError(w, r, err)
 			return
+		}
+		_, _ = s.db.Exec(r.Context(), `INSERT INTO audit_logs(id,user_id,action,resource_type,resource_id)VALUES($1,$2,'takeover.scheduled','scheduled_takeover',$3)`, uuid.New(), user.ID, id.String())
+		writeJSON(w, http.StatusCreated, map[string]any{"data": map[string]any{"id": id, "status": "scheduled", "startsAt": start, "expiresAt": input.ExpiresAt}})
+		return
+	}
+	id, affected, failure := s.startTakeover(r.Context(), &user.ID, org, input, now)
+	if failure != nil {
+		s.writeTakeoverFailure(w, r, failure)
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]any{"data": map[string]any{"id": id, "status": "active", "affectedCount": affected, "expiresAt": input.ExpiresAt}})
+}
+
+// startTakeover activates a Takeover now: it records the targets, replaces
+// overlapping Takeovers, bumps every target's manifest and tells connected
+// players. Validation and authorization happen before; the scheduled-Takeover
+// worker calls it with the user who scheduled it.
+func (s *server) startTakeover(ctx context.Context, actor *uuid.UUID, org uuid.UUID, input takeoverInput, now time.Time) (uuid.UUID, int, *takeoverFailure) {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
+	}
+	defer tx.Rollback(ctx)
+	id := uuid.New()
+	if _, err = tx.Exec(ctx, `INSERT INTO takeovers(id,organization_id,name,description,playlist_id,status,activated_by,activated_at,expires_at)VALUES($1,$2,$3,$4,$5,'active',$6,$7,$8)`, id, org, input.Name, input.Description, input.PlaylistID, actor, now, input.ExpiresAt); err != nil {
+		return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
+	}
+	for _, screen := range uniqueUUIDs(input.ScreenIDs) {
+		if _, err = tx.Exec(ctx, `INSERT INTO takeover_targets(takeover_id,target_type,screen_id) SELECT $1,'screen',$2 WHERE EXISTS(SELECT 1 FROM screens WHERE id=$2 AND organization_id=$3)`, id, screen, org); err != nil {
+			return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 		}
 	}
 	for _, group := range uniqueUUIDs(input.GroupIDs) {
-		if _, err = tx.Exec(r.Context(), `INSERT INTO takeover_targets(takeover_id,target_type,screen_group_id) SELECT $1,'group',$2 WHERE EXISTS(SELECT 1 FROM screen_groups WHERE id=$2 AND organization_id=$3 AND deleted_at IS NULL)`, id, group, org); err != nil {
-			s.internalError(w, r, err)
-			return
+		if _, err = tx.Exec(ctx, `INSERT INTO takeover_targets(takeover_id,target_type,screen_group_id) SELECT $1,'group',$2 WHERE EXISTS(SELECT 1 FROM screen_groups WHERE id=$2 AND organization_id=$3 AND deleted_at IS NULL)`, id, group, org); err != nil {
+			return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 		}
 	}
-	rows, err := tx.Query(r.Context(), `SELECT DISTINCT s.id FROM screens s WHERE s.organization_id=$2 AND s.deleted_at IS NULL AND (s.id=ANY($3) OR EXISTS(SELECT 1 FROM screen_group_memberships m WHERE m.screen_id=s.id AND m.screen_group_id=ANY($4)))`, id, org, input.ScreenIDs, input.GroupIDs)
+	rows, err := tx.Query(ctx, `SELECT DISTINCT s.id FROM screens s WHERE s.organization_id=$2 AND s.deleted_at IS NULL AND (s.id=ANY($3) OR EXISTS(SELECT 1 FROM screen_group_memberships m WHERE m.screen_id=s.id AND m.screen_group_id=ANY($4)))`, id, org, input.ScreenIDs, input.GroupIDs)
 	if err != nil {
-		s.internalError(w, r, err)
-		return
+		return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 	}
 	screens := []uuid.UUID{}
 	for rows.Next() {
 		var screen uuid.UUID
 		if err = rows.Scan(&screen); err != nil {
 			rows.Close()
-			s.internalError(w, r, err)
-			return
+			return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 		}
 		screens = append(screens, screen)
 	}
 	rows.Close()
 	if err = rows.Err(); err != nil {
-		s.internalError(w, r, err)
-		return
+		return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 	}
 	if len(screens) == 0 {
-		writeError(w, 422, "takeover_target_required", "No eligible screens matched the targets.")
-		return
+		return uuid.Nil, 0, &takeoverFailure{status: 422, code: "takeover_target_required", message: "No eligible screens matched the targets."}
 	}
-	replacedRows, err := tx.Query(r.Context(), `SELECT DISTINCT es.takeover_id FROM takeover_screen_states es JOIN takeovers e ON e.id=es.takeover_id WHERE es.screen_id=ANY($1) AND e.status='active' AND e.id<>$2 AND es.state NOT IN ('restored','cancelled','expired')`, screens, id)
+	replacedRows, err := tx.Query(ctx, `SELECT DISTINCT es.takeover_id FROM takeover_screen_states es JOIN takeovers e ON e.id=es.takeover_id WHERE es.screen_id=ANY($1) AND e.status='active' AND e.id<>$2 AND es.state NOT IN ('restored','cancelled','expired')`, screens, id)
 	if err != nil {
-		s.internalError(w, r, err)
-		return
+		return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 	}
 	replacedIDs := []uuid.UUID{}
 	for replacedRows.Next() {
 		var replaced uuid.UUID
 		if err = replacedRows.Scan(&replaced); err != nil {
 			replacedRows.Close()
-			s.internalError(w, r, err)
-			return
+			return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 		}
 		replacedIDs = append(replacedIDs, replaced)
-		if _, err = tx.Exec(r.Context(), `UPDATE takeovers SET status='cancelled',cancelled_at=now(),cancellation_reason='Replaced by another Takeover',updated_at=now() WHERE id=$1 AND status='active'`, replaced); err != nil {
+		if _, err = tx.Exec(ctx, `UPDATE takeovers SET status='cancelled',cancelled_at=now(),cancellation_reason='Replaced by another Takeover',updated_at=now() WHERE id=$1 AND status='active'`, replaced); err != nil {
 			replacedRows.Close()
-			s.internalError(w, r, err)
-			return
+			return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 		}
-		if _, err = tx.Exec(r.Context(), `INSERT INTO audit_logs(id,user_id,action,resource_type,resource_id)VALUES($1,$2,'takeover.replaced','takeover',$3)`, uuid.New(), user.ID, replaced.String()); err != nil {
+		if _, err = tx.Exec(ctx, `INSERT INTO audit_logs(id,user_id,action,resource_type,resource_id)VALUES($1,$2,'takeover.replaced','takeover',$3)`, uuid.New(), actor, replaced.String()); err != nil {
 			replacedRows.Close()
-			s.internalError(w, r, err)
-			return
+			return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 		}
 	}
 	replacedRows.Close()
 	if err = replacedRows.Err(); err != nil {
-		s.internalError(w, r, err)
-		return
+		return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 	}
 	versions := map[uuid.UUID]int64{}
 	for _, screen := range screens {
-		if _, err = tx.Exec(r.Context(), `UPDATE takeover_screen_states SET state='restored',restored_at=now(),last_updated_at=now() WHERE screen_id=$1 AND takeover_id=ANY($2) AND state NOT IN ('restored','cancelled','expired')`, screen, replacedIDs); err != nil {
-			s.internalError(w, r, err)
-			return
+		if _, err = tx.Exec(ctx, `UPDATE takeover_screen_states SET state='restored',restored_at=now(),last_updated_at=now() WHERE screen_id=$1 AND takeover_id=ANY($2) AND state NOT IN ('restored','cancelled','expired')`, screen, replacedIDs); err != nil {
+			return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 		}
 		var version int64
-		if err = tx.QueryRow(r.Context(), `UPDATE screen_manifest_state SET manifest_version=manifest_version+1,changed_at=now(),change_reason='takeover.activated' WHERE screen_id=$1 RETURNING manifest_version`, screen).Scan(&version); err != nil {
-			s.internalError(w, r, err)
-			return
+		if err = tx.QueryRow(ctx, `UPDATE screen_manifest_state SET manifest_version=manifest_version+1,changed_at=now(),change_reason='takeover.activated' WHERE screen_id=$1 RETURNING manifest_version`, screen).Scan(&version); err != nil {
+			return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 		}
 		versions[screen] = version
-		_, err = tx.Exec(r.Context(), `INSERT INTO takeover_screen_states(takeover_id,screen_id,manifest_version,state)VALUES($1,$2,$3,'pending')`, id, screen, version)
+		_, err = tx.Exec(ctx, `INSERT INTO takeover_screen_states(takeover_id,screen_id,manifest_version,state)VALUES($1,$2,$3,'pending')`, id, screen, version)
 		if err != nil {
-			s.internalError(w, r, err)
-			return
+			return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 		}
 	}
-	if _, err = tx.Exec(r.Context(), `INSERT INTO audit_logs(id,user_id,action,resource_type,resource_id)VALUES($1,$2,'takeover.activated','takeover',$3)`, uuid.New(), user.ID, id.String()); err != nil {
-		s.internalError(w, r, err)
-		return
+	if _, err = tx.Exec(ctx, `INSERT INTO audit_logs(id,user_id,action,resource_type,resource_id)VALUES($1,$2,'takeover.activated','takeover',$3)`, uuid.New(), actor, id.String()); err != nil {
+		return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 	}
-	if err = tx.Commit(r.Context()); err != nil {
-		s.internalError(w, r, err)
-		return
+	if err = tx.Commit(ctx); err != nil {
+		return uuid.Nil, 0, &takeoverFailure{status: 500, err: err}
 	}
 	// Emergency takeover preempts the lower-priority external presentation.
 	// For groups this stops every participant through the session's state rows.
-	s.stopAirplayForScreens(r.Context(), screens, user.ID, "emergency_takeover")
+	stopper := uuid.Nil // a scheduled Takeover whose author was deleted
+	if actor != nil {
+		stopper = *actor
+	}
+	s.stopAirplayForScreens(ctx, screens, stopper, "emergency_takeover")
 	for _, screen := range screens {
 		version := versions[screen]
 		s.devices.Notify(screen, map[string]any{"type": "takeover.changed", "takeoverId": id, "manifestVersion": version})
 		s.devices.Notify(screen, map[string]any{"type": "manifest.changed", "manifestVersion": version})
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{"data": map[string]any{"id": id, "status": "active", "affectedCount": len(screens), "expiresAt": input.ExpiresAt}})
+	return id, len(screens), nil
 }
 
 func (s *server) cancelTakeover(w http.ResponseWriter, r *http.Request) {

@@ -38,21 +38,13 @@
   container-type: inline-size;
 }
 
+/* On a wide page the search takes the space the filters leave; the filters
+   keep their natural width (screens.css), so their values are never cut. */
 @container (min-width: 58rem) {
-  .screen-toolbar {
-    flex-wrap: nowrap;
-  }
-
   .screen-toolbar .screen-search {
     flex: 1 1 14rem;
-    min-width: 10rem;
+    min-width: 12rem;
     max-width: none;
-  }
-
-  .screen-toolbar .screen-filter-select.signal-select {
-    flex: 0 1 8.75rem;
-    width: 8.75rem;
-    min-width: 0;
   }
 }
 

@@ -303,6 +303,8 @@ func (s *server) routes() http.Handler {
 			dashboard.With(s.requireRoles("owner", "administrator"), s.operationsRateLimit, s.requireCSRF).Post("/update-deployments", s.createUpdateDeployment)
 			dashboard.With(s.requireRoles("owner", "administrator"), s.requireCSRF).Post("/update-deployments/{id}/cancel", s.cancelUpdateDeployment)
 			dashboard.With(s.requireRoles("owner", "administrator"), s.requireCSRF).Post("/update-deployments/{id}/screens/{screenId}/retry", s.retryUpdateScreen)
+			dashboard.Get("/takeovers/scheduled", s.listScheduledTakeovers)
+			dashboard.With(s.requireRoles("owner", "administrator"), s.requireCSRF).Delete("/takeovers/scheduled/{id}", s.cancelScheduledTakeover)
 			dashboard.Get("/takeovers/{id}", s.getTakeover)
 			dashboard.With(s.requireRoles("owner", "administrator"), s.operationsRateLimit, s.requireCSRF).Post("/takeovers", s.activateTakeover)
 			dashboard.With(s.requireRoles("owner", "administrator"), s.requireCSRF).Post("/takeovers/{id}/cancel", s.cancelTakeover)
