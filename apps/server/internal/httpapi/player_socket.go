@@ -223,8 +223,18 @@ func (s *server) handleSocketStatus(r *http.Request, ctx context.Context, princi
 			}
 		}
 		var status playlists.PlayerStatus
-		if err := json.Unmarshal(statusPayload, &status); err == nil {
-			_ = s.playlists.ReportStatus(ctx, principal.ScreenID, status)
+		if err := json.Unmarshal(statusPayload, &status); err != nil {
+			s.logger.Warn("player status could not be decoded",
+				"error", err, "screen_id", principal.ScreenID)
+		} else {
+			if adjusted := playlists.NormalizePlayerStatus(&status); len(adjusted) > 0 {
+				s.logger.Warn("player status fields were out of range and cleared",
+					"fields", adjusted, "screen_id", principal.ScreenID)
+			}
+			if err := s.playlists.ReportStatus(ctx, principal.ScreenID, status); err != nil {
+				s.logger.Warn("player status could not be stored",
+					"error", err, "screen_id", principal.ScreenID)
+			}
 		}
 	}
 	if contactRecorded {

@@ -140,7 +140,7 @@ func (s *server) playerHeartbeat(w http.ResponseWriter, r *http.Request) {
 	s.fallbackAirplayForScreen(r.Context(), principal.ScreenID)
 	s.advanceCanaryDeploymentsForScreen(r.Context(), principal.ScreenID)
 	if s.playlists != nil {
-		_ = s.playlists.ReportStatus(r.Context(), principal.ScreenID, playlists.PlayerStatus{
+		status := playlists.PlayerStatus{
 			ActiveManifestVersion: body.ActiveManifestVersion, PendingManifestVersion: body.PendingManifestVersion,
 			AssignedPlaylistID: body.AssignedPlaylistID, CurrentItemID: body.CurrentItemID, CurrentAssetID: body.CurrentAssetID,
 			PlaybackState: body.PlaybackState, DownloadQueueCount: body.DownloadQueueCount, DownloadedBytes: body.DownloadedBytes,
@@ -152,7 +152,15 @@ func (s *server) playerHeartbeat(w http.ResponseWriter, r *http.Request) {
 			ActiveTakeoverID: body.ActiveTakeoverID, TakeoverState: body.TakeoverState, TakeoverPreparationProgress: body.TakeoverPreparationProgress,
 			PlaybackDisabled: body.PlaybackDisabled, LastCommandID: body.LastCommandID, LastCommandState: body.LastCommandState, LastCommandResult: body.LastCommandResult, LastCommandCompletedAt: body.LastCommandCompletedAt,
 			ActiveConfigRevision: body.ActiveConfigRevision, ConfigurationError: body.ConfigurationError,
-		})
+		}
+		if adjusted := playlists.NormalizePlayerStatus(&status); len(adjusted) > 0 {
+			s.logger.Warn("player status fields were out of range and cleared",
+				"fields", adjusted, "screen_id", principal.ScreenID)
+		}
+		if err := s.playlists.ReportStatus(r.Context(), principal.ScreenID, status); err != nil {
+			s.logger.Warn("player status could not be stored",
+				"error", err, "screen_id", principal.ScreenID)
+		}
 	}
 	data := map[string]any{"accepted": true}
 	if len(dropped) > 0 {

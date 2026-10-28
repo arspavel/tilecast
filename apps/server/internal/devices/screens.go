@@ -23,8 +23,8 @@ SELECT s.id,s.name,s.description,COALESCE(l.name,''),s.location_id,s.room_name,s
        s.last_connected_at,s.last_disconnected_at,s.last_heartbeat_at,host(s.last_known_ip),s.created_at,s.updated_at,
        EXISTS(SELECT 1 FROM device_credentials c WHERE c.screen_id=s.id AND c.revoked_at IS NULL),
        s.archived_at,s.archived_reason,
-       sg.id,sg.name,COALESCE(p.name,ly.name),
-       CASE WHEN p.id IS NOT NULL THEN 'playlist' WHEN ly.id IS NOT NULL THEN 'presentation' END,
+       sg.id,sg.name,COALESCE(cp.name,p.name,ly.name),
+       CASE WHEN cp.id IS NOT NULL OR p.id IS NOT NULL THEN 'playlist' WHEN ly.id IS NOT NULL THEN 'presentation' END,
        ps.player_version_code,ps.android_sdk,ps.installer_source,ps.install_permission_status,
        ps.current_update_deployment_id,ps.update_state,ps.update_downloaded_bytes,ps.update_expected_bytes,ps.update_error,
        ps.current_item_id,ps.current_asset_id,ps.playback_state,ps.last_sync_error,ps.last_playback_error,
@@ -39,7 +39,11 @@ LEFT JOIN screen_playlist_assignments sa ON sa.screen_id=s.id
 LEFT JOIN screen_group_playlist_assignments ga ON ga.screen_group_id=sg.id
 LEFT JOIN playlists p ON p.id=COALESCE(ga.playlist_id,sa.playlist_id)
 LEFT JOIN layouts ly ON ly.id=COALESCE(ga.layout_id,sa.layout_id)
-LEFT JOIN screen_player_status ps ON ps.screen_id=s.id`
+LEFT JOIN screen_player_status ps ON ps.screen_id=s.id
+-- What the player reports it is playing wins over the direct assignment: a
+-- schedule or a takeover is content too, and the assignment alone made a
+-- screen playing a scheduled playlist read "nothing assigned".
+LEFT JOIN playlists cp ON cp.id=ps.current_playlist_id AND ps.playback_state='playing'`
 
 func (s *Service) ListScreens(ctx context.Context) ([]Screen, error) {
 	rows, err := s.db.Query(ctx, screenSelect+` WHERE s.archived_at IS NULL AND EXISTS (SELECT 1 FROM device_credentials c WHERE c.screen_id=s.id AND c.revoked_at IS NULL) ORDER BY s.name ASC LIMIT 500`)

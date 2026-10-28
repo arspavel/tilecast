@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -2663,42 +2664,77 @@ func manifestETagForSchedules(base string, schedules []ManifestSchedule) string 
 	return `"sha256-` + hex.EncodeToString(sum[:]) + `"`
 }
 
-func (s *Service) ReportStatus(ctx context.Context, screenID uuid.UUID, status PlayerStatus) error {
-	if len(status.PlaybackState) > 80 || len(status.LastSyncError) > 500 || len(status.LastPlaybackError) > 500 || len(status.ScheduleEvaluationError) > 500 || len(status.WebsiteState) > 40 || len(status.WebsiteFailureCategory) > 80 || len(status.WebsiteCurrentHost) > 253 || len(status.WidgetState) > 40 || len(status.WidgetError) > 120 {
-		return errors.New("player status is invalid")
+var (
+	statusWidgetProviders  = map[string]bool{"": true, "website": true, "youtube": true, "clock": true, "date": true, "qrcode": true, "ticker": true, "menu": true, "list": true, "table": true, "agenda": true}
+	statusSelectionSources = map[string]bool{"": true, "takeover": true, "schedule": true, "direct_fallback": true, "none": true}
+	statusWebsiteStates    = map[string]bool{"": true, "idle": true, "loading": true, "loaded": true, "refreshing": true, "failed": true, "timed_out": true, "blocked": true, "showing_fallback": true}
+	statusWebsiteErrors    = map[string]bool{"": true, "dns_failure": true, "connection_failure": true, "tls_failure": true, "http_error": true, "load_timeout": true, "blocked_navigation": true, "renderer_crash": true, "offline": true, "invalid_configuration": true, "unsupported_scheme": true, "unknown_webview_error": true}
+	statusTakeoverStates   = map[string]bool{"": true, "pending": true, "notified": true, "preparing": true, "ready": true, "active": true, "failed": true, "offline": true, "restored": true, "expired": true, "cancelled": true}
+)
+
+// NormalizePlayerStatus clears or trims the optional fields a player reported
+// outside the accepted range and returns their names. A status used to be
+// refused whole for one such field, which froze the screen's playback state in
+// Studio at its last accepted value while the player went on playing; one odd
+// value from an older or newer player must not hide everything else it says.
+func NormalizePlayerStatus(status *PlayerStatus) []string {
+	var adjusted []string
+	trim := func(name string, value *string, limit int) {
+		// By rune: a byte cut can split a Cyrillic character, and Postgres
+		// rejects the invalid UTF-8 that produces.
+		if runes := []rune(*value); len(runes) > limit {
+			*value = string(runes[:limit])
+			adjusted = append(adjusted, name)
+		}
 	}
-	widgetProviders := map[string]bool{"": true, "website": true, "youtube": true, "clock": true, "date": true, "qrcode": true, "ticker": true, "menu": true, "list": true, "table": true, "agenda": true}
-	if !widgetProviders[status.WidgetProvider] {
-		return errors.New("player widget status is invalid")
+	trim("playbackState", &status.PlaybackState, 80)
+	trim("lastSyncError", &status.LastSyncError, 500)
+	trim("lastPlaybackError", &status.LastPlaybackError, 500)
+	trim("scheduleEvaluationError", &status.ScheduleEvaluationError, 500)
+	trim("websiteCurrentHost", &status.WebsiteCurrentHost, 253)
+	trim("widgetState", &status.WidgetState, 40)
+	trim("widgetError", &status.WidgetError, 120)
+	enum := func(name string, value *string, allowed map[string]bool) {
+		if !allowed[*value] {
+			*value = ""
+			adjusted = append(adjusted, name)
+		}
 	}
-	if status.SelectionSource != "" && status.SelectionSource != "takeover" && status.SelectionSource != "schedule" && status.SelectionSource != "direct_fallback" && status.SelectionSource != "none" {
-		return errors.New("player status is invalid")
-	}
-	websiteStates := map[string]bool{"": true, "idle": true, "loading": true, "loaded": true, "refreshing": true, "failed": true, "timed_out": true, "blocked": true, "showing_fallback": true}
-	websiteErrors := map[string]bool{"": true, "dns_failure": true, "connection_failure": true, "tls_failure": true, "http_error": true, "load_timeout": true, "blocked_navigation": true, "renderer_crash": true, "offline": true, "invalid_configuration": true, "unsupported_scheme": true, "unknown_webview_error": true}
-	if !websiteStates[status.WebsiteState] || !websiteErrors[status.WebsiteFailureCategory] {
-		return errors.New("player website status is invalid")
-	}
+	enum("widgetProvider", &status.WidgetProvider, statusWidgetProviders)
+	enum("selectionSource", &status.SelectionSource, statusSelectionSources)
+	enum("websiteState", &status.WebsiteState, statusWebsiteStates)
+	enum("websiteFailureCategory", &status.WebsiteFailureCategory, statusWebsiteErrors)
+	enum("takeoverState", &status.TakeoverState, statusTakeoverStates)
 	if status.DeviceClockOffsetSeconds != nil && (*status.DeviceClockOffsetSeconds < -604800 || *status.DeviceClockOffsetSeconds > 604800) {
-		return errors.New("player status is invalid")
+		status.DeviceClockOffsetSeconds = nil
+		adjusted = append(adjusted, "deviceClockOffsetSeconds")
 	}
-	for _, value := range []*int64{status.DownloadedBytes, status.RequiredBytes, status.CacheUsedBytes, status.CacheLimitBytes} {
-		if value != nil && *value < 0 {
-			return errors.New("player status is invalid")
+	for name, value := range map[string]**int64{"downloadedBytes": &status.DownloadedBytes, "requiredBytes": &status.RequiredBytes, "cacheUsedBytes": &status.CacheUsedBytes, "cacheLimitBytes": &status.CacheLimitBytes} {
+		if *value != nil && **value < 0 {
+			*value = nil
+			adjusted = append(adjusted, name)
 		}
 	}
 	if status.DownloadQueueCount != nil && *status.DownloadQueueCount < 0 {
-		return errors.New("player status is invalid")
+		status.DownloadQueueCount = nil
+		adjusted = append(adjusted, "downloadQueueCount")
 	}
-	takeoverStates := map[string]bool{"": true, "pending": true, "notified": true, "preparing": true, "ready": true, "active": true, "failed": true, "offline": true, "restored": true, "expired": true, "cancelled": true}
-	if !takeoverStates[status.TakeoverState] || status.TakeoverPreparationProgress != nil && (*status.TakeoverPreparationProgress < 0 || *status.TakeoverPreparationProgress > 100) {
-		return errors.New("player takeover status is invalid")
+	if status.TakeoverPreparationProgress != nil && (*status.TakeoverPreparationProgress < 0 || *status.TakeoverPreparationProgress > 100) {
+		status.TakeoverPreparationProgress = nil
+		adjusted = append(adjusted, "takeoverPreparationProgress")
 	}
-	for _, value := range []*int{status.WebsiteBlockedNavigationCount, status.WebsiteRendererRecoveryCount} {
-		if value != nil && (*value < 0 || *value > 1000000) {
-			return errors.New("player website status is invalid")
+	for name, value := range map[string]**int{"websiteBlockedNavigationCount": &status.WebsiteBlockedNavigationCount, "websiteRendererRecoveryCount": &status.WebsiteRendererRecoveryCount} {
+		if *value != nil && (**value < 0 || **value > 1000000) {
+			*value = nil
+			adjusted = append(adjusted, name)
 		}
 	}
+	sort.Strings(adjusted)
+	return adjusted
+}
+
+func (s *Service) ReportStatus(ctx context.Context, screenID uuid.UUID, status PlayerStatus) error {
+	NormalizePlayerStatus(&status)
 	_, err := s.db.Exec(ctx, `INSERT INTO screen_player_status(screen_id,active_manifest_version,pending_manifest_version,assigned_playlist_id,current_item_id,current_asset_id,playback_state,download_queue_count,downloaded_bytes,required_bytes,cache_used_bytes,cache_limit_bytes,last_sync_error,last_playback_error,current_schedule_id,current_playlist_id,selection_source,next_transition_at,device_clock_offset_seconds,schedule_evaluation_error,schedule_manifest_version,current_website_asset_id,website_state,website_load_started_at,website_load_completed_at,website_failure_category,website_blocked_navigation_count,website_current_host,website_fallback_shown,website_renderer_recovery_count,updated_at)VALUES($1,$2,$3,$4,$5,$6,NULLIF($7,''),$8,$9,$10,$11,$12,NULLIF($13,''),NULLIF($14,''),$15,$16,NULLIF($17,''),$18,$19,NULLIF($20,''),$21,$22,NULLIF($23,''),$24,$25,NULLIF($26,''),$27,NULLIF($28,''),$29,$30,now()) ON CONFLICT(screen_id)DO UPDATE SET active_manifest_version=EXCLUDED.active_manifest_version,pending_manifest_version=EXCLUDED.pending_manifest_version,assigned_playlist_id=EXCLUDED.assigned_playlist_id,current_item_id=EXCLUDED.current_item_id,current_asset_id=EXCLUDED.current_asset_id,playback_state=EXCLUDED.playback_state,download_queue_count=EXCLUDED.download_queue_count,downloaded_bytes=EXCLUDED.downloaded_bytes,required_bytes=EXCLUDED.required_bytes,cache_used_bytes=EXCLUDED.cache_used_bytes,cache_limit_bytes=EXCLUDED.cache_limit_bytes,last_sync_error=EXCLUDED.last_sync_error,last_playback_error=EXCLUDED.last_playback_error,current_schedule_id=EXCLUDED.current_schedule_id,current_playlist_id=EXCLUDED.current_playlist_id,selection_source=EXCLUDED.selection_source,next_transition_at=EXCLUDED.next_transition_at,device_clock_offset_seconds=EXCLUDED.device_clock_offset_seconds,schedule_evaluation_error=EXCLUDED.schedule_evaluation_error,schedule_manifest_version=EXCLUDED.schedule_manifest_version,current_website_asset_id=EXCLUDED.current_website_asset_id,website_state=EXCLUDED.website_state,website_load_started_at=COALESCE(EXCLUDED.website_load_started_at,screen_player_status.website_load_started_at),website_load_completed_at=COALESCE(EXCLUDED.website_load_completed_at,screen_player_status.website_load_completed_at),website_failure_category=COALESCE(EXCLUDED.website_failure_category,screen_player_status.website_failure_category),website_blocked_navigation_count=EXCLUDED.website_blocked_navigation_count,website_current_host=COALESCE(EXCLUDED.website_current_host,screen_player_status.website_current_host),website_fallback_shown=EXCLUDED.website_fallback_shown,website_renderer_recovery_count=EXCLUDED.website_renderer_recovery_count,updated_at=now()`, screenID, status.ActiveManifestVersion, status.PendingManifestVersion, status.AssignedPlaylistID, status.CurrentItemID, status.CurrentAssetID, status.PlaybackState, status.DownloadQueueCount, status.DownloadedBytes, status.RequiredBytes, status.CacheUsedBytes, status.CacheLimitBytes, status.LastSyncError, status.LastPlaybackError, status.CurrentScheduleID, status.CurrentPlaylistID, status.SelectionSource, status.NextTransitionAt, status.DeviceClockOffsetSeconds, status.ScheduleEvaluationError, status.ScheduleManifestVersion, status.CurrentWebsiteAssetID, status.WebsiteState, status.WebsiteLoadStartedAt, status.WebsiteLoadCompletedAt, status.WebsiteFailureCategory, status.WebsiteBlockedNavigationCount, status.WebsiteCurrentHost, status.WebsiteFallbackShown, status.WebsiteRendererRecoveryCount)
 	if err == nil && status.CurrentWebsiteAssetID != nil {
 		_, err = s.db.Exec(ctx, `UPDATE screen_player_status SET last_website_asset_id=$2 WHERE screen_id=$1`, screenID, status.CurrentWebsiteAssetID)
@@ -2710,7 +2746,7 @@ func (s *Service) ReportStatus(ctx context.Context, screenID uuid.UUID, status P
 		_, err = s.db.Exec(ctx, `UPDATE screen_player_status SET current_widget_id=$2,widget_provider=NULLIF($3,''),widget_state=NULLIF($4,''),widget_error=NULLIF($5,'') WHERE screen_id=$1`, screenID, status.CurrentWidgetID, status.WidgetProvider, status.WidgetState, status.WidgetError)
 	}
 	if err == nil {
-		_, err = s.db.Exec(ctx, `UPDATE screen_player_status SET active_takeover_id=$2,takeover_state=NULLIF($3,''),takeover_preparation_progress=$4,playback_disabled=COALESCE($5,playback_disabled),last_command_id=COALESCE($6,last_command_id),last_command_state=COALESCE(NULLIF($7,''),last_command_state),last_command_result=COALESCE(NULLIF($8,''),last_command_result),last_command_completed_at=COALESCE($9,last_command_completed_at) WHERE screen_id=$1`, screenID, status.ActiveTakeoverID, status.TakeoverState, status.TakeoverPreparationProgress, status.PlaybackDisabled, status.LastCommandID, status.LastCommandState, status.LastCommandResult, status.LastCommandCompletedAt)
+		_, err = s.db.Exec(ctx, `UPDATE screen_player_status SET active_takeover_id=(SELECT id FROM takeovers WHERE id=$2),takeover_state=NULLIF($3,''),takeover_preparation_progress=$4,playback_disabled=COALESCE($5,playback_disabled),last_command_id=COALESCE((SELECT id FROM player_commands WHERE id=$6),last_command_id),last_command_state=COALESCE(NULLIF($7,''),last_command_state),last_command_result=COALESCE(NULLIF($8,''),last_command_result),last_command_completed_at=COALESCE($9,last_command_completed_at) WHERE screen_id=$1`, screenID, status.ActiveTakeoverID, status.TakeoverState, status.TakeoverPreparationProgress, status.PlaybackDisabled, status.LastCommandID, status.LastCommandState, status.LastCommandResult, status.LastCommandCompletedAt)
 	}
 	if err == nil && status.ActiveTakeoverID != nil && status.TakeoverState != "" {
 		_, _ = s.db.Exec(ctx, `UPDATE takeover_screen_states SET state=$3,last_updated_at=now(),prepared_at=CASE WHEN $3 IN ('ready','active') THEN COALESCE(prepared_at,now()) ELSE prepared_at END,activated_at=CASE WHEN $3='active' THEN COALESCE(activated_at,now()) ELSE activated_at END WHERE takeover_id=$1 AND screen_id=$2`, status.ActiveTakeoverID, screenID, status.TakeoverState)

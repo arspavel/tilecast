@@ -251,7 +251,9 @@ func (s *Service) Heartbeat(ctx context.Context, principal DevicePrincipal, hear
 		}
 		_, _ = s.db.Exec(ctx, `UPDATE screen_player_status SET autostart_state=NULLIF($2,''),autostart_target=NULLIF($3,''),autostart_supervised=$4,autostart_linger_enabled=$5,autostart_error=NULLIF($6,'') WHERE screen_id=$1`, principal.ScreenID, heartbeat.AutostartState, target, heartbeat.AutostartSupervised, heartbeat.AutostartLingerEnabled, autostartError)
 	}
-	_, _ = s.db.Exec(ctx, `UPDATE screen_player_status SET presentation_schema_versions=$2,native_presentation_capabilities=$3,web_runtime_version=$4,web_bundle_limit_bytes=$5 WHERE screen_id=$1`, principal.ScreenID, heartbeat.PresentationSchemaVersions, heartbeat.NativePresentationCapabilities, heartbeat.WebRuntimeVersion, heartbeat.WebBundleLimitBytes)
+	// Players older than the declarative runtime omit these fields; the columns
+	// are NOT NULL, so an absent value means "none" rather than a failed update.
+	_, _ = s.db.Exec(ctx, `UPDATE screen_player_status SET presentation_schema_versions=COALESCE($2,'{}'),native_presentation_capabilities=COALESCE($3,'{}'::jsonb),web_runtime_version=COALESCE($4,0),web_bundle_limit_bytes=COALESCE($5,0) WHERE screen_id=$1`, principal.ScreenID, heartbeat.PresentationSchemaVersions, heartbeat.NativePresentationCapabilities, heartbeat.WebRuntimeVersion, heartbeat.WebBundleLimitBytes)
 	// AirPlay capability and external-presentation status are optional Linux
 	// fields. The helper is best effort so older/non-Linux players continue to
 	// heartbeat normally while the migration rolls through the fleet.
