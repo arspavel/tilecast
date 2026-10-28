@@ -15,6 +15,26 @@ export const scheduleWeekdays = [
   { value: 0, short: "Sun", long: "Sunday" },
 ] as const;
 
+// Around the clock is stored as an ordinary weekly window from midnight to
+// midnight on every weekday: the server and every player already read an end
+// equal to the start as "the following day", so the windows join seamlessly.
+export const aroundTheClockTiming = {
+  dailyStart: "00:00",
+  dailyEnd: "00:00",
+  daysOfWeek: scheduleWeekdays.map((day) => day.value),
+};
+
+export function isAroundTheClock(
+  input: Pick<ScheduleInput, "type" | "dailyStart" | "dailyEnd" | "daysOfWeek">,
+) {
+  return (
+    input.type === "weekly" &&
+    input.dailyStart?.slice(0, 5) === "00:00" &&
+    input.dailyEnd?.slice(0, 5) === "00:00" &&
+    scheduleWeekdays.every((day) => input.daysOfWeek.includes(day.value))
+  );
+}
+
 export type PriorityPreset = "normal" | "important" | "special" | "custom";
 
 export function priorityPreset(priority: number): PriorityPreset {
@@ -92,6 +112,7 @@ export function describeScheduleTiming(input: ScheduleInput) {
   const range = input.startDate
     ? `, beginning ${new Date(`${input.startDate}T00:00:00`).toLocaleDateString()}${input.endDate ? ` through ${new Date(`${input.endDate}T00:00:00`).toLocaleDateString()}` : ""}`
     : "";
+  if (isAroundTheClock(input)) return `Круглосуточно, каждый день${range}`;
   return `${describeWeekdays(input.daysOfWeek)} from ${formatClock(input.dailyStart)} to ${formatClock(input.dailyEnd)}${overnight ? " the following day" : ""}${range}`;
 }
 

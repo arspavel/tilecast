@@ -25,6 +25,7 @@ import { QuickPresentDialog } from "../components/QuickPresentDialog";
 import { SpanWallEditor } from "../components/SpanWallEditor";
 import { DisplayControlGroupActions } from "../components/DisplayControlGroupActions";
 import { ScreenManagementTabs } from "../components/ScreenManagementTabs";
+import { isAroundTheClock } from "../schedules/scheduleBuilderModel";
 
 const canManage = (role?: string) =>
   role === "owner" || role === "administrator";
@@ -596,7 +597,7 @@ export function SchedulesPage() {
             </span>
             <span>
               {schedule.type === "weekly"
-                ? `${schedule.dailyStart}–${schedule.dailyEnd} · ${schedule.timezone}`
+                ? `${isAroundTheClock(schedule) ? "Круглосуточно" : `${schedule.dailyStart}–${schedule.dailyEnd}`} · ${schedule.timezone}`
                 : `${new Date(schedule.oneTimeStart!).toLocaleString()}–${new Date(schedule.oneTimeEnd!).toLocaleString()}`}
             </span>
             <b>Priority {schedule.priority}</b>

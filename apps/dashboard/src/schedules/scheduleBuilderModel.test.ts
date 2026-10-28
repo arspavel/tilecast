@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { ScheduleInput, Screen, ScreenGroup } from "../api/types";
 import {
+  aroundTheClockTiming,
   conflictWinnerReason,
   countTargetScreens,
   describeScheduleTiming,
+  isAroundTheClock,
   oneTimeDuration,
   priorityPreset,
   scheduleIsDirty,
@@ -27,6 +29,22 @@ const weekly = (changes: Partial<ScheduleInput> = {}): ScheduleInput => ({
 });
 
 describe("Schedule Builder model", () => {
+  it("recognises and describes an around-the-clock schedule", () => {
+    const allDay = weekly({ ...aroundTheClockTiming });
+    expect(isAroundTheClock(allDay)).toBe(true);
+    expect(describeScheduleTiming(allDay)).toBe("Круглосуточно, каждый день");
+    expect(validateScheduleInput(allDay)).toEqual({});
+    // Six days or a gap at night is an ordinary weekly window.
+    expect(
+      isAroundTheClock(
+        weekly({ ...aroundTheClockTiming, daysOfWeek: [1, 2, 3, 4, 5, 6] }),
+      ),
+    ).toBe(false);
+    expect(
+      isAroundTheClock(weekly({ ...aroundTheClockTiming, dailyEnd: "23:00" })),
+    ).toBe(false);
+  });
+
   it("describes a recurring weekday schedule", () => {
     expect(describeScheduleTiming(weekly())).toMatch(/Monday through Friday/);
     expect(describeScheduleTiming(weekly())).toMatch(/9:00 AM/);

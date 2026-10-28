@@ -368,10 +368,16 @@
     var minute = parts.hour * 60 + parts.minute;
     var start = clockMinutes(s.dailyStart), end = clockMinutes(s.dailyEnd);
     if (start == null || end == null) return false;
-    if (end > start) return days.indexOf(isoDay) >= 0 && minute >= start && minute < end;
-    if (minute >= start) return days.indexOf(isoDay) >= 0;
+    if (end > start) return hasDay(days, isoDay) && minute >= start && minute < end;
+    if (minute >= start) return hasDay(days, isoDay);
     var previous = isoDay === 1 ? 7 : isoDay - 1;
-    return minute < end && days.indexOf(previous) >= 0;
+    return minute < end && hasDay(days, previous);
+  }
+
+  // Studio and the server number Sunday 0 (JavaScript and Go weekdays); the
+  // ISO numbering used above calls it 7. Accept both so Sunday windows apply.
+  function hasDay(days, isoDay) {
+    return days.indexOf(isoDay) >= 0 || (isoDay === 7 && days.indexOf(0) >= 0);
   }
 
   // Building an Intl formatter is slow on TV hardware; the next-change search

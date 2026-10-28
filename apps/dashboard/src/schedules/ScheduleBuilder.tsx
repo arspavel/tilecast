@@ -35,9 +35,11 @@ import {
 } from "../components/ui";
 import { PlaylistPicker } from "../components/content-picker";
 import {
+  aroundTheClockTiming,
   conflictWinnerReason,
   countTargetScreens,
   describeScheduleTiming,
+  isAroundTheClock,
   oneTimeDuration,
   priorityLabel,
   priorityPreset,
@@ -49,6 +51,12 @@ import {
   type PriorityPreset,
 } from "./scheduleBuilderModel";
 
+const defaultWeeklyTiming = {
+  dailyStart: "09:00",
+  dailyEnd: "17:00",
+  daysOfWeek: [1, 2, 3, 4, 5],
+};
+
 const initialSchedule = (): ScheduleInput => ({
   name: "",
   description: "",
@@ -59,9 +67,8 @@ const initialSchedule = (): ScheduleInput => ({
   timezone: "",
   priority: 0,
   enabled: true,
-  dailyStart: "09:00",
-  dailyEnd: "17:00",
-  daysOfWeek: [1, 2, 3, 4, 5],
+  ...defaultWeeklyTiming,
+  daysOfWeek: [...defaultWeeklyTiming.daysOfWeek],
   targets: [],
 });
 
@@ -665,22 +672,19 @@ function DisplayControlSelection({
   );
 }
 
-function WeeklyTiming({
+function WeeklyWindow({
   input,
   set,
-  showDateRange,
-  setShowDateRange,
   errors,
+  overnight,
 }: {
   input: ScheduleInput;
   set: <K extends keyof ScheduleInput>(key: K, value: ScheduleInput[K]) => void;
-  showDateRange: boolean;
-  setShowDateRange: (value: boolean) => void;
   errors: Record<string, string>;
+  overnight: boolean;
 }) {
-  const overnight = (input.dailyEnd ?? "") <= (input.dailyStart ?? "");
   return (
-    <div className="schedule-timing-fields">
+    <>
       <div className="schedule-weekdays" aria-label="Active weekdays">
         {scheduleWeekdays.map((day) => (
           <button
@@ -731,6 +735,52 @@ function WeeklyTiming({
         >
           Playback ends the following day.
         </Notice>
+      )}
+    </>
+  );
+}
+
+function WeeklyTiming({
+  input,
+  set,
+  showDateRange,
+  setShowDateRange,
+  errors,
+}: {
+  input: ScheduleInput;
+  set: <K extends keyof ScheduleInput>(key: K, value: ScheduleInput[K]) => void;
+  showDateRange: boolean;
+  setShowDateRange: (value: boolean) => void;
+  errors: Record<string, string>;
+}) {
+  const overnight = (input.dailyEnd ?? "") <= (input.dailyStart ?? "");
+  const aroundTheClock = isAroundTheClock(input);
+  const setAroundTheClock = (enabled: boolean) => {
+    const timing = enabled ? aroundTheClockTiming : defaultWeeklyTiming;
+    set("dailyStart", timing.dailyStart);
+    set("dailyEnd", timing.dailyEnd);
+    set("daysOfWeek", [...timing.daysOfWeek]);
+  };
+  return (
+    <div className="schedule-timing-fields">
+      <label className="checkbox-row schedule-around-the-clock">
+        <input
+          type="checkbox"
+          checked={aroundTheClock}
+          onChange={(event) => setAroundTheClock(event.target.checked)}
+        />
+        <span>
+          <strong>Круглосуточно</strong>
+          <small>Каждый день с 00:00 до 00:00 без перерыва.</small>
+        </span>
+      </label>
+      {!aroundTheClock && (
+        <WeeklyWindow
+          input={input}
+          set={set}
+          errors={errors}
+          overnight={overnight}
+        />
       )}
       {!showDateRange ? (
         <Button

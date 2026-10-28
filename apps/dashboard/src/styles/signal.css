@@ -3182,6 +3182,37 @@ tbody tr {
   gap: var(--tc-space-3);
 }
 
+.schedule-around-the-clock {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tc-space-3);
+  padding: var(--tc-space-3);
+  cursor: pointer;
+  border: 1px solid var(--tc-border-default);
+  border-radius: var(--tc-radius-control);
+  background: var(--tc-bg-surface);
+}
+
+.schedule-around-the-clock:has(input:checked) {
+  border-color: var(--accent);
+}
+
+.schedule-around-the-clock input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.schedule-around-the-clock span {
+  display: grid;
+  gap: 2px;
+}
+
+.schedule-around-the-clock small {
+  color: var(--tc-text-secondary);
+}
+
 /* One weekday row for every surface that picks weekdays, so a Monday reads the
    same in Schedules and in the Countdown Bar editor. */
 .schedule-weekdays,
