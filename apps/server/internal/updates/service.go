@@ -377,6 +377,18 @@ func (s *Service) importRelease(ctx context.Context, release ProviderRelease) er
 	if !manifestOK || !signatureOK || !artifactOK {
 		return errors.New("release is missing required Tilecast Player assets")
 	}
+	// A published release's signed manifest does not change, and each asset
+	// download is a GitHub API request. Fetching both again for every known
+	// release on every changed listing spent the unauthenticated quota of 60
+	// requests an hour within a few checks, after which artifact downloads
+	// were refused. Only new releases are fetched; a deleted one is new again.
+	var known bool
+	if err := s.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM player_releases WHERE github_release_id=$1)`, release.ID).Scan(&known); err != nil {
+		return err
+	}
+	if known {
+		return nil
+	}
 	raw, err := s.provider.Download(ctx, manifestAsset.URL, 128<<10)
 	if err != nil {
 		return err
