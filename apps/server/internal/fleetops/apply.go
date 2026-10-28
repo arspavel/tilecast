@@ -47,11 +47,11 @@ func (s *Service) Apply(ctx context.Context, user uuid.UUID, request Request, ex
 		return Operation{}, err
 	}
 	if expectedChangeCount >= 0 && preview.ChangeCount != expectedChangeCount {
-		return Operation{}, fmt.Errorf("%w: the preview showed %d screens changing, now it is %d. Review the change again.",
+		return Operation{}, fmt.Errorf("%w: в предпросмотре менялось экранов: %d, сейчас: %d. Проверьте изменение ещё раз.",
 			ErrStale, expectedChangeCount, preview.ChangeCount)
 	}
 	if preview.ChangeCount == 0 {
-		return Operation{}, validationError("nothing would change")
+		return Operation{}, validationError("ничего не изменится")
 	}
 
 	// Previous state is captured before anything is written. Assigning one
@@ -123,11 +123,11 @@ func (s *Service) applyOne(ctx context.Context, user uuid.UUID, request Request,
 		return s.enabler.SetEnabled(ctx, screenID, user, *request.Enabled)
 	case ActionSendCommand:
 		if s.commands == nil {
-			return errors.New("bulk commands are unavailable on this server")
+			return errors.New("массовые команды недоступны на этом сервере")
 		}
 		return s.commands.EnqueueCommand(ctx, screenID, user, request.CommandType, request.CommandPayload)
 	}
-	return validationError("unknown action %q", request.Action)
+	return validationError("неизвестное действие %q", request.Action)
 }
 
 func (s *Service) captureUndo(ctx context.Context, preview Preview, request Request) ([]undoEntry, error) {
@@ -242,10 +242,10 @@ func (s *Service) Undo(ctx context.Context, user uuid.UUID, role string, id uuid
 		return Operation{}, ErrNotReversible
 	}
 	if undoneAt != nil {
-		return Operation{}, fmt.Errorf("%w: this operation was already undone", ErrValidation)
+		return Operation{}, fmt.Errorf("%w: это изменение уже отменено", ErrValidation)
 	}
 	if expires == nil || time.Now().After(*expires) {
-		return Operation{}, fmt.Errorf("%w: the undo window has closed. Change the screens again instead.", ErrValidation)
+		return Operation{}, fmt.Errorf("%w: срок отмены истёк. Измените экраны заново.", ErrValidation)
 	}
 	// Claim it before restoring anything. The read above and the write at the
 	// end left a window in which two concurrent undos both passed the check and
@@ -257,7 +257,7 @@ func (s *Service) Undo(ctx context.Context, user uuid.UUID, role string, id uuid
 		return Operation{}, err
 	}
 	if claim.RowsAffected() == 0 {
-		return Operation{}, fmt.Errorf("%w: this operation was already undone", ErrValidation)
+		return Operation{}, fmt.Errorf("%w: это изменение уже отменено", ErrValidation)
 	}
 
 	var entries []undoEntry

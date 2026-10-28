@@ -26,7 +26,7 @@ func TestValidateRejectsTooManyScreens(t *testing.T) {
 		ids[i] = uuid.New()
 	}
 	err := playlistRequest(ids...).Validate()
-	if !errors.Is(err, ErrValidation) || !strings.Contains(err.Error(), "no more than") {
+	if !errors.Is(err, ErrValidation) || !strings.Contains(err.Error(), "не больше") {
 		t.Errorf("Validate() = %v, want a size limit error", err)
 	}
 }
@@ -118,7 +118,7 @@ func TestCommandIsAlwaysWork(t *testing.T) {
 }
 
 func TestBlockedReasons(t *testing.T) {
-	if got := blockedReason(screenRow{archived: true}, playlistRequest()); got != "Archived" {
+	if got := blockedReason(screenRow{archived: true}, playlistRequest()); got != "в архиве" {
 		t.Errorf("archived screen = %q", got)
 	}
 	if got := blockedReason(screenRow{revoked: true}, playlistRequest()); got == "" {
@@ -143,13 +143,13 @@ func TestDisabledScreenBlocksACommandButNotAnAssignment(t *testing.T) {
 
 func TestCurrentLabelPrefersWhatIsActuallyAssigned(t *testing.T) {
 	playlist, layout := uuid.New(), uuid.New()
-	if got := (screenRow{playlistID: &playlist, playlistName: "Menu"}).currentLabel(); got != "Playlist: Menu" {
+	if got := (screenRow{playlistID: &playlist, playlistName: "Menu"}).currentLabel(); got != "Плейлист: Menu" {
 		t.Errorf("currentLabel = %q", got)
 	}
-	if got := (screenRow{layoutID: &layout, layoutName: "Lobby"}).currentLabel(); got != "Layout: Lobby" {
+	if got := (screenRow{layoutID: &layout, layoutName: "Lobby"}).currentLabel(); got != "Макет: Lobby" {
 		t.Errorf("currentLabel = %q", got)
 	}
-	if got := (screenRow{}).currentLabel(); got != "Nothing assigned" {
+	if got := (screenRow{}).currentLabel(); got != "Ничего не назначено" {
 		t.Errorf("currentLabel = %q", got)
 	}
 }
@@ -158,11 +158,11 @@ func TestJoinNamesSummarisesLongLists(t *testing.T) {
 	if got := joinNames([]string{"A"}); got != "A" {
 		t.Errorf("joinNames = %q", got)
 	}
-	if got := joinNames([]string{"A", "B"}); got != "A and B" {
+	if got := joinNames([]string{"A", "B"}); got != "A и B" {
 		t.Errorf("joinNames = %q", got)
 	}
 	got := joinNames([]string{"A", "B", "C", "D", "E"})
-	if !strings.Contains(got, "and 2 more") {
+	if !strings.Contains(got, "и ещё 2") {
 		t.Errorf("joinNames = %q, want a summarised tail", got)
 	}
 }

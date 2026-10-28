@@ -102,6 +102,9 @@ describe("Fleet bulk changes", () => {
       widen<Awaited<ReturnType<typeof api.layouts>>>({ items: [], total: 0 }),
     );
     vi.spyOn(api, "bulkOperations").mockResolvedValue([]);
+    vi.spyOn(api, "playerReleases").mockResolvedValue(
+      widen<Awaited<ReturnType<typeof api.playerReleases>>>({ items: [] }),
+    );
   });
   afterEach(() => {
     cleanup();
@@ -111,7 +114,7 @@ describe("Fleet bulk changes", () => {
   it("will not preview until screens and a playlist are chosen", async () => {
     renderPage();
     const button = await screen.findByRole("button", {
-      name: /Preview the change/,
+      name: /Показать, что изменится/,
     });
     expect(button.hasAttribute("disabled")).toBe(true);
   });
@@ -126,13 +129,13 @@ describe("Fleet bulk changes", () => {
     await user.click(
       await screen.findByRole("checkbox", { name: /Cafeteria/ }),
     );
-    await choose(user, "Playlist", "New menu");
+    await choose(user, "Плейлист", "New menu");
     await user.click(
-      screen.getByRole("button", { name: /Preview the change/ }),
+      screen.getByRole("button", { name: /Показать, что изменится/ }),
     );
 
     await waitFor(() => expect(build).toHaveBeenCalled());
-    expect(await screen.findByText(/Gym \(via North Wing\)/)).toBeTruthy();
+    expect(await screen.findByText(/Gym \(через North Wing\)/)).toBeTruthy();
     expect(screen.getByText(/share a Display Group/)).toBeTruthy();
   });
 
@@ -143,12 +146,12 @@ describe("Fleet bulk changes", () => {
     await user.click(
       await screen.findByRole("checkbox", { name: /Cafeteria/ }),
     );
-    await choose(user, "Playlist", "New menu");
+    await choose(user, "Плейлист", "New menu");
     await user.click(
-      screen.getByRole("button", { name: /Preview the change/ }),
+      screen.getByRole("button", { name: /Показать, что изменится/ }),
     );
 
-    expect(await screen.findByText(/Skipped: Archived/)).toBeTruthy();
+    expect(await screen.findByText(/Пропущен: Archived/)).toBeTruthy();
   });
 
   it("confirms with the number of screens that actually move", async () => {
@@ -158,14 +161,14 @@ describe("Fleet bulk changes", () => {
     await user.click(
       await screen.findByRole("checkbox", { name: /Cafeteria/ }),
     );
-    await choose(user, "Playlist", "New menu");
+    await choose(user, "Плейлист", "New menu");
     await user.click(
-      screen.getByRole("button", { name: /Preview the change/ }),
+      screen.getByRole("button", { name: /Показать, что изменится/ }),
     );
 
     // Three rows are listed, two of them change. The button must say two.
     expect(
-      await screen.findByRole("button", { name: "Change 2 screens" }),
+      await screen.findByRole("button", { name: "Изменить 2 экрана" }),
     ).toBeTruthy();
   });
 
@@ -187,12 +190,12 @@ describe("Fleet bulk changes", () => {
     await user.click(
       await screen.findByRole("checkbox", { name: /Cafeteria/ }),
     );
-    await choose(user, "Playlist", "New menu");
+    await choose(user, "Плейлист", "New menu");
     await user.click(
-      screen.getByRole("button", { name: /Preview the change/ }),
+      screen.getByRole("button", { name: /Показать, что изменится/ }),
     );
     await user.click(
-      await screen.findByRole("button", { name: "Change 2 screens" }),
+      await screen.findByRole("button", { name: "Изменить 2 экрана" }),
     );
 
     await waitFor(() => expect(apply).toHaveBeenCalled());
@@ -218,25 +221,90 @@ describe("Fleet bulk changes", () => {
     await user.click(
       await screen.findByRole("checkbox", { name: /Cafeteria/ }),
     );
-    await choose(user, "Playlist", "New menu");
+    await choose(user, "Плейлист", "New menu");
     await user.click(
-      screen.getByRole("button", { name: /Preview the change/ }),
+      screen.getByRole("button", { name: /Показать, что изменится/ }),
     );
     await user.click(
-      await screen.findByRole("button", { name: "Change 2 screens" }),
+      await screen.findByRole("button", { name: "Изменить 2 экрана" }),
     );
 
     expect(
-      await screen.findByRole("button", { name: /Undo this change/ }),
+      await screen.findByRole("button", { name: /Отменить изменение/ }),
     ).toBeTruthy();
   });
 
   it("warns that a command cannot be undone", async () => {
     renderPage();
     const user = userEvent.setup();
-    await choose(user, "Action", "Send a command");
+    await choose(user, "Действие", "Отправить команду");
     expect(
-      screen.getByText(/cannot be undone once a Player collects it/),
+      screen.getByText(/нельзя отменить после того, как плеер её получил/),
     ).toBeTruthy();
+  });
+
+  it("updates only the Android players that are older than the release", async () => {
+    const widen = <T,>(value: unknown) => value as T;
+    vi.spyOn(api, "screens").mockResolvedValue(
+      widen<Awaited<ReturnType<typeof api.screens>>>({
+        items: [
+          {
+            id: "s1",
+            name: "Cafeteria",
+            platform: "android",
+            playerVersion: "0.36.0",
+            playerVersionCode: 59,
+          },
+          {
+            id: "s2",
+            name: "Gym",
+            platform: "android",
+            playerVersion: "0.37.0",
+            playerVersionCode: 60,
+          },
+          {
+            id: "s3",
+            name: "Lobby LG",
+            platform: "webos",
+            playerVersion: "0.3.2",
+          },
+        ],
+        total: 3,
+      }),
+    );
+    vi.spyOn(api, "playerReleases").mockResolvedValue(
+      widen<Awaited<ReturnType<typeof api.playerReleases>>>({
+        items: [
+          {
+            id: "r60",
+            platform: "android",
+            versionCode: 60,
+            versionName: "0.37.0",
+            verificationStatus: "verified",
+            cacheStatus: "cached",
+          },
+        ],
+      }),
+    );
+    const deploy = vi
+      .spyOn(api, "createUpdateDeployment")
+      .mockResolvedValue({ id: "d1", targetCount: 1 });
+    renderPage();
+    const user = userEvent.setup();
+
+    await choose(user, "Действие", "Обновить плеер");
+    await user.click(screen.getByRole("button", { name: "Выбрать все" }));
+    await user.click(
+      screen.getByRole("button", { name: /Показать, что изменится/ }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: "Обновить 1 экран" }),
+    );
+
+    await waitFor(() => expect(deploy).toHaveBeenCalled());
+    const [input] = deploy.mock.calls[0] ?? [];
+    expect(input?.releaseId).toBe("r60");
+    expect(input?.screenIds).toEqual(["s1"]);
+    expect(await screen.findByText("Обновление запущено")).toBeTruthy();
   });
 });

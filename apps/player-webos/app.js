@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.3.2";
-  var VERSION_CODE = 6;
+  var VERSION = "0.4.0";
+  var VERSION_CODE = 7;
   var STORE = "tilecast.webos.";
   // Media is kept in memory between playlist cycles so a loop does not
   // download every item again. Items on screen are never evicted.
@@ -269,6 +269,7 @@
     clearInterval(state.syncTimer);
     clearInterval(state.heartbeatTimer);
     clearInterval(state.scheduleTimer);
+    clearInterval(commands.timer);
   }
 
   function runPaired() {
@@ -283,6 +284,7 @@
     state.scheduleTimer = setInterval(evaluateManifest, 30000);
     startPreviewLoop();
     startLiveStreamLoop();
+    startCommandLoop();
   }
 
   function syncConfig() {
@@ -581,7 +583,7 @@
 
     if (item.assetType === "website") {
       var website = findWebsite(item.assetId);
-      if (!website) return itemFailed("Website configuration is missing", token);
+      if (!website) return itemFailed("Нет настроек веб-страницы", token);
       // The same website again (for example a one-item playlist) stays loaded
       // instead of reloading at every cycle.
       var visible = visibleElement();
@@ -606,7 +608,7 @@
     }
 
     var asset = findAsset(item.assetId, item.variantId);
-    if (!asset) return itemFailed("Media asset is missing", token);
+    if (!asset) return itemFailed("Медиафайл не найден", token);
     var key = mediaKey(asset);
     loadMedia(asset).then(function (url) {
       if (token !== state.renderToken) return;
@@ -643,7 +645,7 @@
       reveal(image, key, token);
       armNext(itemDuration(item), token);
     };
-    image.onerror = function () { itemFailed("Image decode failed", token); };
+    image.onerror = function () { itemFailed("Не удалось открыть изображение", token); };
     image.src = url;
     stage.appendChild(image);
   }
@@ -659,8 +661,11 @@
     video.autoplay = true;
     video.playsInline = true;
     video.preload = "auto";
-    video.muted = !itemAudio(item);
-    video.volume = itemVolume(item);
+    // A silent item stays silent; the Studio mute and volume commands apply
+    // on top of the item's own settings.
+    if (!itemAudio(item)) video.setAttribute("data-silent", "1");
+    video.muted = !itemAudio(item) || !!state.muted;
+    video.volume = state.volumeOverride == null ? itemVolume(item) : state.volumeOverride;
     video.onloadedmetadata = function () {
       if (startMs > 0 && startMs / 1000 < (video.duration || Infinity)) video.currentTime = startMs / 1000;
     };
@@ -675,7 +680,7 @@
       if (!item.usePlayerDefaults && isFinite(cap) && cap > 0) armNext(cap, token);
     };
     video.onended = function () { if (token === state.renderToken) playNext(); };
-    video.onerror = function () { itemFailed("Video playback failed", token); };
+    video.onerror = function () { itemFailed("Ошибка воспроизведения видео", token); };
     video.src = url;
     stage.appendChild(video);
     var promise = video.play();
@@ -683,7 +688,7 @@
       if (token !== state.renderToken) return;
       video.muted = true;
       var retry = video.play();
-      if (retry && retry.catch) retry.catch(function () { itemFailed("Video autoplay was blocked", token); });
+      if (retry && retry.catch) retry.catch(function () { itemFailed("Телевизор заблокировал автозапуск видео", token); });
     });
   }
 
@@ -826,7 +831,7 @@
     var unit = height / 20;
     context.fillStyle = "#5eead4";
     context.font = "bold " + Math.round(unit * 0.9) + "px Arial, sans-serif";
-    context.fillText("TILECAST WEBOS", unit * 1.5, unit * 2.2);
+    context.fillText("LSR SIGNAGE", unit * 1.5, unit * 2.2);
     context.fillStyle = "#f8fafc";
     context.font = "bold " + Math.round(unit * 1.6) + "px Arial, sans-serif";
     context.fillText(String(title).slice(0, 60), unit * 1.5, unit * 5.5);
@@ -918,6 +923,235 @@
     return state.mode === "pairing" || state.mode === "setup" || !state.credential;
   }
 
+  // ---- LG system services ----------------------------------------------------
+  // webOS reaches system services through PalmServiceBridge. A bridge is kept
+  // referenced until its answer arrives; a collected bridge drops the call.
+
+  var pendingBridges = [];
+
+  function lunaCall(uri, params, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      if (typeof window.PalmServiceBridge !== "function") return reject(new Error("luna_unavailable"));
+      var bridge = new window.PalmServiceBridge();
+      var finished = false;
+      var timer = setTimeout(function () {
+        if (finished) return;
+        finish();
+        reject(new Error("luna_timeout"));
+      }, timeoutMs || 5000);
+      function finish() {
+        finished = true;
+        clearTimeout(timer);
+        var index = pendingBridges.indexOf(bridge);
+        if (index >= 0) pendingBridges.splice(index, 1);
+      }
+      pendingBridges.push(bridge);
+      bridge.onservicecallback = function (text) {
+        if (finished) return;
+        finish();
+        var result;
+        try { result = JSON.parse(text); } catch (error) { return reject(error); }
+        if (result && result.returnValue === false) return reject(new Error(result.errorText || result.errorCode || "luna_failed"));
+        resolve(result || {});
+      };
+      try { bridge.call(uri, JSON.stringify(params || {})); }
+      catch (error) { finish(); reject(error); }
+    });
+  }
+
+  // ---- Real screen capture (LG Signage) ---------------------------------------
+  // The canvas copy above cannot see a website frame or video drawn on the
+  // panel's hardware plane. LG Signage panels can capture the actual output, so
+  // Studio sees exactly what viewers see. A consumer TV has no such service:
+  // after a few failures the player stops asking for ten minutes and uses the
+  // canvas copy.
+
+  var SIGNAGE_CAPTURE = "luna://com.webos.service.commercial.signage.storageservice/captureScreen";
+  var hardware = { failures: 0, retryAt: 0 };
+
+  function loadImage(src) {
+    return new Promise(function (resolve, reject) {
+      var image = new Image();
+      image.onload = function () { resolve(image); };
+      image.onerror = function () { reject(new Error("capture_decode_failed")); };
+      image.src = src;
+    });
+  }
+
+  function hardwareFrame(maxWidth, maxHeight) {
+    if (Date.now() < hardware.retryAt) return Promise.reject(new Error("hardware_capture_paused"));
+    return lunaCall(SIGNAGE_CAPTURE, { save: false, thumbnail: false, imgResolution: "HD" }, 6000).then(function (result) {
+      var data = result.data || result.imageData || result.image;
+      if (!data) throw new Error("capture_empty");
+      return loadImage(/^data:/.test(data) ? data : "data:image/jpeg;base64," + data);
+    }).then(function (image) {
+      hardware.failures = 0;
+      var scale = Math.min(1, maxWidth / image.naturalWidth, maxHeight / image.naturalHeight);
+      var width = Math.max(2, Math.round(image.naturalWidth * scale));
+      var height = Math.max(2, Math.round(image.naturalHeight * scale));
+      var canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d").drawImage(image, 0, 0, width, height);
+      return { canvas: canvas, width: width, height: height };
+    }, function (error) {
+      hardware.failures += 1;
+      if (hardware.failures >= 3) {
+        hardware.failures = 0;
+        hardware.retryAt = Date.now() + 10 * 60 * 1000;
+      }
+      throw error;
+    });
+  }
+
+  function screenFrame(maxWidth, maxHeight) {
+    return hardwareFrame(maxWidth, maxHeight).catch(function () {
+      return captureFrame(maxWidth, maxHeight);
+    });
+  }
+
+  // ---- Studio commands ----------------------------------------------------------
+  // The same command queue Android players use. Each command is acknowledged,
+  // run once, and answered; a command this panel cannot perform is answered as
+  // unsupported so Studio does not wait for it.
+
+  var commands = { timer: null, busy: false, seen: {} };
+
+  function startCommandLoop() {
+    clearInterval(commands.timer);
+    commands.timer = setInterval(pollCommands, 10000);
+    pollCommands();
+  }
+
+  function pollCommands() {
+    if (!state.credential || commands.busy) return;
+    commands.busy = true;
+    request("GET", "/api/v1/player/commands", null, {}, false).then(function (list) {
+      return ((list && list.items) || []).reduce(function (chain, command) {
+        return chain.then(function () { return runCommand(command); });
+      }, Promise.resolve());
+    }).catch(function (error) {
+      handleDeviceError(error);
+    }).then(function () {
+      commands.busy = false;
+    });
+  }
+
+  function commandError(code, message) {
+    var error = new Error(message);
+    error.code = code;
+    return error;
+  }
+
+  function runCommand(command) {
+    if (commands.seen[command.id]) return Promise.resolve();
+    commands.seen[command.id] = true;
+    var path = "/api/v1/player/commands/" + encodeURIComponent(command.id);
+    return request("POST", path + "/acknowledge", {}, {}, false).catch(function () {}).then(function () {
+      return executeCommand(command);
+    }).then(function (message) {
+      return { success: true, code: "ok", message: message || "" };
+    }, function (error) {
+      return { success: false, code: error.code || "command_failed", message: String(error.message || error).slice(0, 240) };
+    }).then(function (result) {
+      return request("POST", path + "/result", result, {}, false).catch(function () {}).then(function () {
+        if (result.success && command.type === "restart_player_process") setTimeout(function () { window.location.reload(); }, 300);
+      });
+    });
+  }
+
+  function videoElements() {
+    return Array.prototype.slice.call(stage.querySelectorAll("video"));
+  }
+
+  function clamp(value, low, high) {
+    var number = Math.round(Number(value));
+    if (!isFinite(number)) throw commandError("invalid_payload", "Неверное значение");
+    return Math.max(low, Math.min(high, number));
+  }
+
+  // System volume first; when the panel refuses, the player's own video volume
+  // still changes and the answer says so.
+  function setVolume(level) {
+    return lunaCall("luna://com.webos.audio/setVolume", { volume: level }).then(function () {
+      return "Громкость телевизора: " + level;
+    }, function () {
+      state.volumeOverride = level / 100;
+      videoElements().forEach(function (video) { video.volume = state.volumeOverride; });
+      return "Громкость плеера: " + level + " (системная громкость недоступна)";
+    });
+  }
+
+  function setMuted(muted) {
+    state.muted = muted;
+    videoElements().forEach(function (video) { video.muted = muted || !!video.getAttribute("data-silent"); });
+    return lunaCall("luna://com.webos.audio/setMuted", { muted: muted }).then(function () {
+      return muted ? "Звук выключен" : "Звук включён";
+    }, function () {
+      return muted ? "Звук плеера выключен" : "Звук плеера включён";
+    });
+  }
+
+  function clearMediaCache() {
+    var dropped = 0;
+    Object.keys(media.entries).forEach(function (key) {
+      var entry = media.entries[key];
+      if (entry.url && entry.pins === 0) { dropMedia(entry); dropped += 1; }
+    });
+    return "Удалено файлов из памяти: " + dropped;
+  }
+
+  function executeCommand(command) {
+    var payload = command.payload || {};
+    switch (command.type) {
+      case "sync_now":
+      case "resynchronize_player":
+        state.lastConfigSyncAt = 0;
+        syncManifest();
+        return Promise.resolve("Синхронизация запущена");
+      case "reload_playback":
+      case "recreate_renderer":
+      case "recreate_playback_session":
+      case "retry_current_item":
+        state.currentPlaylist = null;
+        evaluateManifest();
+        return Promise.resolve("Воспроизведение перезапущено");
+      case "skip_current_item":
+        playNext();
+        return Promise.resolve("Элемент пропущен");
+      case "clear_media_cache":
+        return Promise.resolve(clearMediaCache());
+      case "restart_player_process":
+      case "restart_activity":
+        return Promise.resolve("Плеер перезапускается");
+      case "identify_screen":
+        toggleInfo();
+        return Promise.resolve("Служебная строка показана");
+      case "display_set_volume":
+        return setVolume(clamp(payload.volume, 0, 100));
+      case "display_mute":
+        return setMuted(true);
+      case "display_unmute":
+        return setMuted(false);
+      case "display_set_brightness":
+        return lunaCall("luna://com.webos.settingsservice/setSystemSettings", {
+          category: "picture", settings: { backlight: clamp(payload.brightness, 0, 100) }
+        }).then(function () { return "Яркость изменена"; }, function () {
+          throw commandError("unsupported_command", "Телевизор не разрешает менять яркость");
+        });
+      case "display_power_off":
+        return lunaCall("luna://com.webos.service.tvpower/power/turnOffScreen", {}).then(function () { return "Экран выключен"; }, function () {
+          throw commandError("unsupported_command", "Телевизор не разрешает выключать экран");
+        });
+      case "display_power_on":
+        return lunaCall("luna://com.webos.service.tvpower/power/turnOnScreen", {}).then(function () { return "Экран включён"; }, function () {
+          throw commandError("unsupported_command", "Телевизор не разрешает включать экран");
+        });
+      default:
+        return Promise.reject(commandError("unsupported_command", "webOS-плеер не поддерживает эту команду"));
+    }
+  }
+
   // ---- Studio live preview (periodic still image) --------------------------
 
   var preview = { running: false, lastCaptureAt: 0, forceSeen: false };
@@ -954,8 +1188,11 @@
       form.append("failureStatus", "sensitive_pairing");
       return request("POST", "/api/v1/player/preview", form, {}, false);
     }
-    var shot = captureFrame(960, 540);
-    return jpegWithin(shot.canvas, 480 * 1024, 0.75).then(function (blob) {
+    var shot;
+    return screenFrame(960, 540).then(function (frame) {
+      shot = frame;
+      return jpegWithin(shot.canvas, 480 * 1024, 0.75);
+    }).then(function (blob) {
       form.append("width", String(shot.width));
       form.append("height", String(shot.height));
       form.append("preview", blob, "preview.jpg");
@@ -1013,9 +1250,12 @@
   // TCLS version 1: magic, version, session UUID, capture time in
   // milliseconds (big-endian uint64), width and height (uint16), then JPEG.
   function sendLiveFrame(session) {
-    var shot = captureFrame(session.maxWidth || 640, session.maxHeight || 360);
+    var shot;
     var limit = Math.max(4096, (session.maxFrameBytes || 102400) - 64);
-    return jpegWithin(shot.canvas, limit, 0.6).then(function (jpeg) {
+    return screenFrame(session.maxWidth || 640, session.maxHeight || 360).then(function (frame) {
+      shot = frame;
+      return jpegWithin(shot.canvas, limit, 0.6);
+    }).then(function (jpeg) {
       var header = new ArrayBuffer(33);
       var view = new DataView(header);
       var bytes = new Uint8Array(header);
@@ -1251,6 +1491,6 @@
   });
 
   window.addEventListener("online", function () { if (state.credential) syncManifest(); });
-  window.addEventListener("unhandledrejection", function (event) { state.lastError = String(event.reason || "Unhandled error"); });
+  window.addEventListener("unhandledrejection", function (event) { state.lastError = String(event.reason || "Необработанная ошибка"); });
   start();
 }());

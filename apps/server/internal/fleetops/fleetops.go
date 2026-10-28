@@ -131,37 +131,37 @@ type Request struct {
 // Validate checks the request shape before anything reads the database.
 func (r Request) Validate() error {
 	if len(r.ScreenIDs) == 0 {
-		return validationError("select at least one screen")
+		return validationError("выберите хотя бы один экран")
 	}
 	if len(r.ScreenIDs) > MaxScreensPerOperation {
-		return validationError("no more than %d screens in one operation", MaxScreensPerOperation)
+		return validationError("не больше %d экранов за одну операцию", MaxScreensPerOperation)
 	}
 	switch r.Action {
 	case ActionAssignPlaylist:
 		if r.PlaylistID == nil {
-			return validationError("assigning a playlist needs a playlist")
+			return validationError("выберите плейлист")
 		}
 		if r.LayoutID != nil {
-			return validationError("choose a playlist or a Layout, not both")
+			return validationError("выберите плейлист или макет, но не оба сразу")
 		}
 	case ActionAssignLayout:
 		if r.LayoutID == nil {
-			return validationError("assigning a Layout needs a Layout")
+			return validationError("выберите макет")
 		}
 		if r.PlaylistID != nil {
-			return validationError("choose a playlist or a Layout, not both")
+			return validationError("выберите плейлист или макет, но не оба сразу")
 		}
 	case ActionClearAssignment:
 	case ActionSetEnabled:
 		if r.Enabled == nil {
-			return validationError("say whether playback should be enabled or disabled")
+			return validationError("укажите, включить или выключить воспроизведение")
 		}
 	case ActionSendCommand:
 		if r.CommandType == "" {
-			return validationError("choose a command")
+			return validationError("выберите команду")
 		}
 	default:
-		return validationError("unknown action %q", r.Action)
+		return validationError("неизвестное действие %q", r.Action)
 	}
 	return nil
 }
@@ -228,11 +228,11 @@ type screenRow struct {
 func (row screenRow) currentLabel() string {
 	switch {
 	case row.playlistID != nil:
-		return "Playlist: " + row.playlistName
+		return "Плейлист: " + row.playlistName
 	case row.layoutID != nil:
-		return "Layout: " + row.layoutName
+		return "Макет: " + row.layoutName
 	default:
-		return "Nothing assigned"
+		return "Ничего не назначено"
 	}
 }
 
@@ -246,7 +246,7 @@ func (s *Service) Build(ctx context.Context, request Request) (Preview, error) {
 		return Preview{}, err
 	}
 	if len(rows) == 0 {
-		return Preview{}, validationError("none of the selected screens exist")
+		return Preview{}, validationError("выбранные экраны не найдены")
 	}
 	// The cap applies to what will actually change, not to what was selected.
 	// Sync-group fan-out happens after Validate, and a screen may belong to
@@ -254,7 +254,7 @@ func (s *Service) Build(ctx context.Context, request Request) (Preview, error) {
 	// constant exists to enforce.
 	if len(rows) > MaxScreensPerOperation {
 		return Preview{}, validationError(
-			"sync groups expand this selection to %d screens; no more than %d in one operation",
+			"с учётом групп выбрано экранов: %d, а за одну операцию можно не больше %d",
 			len(rows), MaxScreensPerOperation)
 	}
 
@@ -317,17 +317,13 @@ func (s *Service) Build(ctx context.Context, request Request) (Preview, error) {
 			names = append(names, name)
 		}
 		sort.Strings(names)
-		subject := "screens are"
-		if preview.GroupAddedCount == 1 {
-			subject = "screen is"
-		}
 		preview.Warnings = append(preview.Warnings, fmt.Sprintf(
-			"%d more %s included because they share a sync group (%s). A sync group plays one assignment on every member.",
-			preview.GroupAddedCount, subject, joinNames(names)))
+			"Добавлено экранов из тех же групп: %d (%s). Все экраны группы воспроизводят одно общее назначение.",
+			preview.GroupAddedCount, joinNames(names)))
 	}
 	if !request.Reversible() {
 		preview.Warnings = append(preview.Warnings,
-			"Sending a command cannot be undone. A Player may collect it immediately.")
+			"Отправку команды нельзя отменить: плеер может получить её сразу.")
 	}
 	return preview, nil
 }
@@ -408,9 +404,9 @@ func (s *Service) nextLabel(ctx context.Context, request Request) (string, error
 		err := s.db.QueryRow(ctx,
 			`SELECT name FROM playlists WHERE id=$1 AND deleted_at IS NULL`, request.PlaylistID).Scan(&name)
 		if err != nil {
-			return "", validationError("that playlist no longer exists")
+			return "", validationError("этот плейлист удалён")
 		}
-		return "Playlist: " + name, nil
+		return "Плейлист: " + name, nil
 	case ActionAssignLayout:
 		var name string
 		err := s.db.QueryRow(ctx,
@@ -418,36 +414,36 @@ func (s *Service) nextLabel(ctx context.Context, request Request) (string, error
 			 WHERE id=$1 AND deleted_at IS NULL AND published_revision_id IS NOT NULL`,
 			request.LayoutID).Scan(&name)
 		if err != nil {
-			return "", validationError("that Layout no longer exists or is not published")
+			return "", validationError("этот макет удалён или не опубликован")
 		}
-		return "Layout: " + name, nil
+		return "Макет: " + name, nil
 	case ActionClearAssignment:
-		return "Nothing assigned", nil
+		return "Ничего не назначено", nil
 	case ActionSetEnabled:
 		return enabledLabel(*request.Enabled), nil
 	default:
-		return "Command: " + request.CommandType, nil
+		return "Команда: " + commandLabel(request.CommandType), nil
 	}
 }
 
 func enabledLabel(enabled bool) string {
 	if enabled {
-		return "Playback enabled"
+		return "Воспроизведение включено"
 	}
-	return "Playback disabled"
+	return "Воспроизведение выключено"
 }
 
 // blockedReason names why a screen will be skipped, in words an operator can
 // act on. A skipped screen is reported, never silently dropped.
 func blockedReason(row screenRow, request Request) string {
 	if row.archived {
-		return "Archived"
+		return "в архиве"
 	}
 	if row.revoked {
-		return "No active player credential"
+		return "плеер не подключён"
 	}
 	if request.Action == ActionSendCommand && !row.enabled {
-		return "Playback is disabled"
+		return "воспроизведение выключено"
 	}
 	return ""
 }
@@ -475,7 +471,7 @@ func joinNames(names []string) string {
 	if len(names) <= 3 {
 		return joinWithCommas(names)
 	}
-	return joinWithCommas(names[:3]) + fmt.Sprintf(" and %d more", len(names)-3)
+	return joinWithCommas(names[:3]) + fmt.Sprintf(" и ещё %d", len(names)-3)
 }
 
 func joinWithCommas(names []string) string {
@@ -485,7 +481,7 @@ func joinWithCommas(names []string) string {
 	case 1:
 		return names[0]
 	case 2:
-		return names[0] + " and " + names[1]
+		return names[0] + " и " + names[1]
 	default:
 		out := ""
 		for i, name := range names[:len(names)-1] {
@@ -494,6 +490,22 @@ func joinWithCommas(names []string) string {
 			}
 			out += name
 		}
-		return out + ", and " + names[len(names)-1]
+		return out + " и " + names[len(names)-1]
+	}
+}
+
+// commandLabel names a bulk command the way the Studio command menu does.
+func commandLabel(commandType string) string {
+	switch commandType {
+	case "sync_now":
+		return "синхронизировать сейчас"
+	case "reload_playback":
+		return "перезапустить воспроизведение"
+	case "clear_media_cache":
+		return "очистить кэш медиа"
+	case "restart_player_process":
+		return "перезапустить плеер"
+	default:
+		return commandType
 	}
 }

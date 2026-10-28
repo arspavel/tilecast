@@ -281,6 +281,12 @@ func (s *Service) DeleteGroup(ctx context.Context, id, user uuid.UUID) error {
 	if _, err = tx.Exec(ctx, `DELETE FROM alert_rule_targets WHERE target_type='group' AND screen_group_id=$1`, id); err != nil {
 		return err
 	}
+	// A deleted group must not linger as a schedule target, an access scope, a
+	// running Show-now, or a takeover still waiting to start: Studio would keep
+	// naming it long after it was removed.
+	if err = clearGroupReferences(ctx, tx, id); err != nil {
+		return err
+	}
 	configRevisions := map[uuid.UUID]int64{}
 	for _, note := range notes {
 		_, _ = tx.Exec(ctx, `INSERT INTO screen_config_state(screen_id)VALUES($1)ON CONFLICT DO NOTHING`, note.id)
@@ -1053,6 +1059,29 @@ func affectedForSchedule(ctx context.Context, q interface {
 		out = append(out, x)
 	}
 	return out, rows.Err()
+}
+
+// clearGroupReferences removes the live references to a group being deleted.
+// History (emergency and update deployment targets, incidents, proof of play)
+// keeps its rows so past events still name the group they reached.
+func clearGroupReferences(ctx context.Context, tx pgx.Tx, id uuid.UUID) error {
+	for _, statement := range []string{
+		`DELETE FROM schedule_targets WHERE target_type='group' AND screen_group_id=$1`,
+		`DELETE FROM user_screen_scopes WHERE scope_type='group' AND scope_id=$1`,
+		`UPDATE presentation_overrides SET stopped_at=now(),stop_reason='Группа удалена' WHERE target_type='group' AND target_id=$1 AND stopped_at IS NULL`,
+		// A takeover left with no target at all is cancelled rather than started.
+		`UPDATE scheduled_takeovers
+		 SET group_ids=array_remove(group_ids,$1),
+		     status=CASE WHEN cardinality(array_remove(group_ids,$1))=0 AND cardinality(screen_ids)=0 THEN 'cancelled' ELSE status END,
+		     failure=CASE WHEN cardinality(array_remove(group_ids,$1))=0 AND cardinality(screen_ids)=0 THEN 'Группа удалена' ELSE failure END,
+		     updated_at=now()
+		 WHERE $1=ANY(group_ids) AND status='scheduled'`,
+	} {
+		if _, err := tx.Exec(ctx, statement, id); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 func bumpGroupScreens(ctx context.Context, tx pgx.Tx, id uuid.UUID, reason string) ([]note, error) {
 	rows, err := tx.Query(ctx, `INSERT INTO screen_manifest_state(screen_id,manifest_version,change_reason)SELECT screen_id,1,$2 FROM screen_group_memberships WHERE screen_group_id=$1 ON CONFLICT(screen_id)DO UPDATE SET previous_manifest_version=screen_manifest_state.manifest_version,manifest_version=screen_manifest_state.manifest_version+1,changed_at=now(),change_reason=$2 RETURNING screen_id,manifest_version`, id, reason)

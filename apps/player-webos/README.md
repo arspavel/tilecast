@@ -1,4 +1,4 @@
-# Tilecast Player for LG webOS
+# LSR signage Player for LG webOS
 
 Lightweight native webOS signage player. It supports:
 
@@ -11,13 +11,14 @@ Lightweight native webOS signage player. It supports:
 - Studio live preview and **Watch live**;
 - in-memory media cache with next-item preloading, so playlist loops do not download media again;
 - item changes without a black frame: the next item replaces the current one only after it is ready;
-- skipping of failed items, a video stall watchdog, and a page reload after five minutes without healthy playback.
+- skipping of failed items, a video stall watchdog, and a page reload after five minutes without healthy playback;
+- Studio commands: sync now, reload playback, skip item, clear media cache, restart the player, show the service overlay, volume, mute, and, where the panel allows it, brightness and screen power.
 
-Layouts, widgets, plugins, command processing, remote self-update, and persistent offline media caching are not supported.
+Layouts, widgets, plugins, remote self-update, and persistent offline media caching are not supported. A command the panel cannot perform is answered as unsupported, so Studio does not wait for it.
 
 ## Live preview and Watch live
 
-The player draws the visible image or video frame onto a canvas. A web page cannot read the pixels of a website frame, and some panels show video on a hardware plane that a canvas cannot read. In those cases the preview shows a status card with the playlist, the current item, the video position, and the last error. The player sends live frames over HTTP to `POST /api/v1/player/live-stream-frame`, because a browser cannot send a device credential header on a WebSocket.
+On LG Signage panels the player captures the panel's real output through the signage storage service (`captureScreen`), so Studio shows exactly what viewers see, including websites and video on the hardware plane. Where that service is missing, as on consumer TVs, the player stops asking for ten minutes after three failures and falls back to drawing the visible image or video frame onto a canvas. A web page cannot read the pixels of a website frame, and some panels show video on a hardware plane that a canvas cannot read. In those cases the preview shows a status card with the playlist, the current item, the video position, and the last error. The player sends live frames over HTTP to `POST /api/v1/player/live-stream-frame`, because a browser cannot send a device credential header on a WebSocket.
 
 A disabled screen shows a notice and keeps its pairing. Playback continues when the screen is enabled again.
 
@@ -46,7 +47,7 @@ ares-install --device tv ./org.tilecast.player.webos_0.1.0_all.ipk
 ares-launch --device tv org.tilecast.player.webos
 ```
 
-On first launch, enter the externally reachable Tilecast server URL and approve the pairing code in Studio. Press the red remote key to clear pairing. Press Back to reopen server setup. Press Up to show or hide the service overlay (see below).
+On first launch, enter the externally reachable LSR signage server URL and approve the pairing code in Studio. Press the red remote key to clear pairing. Press Back to reopen server setup. Press Up to show or hide the service overlay (see below).
 
 ## Service overlay
 

@@ -84,16 +84,16 @@ func (s *server) undoBulkOperation(w http.ResponseWriter, r *http.Request) {
 	operation, err := s.fleet.Undo(r.Context(), user.ID, user.Role, id)
 	switch {
 	case errors.Is(err, fleetops.ErrNotFound):
-		writeError(w, http.StatusNotFound, "not_found", "That operation no longer exists.")
+		writeError(w, http.StatusNotFound, "not_found", "Это изменение больше не существует.")
 		return
 	case errors.Is(err, devices.ErrOutOfScope):
 		// Same answer as reading an out-of-scope screen: a scoped operator must
 		// not learn that the operation exists.
-		writeError(w, http.StatusNotFound, "not_found", "That operation no longer exists.")
+		writeError(w, http.StatusNotFound, "not_found", "Это изменение больше не существует.")
 		return
 	case errors.Is(err, fleetops.ErrNotReversible):
 		writeError(w, http.StatusConflict, "not_reversible",
-			"This operation cannot be undone. A command that a Player may already have collected cannot be recalled.")
+			"Это изменение нельзя отменить: команду, которую плеер мог уже получить, не отозвать.")
 		return
 	case errors.Is(err, fleetops.ErrValidation):
 		writeError(w, http.StatusConflict, "undo_unavailable", trimSentinel(err))
