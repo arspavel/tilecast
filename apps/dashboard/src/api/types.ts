@@ -244,6 +244,7 @@ export type Screen = {
   locationDetails?: Location;
   roomName?: string;
   roomNumber?: string;
+  inventoryNumber?: string;
   syncGroupId?: string;
   syncGroupName?: string;
   nowPlayingName?: string;

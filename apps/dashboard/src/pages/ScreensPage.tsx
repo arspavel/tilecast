@@ -233,8 +233,14 @@ const codeSchema = z.object({
 const approvalSchema = z.object({
   name: z.string().trim().min(2, "Enter a screen name").max(120),
   locationId: z.string().optional(),
+  // Kept for the stored value only: the form shows the inventory number in its
+  // place, and the server rewrites room_name on every save.
   roomName: z.string().max(120),
   roomNumber: z.string().max(80),
+  inventoryNumber: z
+    .string()
+    .trim()
+    .max(64, "Инвентарный номер — не длиннее 64 символов"),
   description: z.string().max(1000),
 });
 type CodeForm = z.infer<typeof codeSchema>;
@@ -2122,6 +2128,7 @@ function ApprovalPanel({
       locationId: undefined,
       roomName: "",
       roomNumber: "",
+      inventoryNumber: "",
       description: "",
     },
   });
@@ -2356,16 +2363,17 @@ function ApprovalPanel({
         />
         <div className="screen-room-fields">
           <FormField
-            id="screenRoomName"
-            label="Room name (optional)"
-            placeholder="Library"
-            {...form.register("roomName")}
-          />
-          <FormField
             id="screenRoomNumber"
-            label="Room number (optional)"
+            label="Номер помещения (необязательно)"
             placeholder="204"
             {...form.register("roomNumber")}
+          />
+          <FormField
+            id="screenInventoryNumber"
+            label="Инвентарный номер (необязательно)"
+            placeholder="ИНВ-000123"
+            error={form.formState.errors.inventoryNumber?.message}
+            {...form.register("inventoryNumber")}
           />
         </div>
         <label className="field" htmlFor="screenDescription">
@@ -2453,6 +2461,7 @@ export function ScreenDetailPage() {
       locationId: undefined,
       roomName: "",
       roomNumber: "",
+      inventoryNumber: "",
       description: "",
     },
   });
@@ -2467,6 +2476,7 @@ export function ScreenDetailPage() {
       locationId: query.data.locationId,
       roomName: query.data.roomName ?? "",
       roomNumber: query.data.roomNumber ?? "",
+      inventoryNumber: query.data.inventoryNumber ?? "",
       description: query.data.description,
     });
   }, [detailsForm, editingDetails, query.data]);
@@ -2760,14 +2770,16 @@ export function ScreenDetailPage() {
             />
             <div className="screen-room-fields">
               <FormField
-                id="editScreenRoomName"
-                label="Room name (optional)"
-                {...detailsForm.register("roomName")}
+                id="editScreenRoomNumber"
+                label="Номер помещения (необязательно)"
+                {...detailsForm.register("roomNumber")}
               />
               <FormField
-                id="editScreenRoomNumber"
-                label="Room number (optional)"
-                {...detailsForm.register("roomNumber")}
+                id="editScreenInventoryNumber"
+                label="Инвентарный номер (необязательно)"
+                placeholder="ИНВ-000123"
+                error={detailsForm.formState.errors.inventoryNumber?.message}
+                {...detailsForm.register("inventoryNumber")}
               />
             </div>
             <label

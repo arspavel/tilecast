@@ -14,6 +14,7 @@ import { studioRoutes } from "../App";
 import { api } from "../api/client";
 import type { Screen } from "../api/types";
 import { StudioRoutesProvider } from "../navigation/studioRoutes";
+import type { Incident } from "../pages/ActivityIncidentShared";
 import { buildCommandResults, fuzzyScore, StudioTopbar } from "./StudioTopbar";
 
 afterEach(() => {
@@ -62,8 +63,25 @@ function renderTopbar(
   overrides: {
     deployments?: Awaited<ReturnType<typeof api.updateDeployments>>;
     pairings?: Awaited<ReturnType<typeof api.pendingPairings>>;
+    incidents?: Partial<Incident>[];
   } = {},
 ) {
+  // Open incidents come from the Activity API, which is fetched directly.
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: RequestInfo | URL) =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify(
+            String(input).startsWith("/api/v1/activity/incidents")
+              ? { data: { items: overrides.incidents ?? [] } }
+              : {},
+          ),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    ),
+  );
   vi.spyOn(api, "screens").mockResolvedValue({
     items: [lobbyScreen],
     total: 1,
@@ -229,6 +247,8 @@ describe("StudioTopbar", () => {
       deployments: {
         items: [
           {
+            // A deployment's failure count no longer alerts: the failure is
+            // announced from its incident, which can be closed.
             id: "dep-1",
             name: "Winter rollout",
             failedCount: 2,
@@ -242,6 +262,15 @@ describe("StudioTopbar", () => {
           },
         ] as Awaited<ReturnType<typeof api.updateDeployments>>["items"],
       },
+      incidents: [
+        {
+          id: "incident-1",
+          incidentType: "update",
+          title: "Не удалось обновить плеер",
+          primaryScreenName: "Winter tablet",
+        },
+        { id: "incident-2", incidentType: "playback", title: "Сбой" },
+      ],
       pairings: {
         items: [{ id: "pair-1" }] as Awaited<
           ReturnType<typeof api.pendingPairings>
@@ -250,7 +279,7 @@ describe("StudioTopbar", () => {
       },
     });
 
-    // A failed deployment is critical, so the badge escalates to the critical style.
+    // A failed update is critical, so the badge escalates to the critical style.
     const badge = await screen.findByText("4", {
       selector: ".topbar__notification-badge",
     });
@@ -258,11 +287,13 @@ describe("StudioTopbar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
 
+    // It points at Overview, where the incident can be closed in place.
     expect(
-      (
-        await screen.findByRole("link", { name: /Winter rollout/ })
-      ).getAttribute("href"),
-    ).toBe("/settings/player/updates");
+      (await screen.findByRole("link", { name: /Winter tablet/ })).getAttribute(
+        "href",
+      ),
+    ).toBe("/");
+    expect(screen.queryByRole("link", { name: /Winter rollout/ })).toBeNull();
     expect(screen.getByText("Critical")).toBeTruthy();
     expect(screen.getByText("Needs attention")).toBeTruthy();
     expect(screen.getByText("Info")).toBeTruthy();

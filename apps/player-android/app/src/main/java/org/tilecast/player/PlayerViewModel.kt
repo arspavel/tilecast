@@ -18,6 +18,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
@@ -172,6 +173,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	private var activeConfigRevision:Long?=null
 	private var configurationError:String?=null
 	private var lastStatusSentAt:Long=0
+	// Sent by the server on connect (server.hello) and when an operator edits
+	// the screen (screen.details); shown in the service overlay.
+	@Volatile private var reportedScreenName:String?=null
+	@Volatile private var inventoryNumber:String?=null
 	private val updateManager=PlayerUpdateManager(application,api)
 	private val mutableUpdate=MutableStateFlow<UpdateUiState?>(updateManager.restored)
 	val update:StateFlow<UpdateUiState?> = mutableUpdate.asStateFlow()
@@ -364,6 +369,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 				if(text.contains("commands.available"))viewModelScope.launch{if(connectionEpoch.isCurrent(epoch))runCommands(url,credential)}
 				if(text.contains("config.changed"))viewModelScope.launch{if(connectionEpoch.isCurrent(epoch))reconcilePlayerConfig(url,credential)}
 				if(text.contains("live_stream.session_changed"))onLiveStreamSessionChanged?.invoke()
+				if(text.contains("server.hello")||text.contains("screen.details"))applyScreenDetails(text)
             }
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
 				if (!connectionEpoch.isCurrent(epoch) || socket !== webSocket) return
@@ -779,6 +785,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		catch (error: Exception) { latencyMillis = null; latencyError = error.message ?: "нет ответа" }
 	}
 
+	private fun applyScreenDetails(text: String) {
+		val message = runCatching { Json.parseToJsonElement(text).jsonObject }.getOrNull() ?: return
+		val type = message["type"]?.jsonPrimitive?.contentOrNull
+		if (type != "server.hello" && type != "screen.details") return
+		message["screenName"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }?.let { reportedScreenName = it }
+		// A server without the field leaves the number unknown rather than blank.
+		message["inventoryNumber"]?.jsonPrimitive?.contentOrNull?.let { inventoryNumber = it }
+	}
+
 	fun diagnostics(): org.tilecast.player.diagnostics.PlayerDiagnostics {
 		val app = getApplication<Application>()
 		val paired = mutableState.value as? PlayerState.PairedIdle
@@ -788,7 +803,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		val position = playlist?.items?.indexOfFirst { it.id == currentItemId }?.takeIf { it >= 0 }
 		val now = SystemClock.elapsedRealtime()
 		return org.tilecast.player.diagnostics.PlayerDiagnostics(
-			screenName = paired?.screenName ?: current?.screenName,
+			screenName = reportedScreenName ?: paired?.screenName ?: current?.screenName,
+			inventoryNumber = inventoryNumber,
 			serverHost = current?.serverUrl?.let { runCatching { java.net.URI(it).host }.getOrNull() ?: it },
 			connected = paired?.connected == true,
 			connectedForMillis = if (paired?.connected == true && socketOpenedAtElapsed > 0) now - socketOpenedAtElapsed else 0,

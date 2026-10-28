@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import type { BackupJob, ScreenStatus, User } from "../api/types";
+import type { Incident } from "../pages/ActivityIncidentShared";
+import { activityRequest } from "../pages/ActivityShared";
 
 // Notifications are derived on the fly from the live domain data the Studio already
 // polls; there is no stored notification model. Priority orders how urgently a person
@@ -86,6 +88,15 @@ export function useNotifications(user?: User): NotificationFeed {
     refetchInterval: 30_000,
     enabled: canOperate,
   });
+  // A failed update is announced from its incident, one per screen: closing
+  // the incident on Overview or in Activity removes it here as well, while
+  // the deployment's failure count would stay in the bell for good.
+  const updateIncidents = useQuery({
+    queryKey: ["activity", "incidents", "overview"],
+    queryFn: () => activityRequest<{ items: Incident[] }>("/incidents"),
+    refetchInterval: 30_000,
+    retry: false,
+  });
   const failedAssets = useQuery({
     queryKey: ["assets", "failed"],
     queryFn: () =>
@@ -110,16 +121,18 @@ export function useNotifications(user?: User): NotificationFeed {
       });
     }
 
+    for (const incident of updateIncidents.data?.items ?? []) {
+      if (incident.incidentType !== "update") continue;
+      collected.push({
+        id: `update-failed:${incident.id}`,
+        priority: "critical",
+        title: incident.primaryScreenName || incident.title,
+        detail: incident.title,
+        to: "/",
+      });
+    }
+
     for (const deployment of deployments.data?.items ?? []) {
-      if (deployment.failedCount > 0) {
-        collected.push({
-          id: `deployment-failed:${deployment.id}`,
-          priority: "critical",
-          title: deployment.name,
-          detail: plural(deployment.failedCount, "failed player update"),
-          to: "/settings/player/updates",
-        });
-      }
       if (deployment.waitingForUserCount > 0) {
         collected.push({
           id: `deployment-waiting:${deployment.id}`,
@@ -211,6 +224,7 @@ export function useNotifications(user?: User): NotificationFeed {
     );
   }, [
     screens.data,
+    updateIncidents.data,
     deployments.data,
     backups.data,
     takeovers.data,

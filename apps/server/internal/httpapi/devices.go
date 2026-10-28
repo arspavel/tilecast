@@ -246,6 +246,7 @@ type approvePairingRequest struct {
 	LocationID                *uuid.UUID `json:"locationId"`
 	RoomName                  string     `json:"roomName"`
 	RoomNumber                string     `json:"roomNumber"`
+	InventoryNumber           *string    `json:"inventoryNumber"`
 	Description               string     `json:"description"`
 	ReplaceExistingCredential bool       `json:"replaceExistingCredential"`
 	ReplaceHardware           bool       `json:"replaceHardware"`
@@ -263,6 +264,10 @@ func (s *server) approvePairing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := r.Context().Value(sessionContextKey).(auth.Session).User
+	if body.InventoryNumber != nil && len([]rune(strings.TrimSpace(*body.InventoryNumber))) > 64 {
+		writeError(w, http.StatusUnprocessableEntity, "validation_failed", "Инвентарный номер — не длиннее 64 символов.")
+		return
+	}
 	screen, err := s.devices.ApprovePairingWithOptions(r.Context(), id, user.ID, devices.PairingApproval{
 		Name: body.Name, LocationID: body.LocationID, RoomName: body.RoomName, RoomNumber: body.RoomNumber,
 		Description: body.Description, ReplaceExistingCredential: body.ReplaceExistingCredential,
@@ -271,6 +276,13 @@ func (s *server) approvePairing(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.writeDeviceError(w, r, err)
 		return
+	}
+	if body.InventoryNumber != nil && !body.ReplaceHardware {
+		// Checked before approval, so this only fails on a database error; the
+		// pairing itself has succeeded and the screen is returned either way.
+		if updated, err := s.devices.SetInventoryNumber(r.Context(), screen.ID, *body.InventoryNumber); err == nil {
+			screen = updated
+		}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": screen})
 }
@@ -344,7 +356,7 @@ func (s *server) updateScreen(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := r.Context().Value(sessionContextKey).(auth.Session).User
-	screen, err := s.devices.UpdateScreen(r.Context(), id, user.ID, body.Name, body.LocationID, body.RoomName, body.RoomNumber, body.Description)
+	screen, err := s.devices.UpdateScreen(r.Context(), id, user.ID, body.Name, body.LocationID, body.RoomName, body.RoomNumber, body.InventoryNumber, body.Description)
 	if err != nil {
 		s.writeDeviceError(w, r, err)
 		return

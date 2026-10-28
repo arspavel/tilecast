@@ -77,7 +77,9 @@ func (s *server) playerSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := send(map[string]any{"type": "server.hello", "protocolVersion": 1, "screenId": principal.ScreenID, "screenName": principal.ScreenName}); err != nil {
+	var inventoryNumber string
+	_ = s.db.QueryRow(r.Context(), `SELECT inventory_number FROM screens WHERE id=$1`, principal.ScreenID).Scan(&inventoryNumber)
+	if err := send(map[string]any{"type": "server.hello", "protocolVersion": 1, "screenId": principal.ScreenID, "screenName": principal.ScreenName, "inventoryNumber": inventoryNumber}); err != nil {
 		return
 	}
 	var pendingCommands bool

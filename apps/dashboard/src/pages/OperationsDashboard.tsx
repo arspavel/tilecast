@@ -22,7 +22,11 @@ import type {
 import { useAuth } from "../auth/AuthProvider";
 import { FleetUptimePanel } from "../components/FleetUptimePanel";
 import { Button, PageHeader, StatusBadge } from "../components/ui";
-import type { Incident } from "./ActivityIncidentShared";
+import {
+  useCanActOnIncidents,
+  useIncidentAction,
+  type Incident,
+} from "./ActivityIncidentShared";
 import { activityRequest } from "./ActivityShared";
 import {
   errorText,
@@ -56,6 +60,8 @@ type AttentionItem = {
   detail: string;
   to: string;
   action: string;
+  /** Set for incidents: the row can be closed right here. */
+  incidentId?: string;
 };
 
 export function OperationsDashboard() {
@@ -64,6 +70,8 @@ export function OperationsDashboard() {
   const role = auth.status?.user?.role ?? "";
   const privileged = role === "owner" || role === "administrator";
   const [showAllAttention, setShowAllAttention] = useState(false);
+  const incidentAction = useIncidentAction();
+  const canCloseIncidents = useCanActOnIncidents();
 
   const screens = useQuery({
     queryKey: ["screens"],
@@ -137,7 +145,11 @@ export function OperationsDashboard() {
   const contentIssues = contentHealth.data
     ? contentIssueCount(contentHealth.data)
     : 0;
-  const updates = updateSummary(deployments.data?.items ?? []);
+  const updates = updateSummary(
+    deployments.data?.items ?? [],
+    activeIncidents.filter((incident) => incident.incidentType === "update")
+      .length,
+  );
   const activeTakeovers = (takeovers.data?.items ?? []).filter(
     (item) => item.status === "active",
   );
@@ -340,10 +352,28 @@ export function OperationsDashboard() {
                         <strong>{item.title}</strong>
                         <small>{item.detail}</small>
                       </span>
-                      <Link to={item.to}>
-                        {item.action}{" "}
-                        <ChevronRight size={14} aria-hidden="true" />
-                      </Link>
+                      <span className="ops-attention-list__actions">
+                        {item.incidentId && canCloseIncidents && (
+                          <button
+                            type="button"
+                            className="ops-dismiss"
+                            disabled={incidentAction.isPending}
+                            onClick={() =>
+                              incidentAction.mutate({
+                                id: item.incidentId!,
+                                action: "resolve",
+                                reason: "Закрыто на странице «Обзор».",
+                              })
+                            }
+                          >
+                            Закрыть
+                          </button>
+                        )}
+                        <Link to={item.to}>
+                          {item.action}{" "}
+                          <ChevronRight size={14} aria-hidden="true" />
+                        </Link>
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -618,12 +648,11 @@ function contentIssueCount(report: ContentHealthReport) {
   );
 }
 
-function updateSummary(deployments: UpdateDeployment[]) {
+/** failed counts open update incidents, so closing one clears it here too. */
+function updateSummary(deployments: UpdateDeployment[], failed: number) {
   let waiting = 0;
-  let failed = 0;
   for (const deployment of deployments) {
     waiting += deployment.waitingForUserCount;
-    failed += deployment.failedCount;
   }
   const latest = deployments[0];
   const detail =
@@ -709,12 +738,18 @@ function buildAttention({
     }
   }
 
-  // An offline screen already has its own row; its incident would repeat it.
+  // An offline screen already has its own row; its connectivity incident would
+  // repeat it. Other incidents of that screen, a failed update say, still show.
   for (const incident of incidents) {
-    if (incident.primaryScreenId && listedScreens.has(incident.primaryScreenId))
+    if (
+      incident.incidentType === "connectivity" &&
+      incident.primaryScreenId &&
+      listedScreens.has(incident.primaryScreenId)
+    )
       continue;
     items.push({
       key: `incident-${incident.id}`,
+      incidentId: incident.id,
       severity:
         incident.severity === "critical" || incident.severity === "error"
           ? "danger"
@@ -732,13 +767,15 @@ function buildAttention({
     });
   }
 
+  // A failed update is reported per screen as an incident (above), which can be
+  // closed; the deployment's failure count stays forever and is not repeated.
   for (const deployment of deployments) {
-    if (!deployment.failedCount && !deployment.waitingForUserCount) continue;
+    if (!deployment.waitingForUserCount) continue;
     items.push({
       key: `update-${deployment.id}`,
-      severity: deployment.failedCount ? "danger" : "warning",
+      severity: "warning",
       title: `Обновление плеера ${deployment.versionName}`,
-      detail: `${deployment.failedCount} сбой · ${deployment.waitingForUserCount} ждут подтверждения на экране`,
+      detail: `${deployment.waitingForUserCount} ждут подтверждения на экране`,
       to: "/settings/player/updates",
       action: "Обновления",
     });

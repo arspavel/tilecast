@@ -16,7 +16,7 @@ import (
 // TV panel built an unusable "adb connect 192.0.2.10/32:5555". host() keeps the
 // bare address and still yields NULL when no heartbeat has reported one.
 const screenSelect = `
-SELECT s.id,s.name,s.description,COALESCE(l.name,''),s.location_id,s.room_name,s.room_number,
+SELECT s.id,s.name,s.description,COALESCE(l.name,''),s.location_id,s.room_name,s.room_number,s.inventory_number,
        l.address_line_1,l.address_line_2,l.city,l.state,l.postal_code,l.country,l.latitude,l.longitude,l.created_at,l.updated_at,
        s.platform,s.device_manufacturer,s.device_model,s.android_version,s.player_version,
        s.screen_width,s.screen_height,s.density,s.locale,s.timezone,s.available_storage_bytes,s.uptime_seconds,s.enabled,s.paired_at,
@@ -110,7 +110,7 @@ func scanScreen(row scanner, presence *PresenceHub, now time.Time) (Screen, erro
 	var addressLine1, addressLine2, city, state, postalCode, country *string
 	var latitude, longitude *float64
 	var locationCreatedAt, locationUpdatedAt *time.Time
-	if err := row.Scan(&screen.ID, &screen.Name, &screen.Description, &screen.Location, &screen.LocationID, &screen.RoomName, &screen.RoomNumber,
+	if err := row.Scan(&screen.ID, &screen.Name, &screen.Description, &screen.Location, &screen.LocationID, &screen.RoomName, &screen.RoomNumber, &screen.InventoryNumber,
 		&addressLine1, &addressLine2, &city, &state, &postalCode, &country, &latitude, &longitude, &locationCreatedAt, &locationUpdatedAt,
 		&screen.Platform, &screen.DeviceManufacturer, &screen.DeviceModel, &screen.AndroidVersion, &screen.PlayerVersion, &screen.ScreenWidth, &screen.ScreenHeight, &screen.Density, &screen.Locale, &screen.Timezone, &screen.AvailableStorageBytes, &screen.UptimeSeconds, &screen.Enabled, &screen.PairedAt, &screen.LastConnectedAt, &screen.LastDisconnectedAt, &screen.LastHeartbeatAt, &screen.LastKnownIP, &screen.CreatedAt, &screen.UpdatedAt, &screen.HasActiveCredential,
 		&screen.ArchivedAt, &screen.ArchivedReason,
@@ -145,9 +145,17 @@ func valueOrEmpty(value *string) string {
 	return *value
 }
 
-func (s *Service) UpdateScreen(ctx context.Context, id, userID uuid.UUID, name string, locationID *uuid.UUID, roomName, roomNumber, description string) (Screen, error) {
+// UpdateScreen saves the operator-editable details. inventoryNumber is nil
+// when the client did not send it, which keeps the stored value: older Studio
+// builds do not know the field and must not clear it.
+func (s *Service) UpdateScreen(ctx context.Context, id, userID uuid.UUID, name string, locationID *uuid.UUID, roomName, roomNumber string, inventoryNumber *string, description string) (Screen, error) {
 	name, roomName, roomNumber, description = strings.TrimSpace(name), strings.TrimSpace(roomName), strings.TrimSpace(roomNumber), strings.TrimSpace(description)
-	if len(name) < 2 || len(name) > 120 || len(roomName) > 120 || len(roomNumber) > 80 || len(description) > 1000 {
+	if inventoryNumber != nil {
+		trimmed := strings.TrimSpace(*inventoryNumber)
+		inventoryNumber = &trimmed
+	}
+	if len(name) < 2 || len(name) > 120 || len(roomName) > 120 || len(roomNumber) > 80 || len(description) > 1000 ||
+		inventoryNumber != nil && len([]rune(*inventoryNumber)) > 64 {
 		return Screen{}, errors.New("screen details are invalid")
 	}
 	tx, err := s.db.Begin(ctx)
@@ -164,7 +172,7 @@ func (s *Service) UpdateScreen(ctx context.Context, id, userID uuid.UUID, name s
 			return Screen{}, errors.New("location is invalid")
 		}
 	}
-	result, err := tx.Exec(ctx, `UPDATE screens SET name=$2,location_id=$3,room_name=$4,room_number=$5,description=$6,updated_at=now() WHERE id=$1 AND archived_at IS NULL`, id, name, locationID, roomName, roomNumber, description)
+	result, err := tx.Exec(ctx, `UPDATE screens SET name=$2,location_id=$3,room_name=$4,room_number=$5,description=$6,inventory_number=COALESCE($7,inventory_number),updated_at=now() WHERE id=$1 AND archived_at IS NULL`, id, name, locationID, roomName, roomNumber, description, inventoryNumber)
 	if err != nil {
 		return Screen{}, fmt.Errorf("update screen: %w", err)
 	}
@@ -177,7 +185,32 @@ func (s *Service) UpdateScreen(ctx context.Context, id, userID uuid.UUID, name s
 	if err := tx.Commit(ctx); err != nil {
 		return Screen{}, err
 	}
+	screen, err := s.GetScreen(ctx, id)
+	if err == nil && s.presence != nil {
+		// The service overlay shows the name and inventory number; tell a
+		// connected player now instead of at its next reconnect.
+		s.presence.Notify(id, ScreenDetailsMessage(screen.Name, screen.InventoryNumber))
+	}
+	return screen, err
+}
+
+// SetInventoryNumber records the asset tag entered while approving a pairing,
+// which creates the screen before the number has anywhere to go.
+func (s *Service) SetInventoryNumber(ctx context.Context, id uuid.UUID, inventoryNumber string) (Screen, error) {
+	inventoryNumber = strings.TrimSpace(inventoryNumber)
+	if len([]rune(inventoryNumber)) > 64 {
+		return Screen{}, errors.New("screen details are invalid")
+	}
+	if _, err := s.db.Exec(ctx, `UPDATE screens SET inventory_number=$2,updated_at=now() WHERE id=$1`, id, inventoryNumber); err != nil {
+		return Screen{}, fmt.Errorf("update inventory number: %w", err)
+	}
 	return s.GetScreen(ctx, id)
+}
+
+// ScreenDetailsMessage is the socket message carrying the details a player
+// shows about itself. The hello on connect carries the same fields.
+func ScreenDetailsMessage(name, inventoryNumber string) map[string]any {
+	return map[string]any{"type": "screen.details", "screenName": name, "inventoryNumber": inventoryNumber}
 }
 
 func (s *Service) SetEnabled(ctx context.Context, id, userID uuid.UUID, enabled bool) error {

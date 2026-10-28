@@ -9,6 +9,7 @@ import java.util.Locale
 /** Service information for the on-screen overlay (remote Up key). */
 data class PlayerDiagnostics(
     val screenName: String? = null,
+    val inventoryNumber: String? = null,
     val serverHost: String? = null,
     val connected: Boolean = false,
     val connectedForMillis: Long = 0,
@@ -118,8 +119,8 @@ object DiagnosticsFormat {
 
     fun source(value: String): String = when (value) {
         "schedule" -> "по расписанию"
-        "takeover" -> "экстренный показ"
-        "quick_present" -> "быстрый показ"
+        "takeover" -> "временный показ"
+        "quick_present" -> "«Показать сейчас»"
         "direct_fallback" -> "назначен экрану"
         "none", "" -> "нет"
         else -> value

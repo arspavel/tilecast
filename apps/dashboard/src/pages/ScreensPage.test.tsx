@@ -486,6 +486,7 @@ describe("screen management", () => {
         locationId: undefined,
         roomName: "Cafeteria",
         roomNumber: "",
+        inventoryNumber: "ИНВ-0042",
         description: "",
       }),
     ).toEqual({
@@ -493,6 +494,7 @@ describe("screen management", () => {
       locationId: undefined,
       roomName: "Cafeteria",
       roomNumber: "",
+      inventoryNumber: "ИНВ-0042",
       description: "",
       replaceExistingCredential: true,
     });
@@ -532,6 +534,7 @@ describe("screen management", () => {
           locationId: undefined,
           roomName: "",
           roomNumber: "",
+          inventoryNumber: "",
           description: "",
         },
         "replace_hardware",

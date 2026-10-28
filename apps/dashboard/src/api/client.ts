@@ -1473,6 +1473,7 @@ export const api = {
       locationId?: string;
       roomName: string;
       roomNumber: string;
+      inventoryNumber?: string;
       description: string;
       replaceExistingCredential: boolean;
       replaceHardware?: boolean;
@@ -1498,6 +1499,7 @@ export const api = {
       locationId?: string;
       roomName: string;
       roomNumber: string;
+      inventoryNumber?: string;
       description: string;
     },
     csrfToken: string,

@@ -117,6 +117,7 @@ type Screen struct {
 	LocationDetails           *Location  `json:"locationDetails,omitempty"`
 	RoomName                  string     `json:"roomName"`
 	RoomNumber                string     `json:"roomNumber"`
+	InventoryNumber           string     `json:"inventoryNumber"`
 	SyncGroupID               *uuid.UUID `json:"syncGroupId,omitempty"`
 	SyncGroupName             *string    `json:"syncGroupName,omitempty"`
 	NowPlayingName            *string    `json:"nowPlayingName,omitempty"`
