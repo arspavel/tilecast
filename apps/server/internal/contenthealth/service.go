@@ -397,6 +397,22 @@ func (s *Service) Report(ctx context.Context) (Report, error) {
 		      SELECT 1 FROM screen_group_memberships m
 		      JOIN screen_group_playlist_assignments g ON g.screen_group_id=m.screen_group_id
 		      WHERE m.screen_id=s.id)
+		  -- A schedule is an assignment too: a screen fed only by a schedule
+		  -- (or a running Show now) has content and must not be reported idle.
+		  AND NOT EXISTS(
+		      SELECT 1 FROM schedules sc
+		      JOIN schedule_targets t ON t.schedule_id=sc.id
+		      WHERE sc.enabled=TRUE AND sc.deleted_at IS NULL
+		        AND (sc.end_date IS NULL OR sc.end_date>=CURRENT_DATE)
+		        AND (sc.type<>'one_time' OR sc.one_time_end>now())
+		        AND (t.screen_id=s.id OR t.screen_group_id IN
+		             (SELECT screen_group_id FROM screen_group_memberships WHERE screen_id=s.id)))
+		  AND NOT EXISTS(
+		      SELECT 1 FROM presentation_overrides o
+		      WHERE o.stopped_at IS NULL AND (o.expires_at IS NULL OR o.expires_at>now())
+		        AND ((o.target_type='screen' AND o.target_id=s.id)
+		             OR (o.target_type='group' AND o.target_id IN
+		                 (SELECT screen_group_id FROM screen_group_memberships WHERE screen_id=s.id))))
 		ORDER BY s.name LIMIT 100`)
 	if err != nil {
 		return Report{}, err
