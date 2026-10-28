@@ -279,15 +279,35 @@
   opacity: 0.45;
   filter: grayscale(1);
 }
-.ops-wall__frame time {
+.ops-wall__caption {
   position: absolute;
-  right: 6px;
-  bottom: 6px;
-  padding: 1px 6px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  padding: 14px 8px 5px;
   color: #e9ecef;
   font-size: 11px;
-  background: rgb(0 0 0 / 0.6);
-  border-radius: 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: linear-gradient(transparent, rgb(0 0 0 / 0.78));
+}
+.ops-wall__caption > span {
+  color: var(--herb, #3dd6c4);
+  font-weight: 700;
+}
+.ops-wall__caption-only {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  max-width: 86%;
+  color: var(--tc-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+.ops-wall__caption-only > svg {
+  color: var(--tc-text-secondary);
 }
 .ops-wall__body {
   display: grid;

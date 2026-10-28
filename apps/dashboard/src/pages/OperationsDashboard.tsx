@@ -491,11 +491,26 @@ function ScreenWall({
       retry: false,
     })),
   });
+  // Snapshot history is off by default and hourly at best, so a reachable
+  // screen shows the file it reports playing right now. Screens playing the
+  // same file share one cached request.
+  const currentAssets = useQueries({
+    queries: screens.map((screen) => ({
+      queryKey: ["asset", screen.currentAssetId ?? ""],
+      queryFn: () => api.asset(screen.currentAssetId ?? ""),
+      enabled: Boolean(screen.currentAssetId) && screen.status === "online",
+      staleTime: 300_000,
+      retry: false,
+    })),
+  });
   return (
     <ul className="ops-wall">
       {screens.map((screen, index) => {
         const health = healthOf(screen);
         const snapshot = snapshots[index]?.data?.items[0];
+        const asset =
+          screen.status === "online" ? currentAssets[index]?.data : undefined;
+        const assetThumbnail = asset?.thumbnailUrl;
         const override = presenting.has(screen.id)
           ? overrides.find(
               (item) =>
@@ -509,12 +524,19 @@ function ScreenWall({
           <li key={screen.id} className={`is-${health}`}>
             <Link to={`/screens/${screen.id}`}>
               <span className="ops-wall__frame">
-                {snapshot ? (
+                {assetThumbnail ? (
+                  <img src={assetThumbnail} alt="" loading="lazy" />
+                ) : snapshot ? (
                   <img
                     src={`/api/v1/screens/${screen.id}/snapshots/${snapshot.id}/image`}
                     alt=""
                     loading="lazy"
                   />
+                ) : health === "working" || health === "problem" ? (
+                  <span className="ops-wall__caption-only">
+                    <Monitor size={22} aria-hidden="true" />
+                    {asset?.name ?? playing}
+                  </span>
                 ) : (
                   <Monitor size={28} aria-hidden="true" />
                 )}
@@ -522,7 +544,17 @@ function ScreenWall({
                   label={screenHealthNames[health]}
                   tone={healthTone[health]}
                 />
-                {snapshot && <time>{relativeTime(snapshot.capturedAt)}</time>}
+                {assetThumbnail ? (
+                  <span className="ops-wall__caption">
+                    <span>Сейчас</span> {asset?.name}
+                  </span>
+                ) : (
+                  snapshot && (
+                    <span className="ops-wall__caption">
+                      Снимок {relativeTime(snapshot.capturedAt)}
+                    </span>
+                  )
+                )}
               </span>
               <span className="ops-wall__body">
                 <strong title={screen.name}>{screen.name}</strong>
