@@ -63,6 +63,7 @@ import { QuickPresentDialog } from "../components/QuickPresentDialog";
 import { FormField } from "../components/FormField";
 import { FireTvAccessibilityAdbPanel } from "../components/FireTvAccessibilityAdbPanel";
 import { ScreenManagementTabs } from "../components/ScreenManagementTabs";
+import { ScreenDisplayControls } from "../components/ScreenDisplayControls";
 import { PlayerPolicyEditor } from "../settings/PlayerPolicyEditor";
 import { formatLocationAddress } from "../settings/LocationsPanel";
 import { isAndroidScreen } from "../playerPlatform";
@@ -951,6 +952,10 @@ export function ScreenListContent({
     },
     ...(canManage
       ? [
+          {
+            label: "Управление дисплеем",
+            onSelect: () => navigate(`/screens/${screen.id}#display-controls`),
+          },
           {
             label: "Restart player",
             onSelect: () =>
@@ -2854,6 +2859,9 @@ export function ScreenDetailPage() {
                 Preview capture is disabled while AirPlay is active.
               </div>
             )}
+          {canManageScreens(auth.status?.user) && (
+            <ScreenDisplayControls screen={screen} />
+          )}
           <dl className="screen-overview__grid">
             <div>
               <dt>Online status</dt>

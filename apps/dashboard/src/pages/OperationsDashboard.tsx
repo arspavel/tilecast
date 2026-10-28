@@ -229,7 +229,7 @@ export function OperationsDashboard() {
 
       <section className="ops-strip" aria-label="Состояние системы">
         <StripTile
-          to="/screens/monitoring"
+          to="/screens"
           label="Экраны в работе"
           value={screens.isSuccess ? `${counts.working}/${enabledCount}` : "…"}
           detail={
