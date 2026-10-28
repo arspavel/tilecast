@@ -73,7 +73,7 @@ const defaultStructured = (
   filters: [],
   refreshIntervalSeconds: 900,
   stalenessLimitHours: 168,
-  emptyState: "No items available",
+  emptyState: "Нет элементов",
   dateSelection: {
     enabled: false,
     dateFormat: "auto",
@@ -1314,7 +1314,7 @@ const defaultCalendar: CalendarConfig = {
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   refreshIntervalSeconds: 900,
   stalenessLimitHours: 168,
-  emptyState: "No events scheduled",
+  emptyState: "Событий нет",
 };
 
 export function CalendarDataSourceEditor({

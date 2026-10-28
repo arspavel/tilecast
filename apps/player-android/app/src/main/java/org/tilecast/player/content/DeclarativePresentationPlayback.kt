@@ -101,8 +101,8 @@ fun DeclarativeWidgetItem(item:ManifestItem,widget: ManifestWidget, session: Pla
         onDispose { onStatus(WidgetPlaybackStatus()) }
     }
     LaunchedEffect(item.id,startOffsetMs){delay(((item.durationMs?:30_000)-startOffsetMs).coerceAtLeast(1));onDone()}
-    val presentation = widget.presentation ?: return onFailure("Presentation is unavailable")
-    val native = presentation.native ?: return onFailure("Native presentation is unavailable")
+    val presentation = widget.presentation ?: return onFailure("Презентация недоступна")
+    val native = presentation.native ?: return onFailure("Презентация недоступна на этом устройстве")
     var now by remember { mutableStateOf(session.content.serverNow()) }
     LaunchedEffect(widget.assetId) {
         while (true) {
@@ -206,7 +206,7 @@ private fun PresentationNodeView(node: PresentationNode, context: PresentationCo
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                if (records.isEmpty()) item { Text(repeated.string("emptyState", "No information available"), color = Color.White) }
+                if (records.isEmpty()) item { Text(repeated.string("emptyState", "Нет данных"), color = Color.White) }
                 items(records.size, key = { records[it].id }) { index -> template?.let { PresentationNodeView(it, context.copy(record = records[index], repeatIndex = index + 1)) } }
             }
         }
@@ -222,7 +222,7 @@ private fun PresentationNodeView(node: PresentationNode, context: PresentationCo
                 repeat.endField,
             ).drop(repeat.offset).take(repeat.limit)
             if (records.isEmpty()) {
-                Text(node.string("emptyState", "No information available"), color = Color.White)
+                Text(node.string("emptyState", "Нет данных"), color = Color.White)
             }
             records.forEachIndexed { index, record ->
                 node.children.forEach { PresentationNodeView(it, context.copy(record = record, repeatIndex = index + 1)) }
@@ -339,7 +339,7 @@ private fun formatEnvironment(binding: PresentationBinding, now: Instant): Strin
                     recurrence = parts.getOrNull(5) ?: "none",
                     completionAction = parts.getOrNull(6) ?: "completed_text",
                     visibleUnits = parts.getOrNull(7) ?: "1111",
-                    completionText = decode(8).ifBlank { "Complete" },
+                    completionText = decode(8).ifBlank { "Завершено" },
                     now = now,
                 ).orEmpty()
             }
@@ -349,7 +349,7 @@ private fun formatEnvironment(binding: PresentationBinding, now: Instant): Strin
                 if (value.endsWith("Z") || value.contains("+")) Instant.parse(value) else LocalDateTime.parse(value).atZone(zone).toInstant()
             }.getOrDefault(now)
             val duration = Duration.between(if (parts.getOrNull(3) == "count_up") target else now, if (parts.getOrNull(3) == "count_up") now else target)
-            if (duration.isNegative) parts.getOrNull(4) ?: "Complete" else "${duration.toDays()}d ${duration.toHoursPart()}h ${duration.toMinutesPart()}m ${duration.toSecondsPart()}s"
+            if (duration.isNegative) parts.getOrNull(4) ?: "Завершено" else "${duration.toDays()} д ${duration.toHoursPart()} ч ${duration.toMinutesPart()} мин ${duration.toSecondsPart()} с"
         }
         else -> ""
     }
@@ -529,7 +529,7 @@ private fun ChartNode(node: PresentationNode, context: PresentationContext) {
         ChartSeriesValues(labels.getOrNull(index).orEmpty().ifBlank { field }, parseOptionalColor(colors.getOrNull(index)) ?: palette[index % palette.size], values)
     }.filter { it.values.isNotEmpty() }
     if (series.isEmpty()) {
-        Text(node.string("emptyState", "No chart data available"), color = Color.White)
+        Text(node.string("emptyState", "Нет данных для графика"), color = Color.White)
         return
     }
     val explicitMin = node.optionalFloat("minimum")

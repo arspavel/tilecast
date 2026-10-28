@@ -105,7 +105,7 @@ func (p calendarSourceProvider) Normalize(ctx context.Context, raw json.RawMessa
 	}
 	config.EmptyState = sanitizeCalendarText(config.EmptyState, 240)
 	if config.EmptyState == "" {
-		config.EmptyState = "No events scheduled"
+		config.EmptyState = "Событий нет"
 	}
 	return config, nil
 }

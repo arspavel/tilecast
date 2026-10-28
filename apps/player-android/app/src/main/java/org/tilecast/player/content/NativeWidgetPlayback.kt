@@ -61,59 +61,59 @@ fun WidgetItem(item: ManifestItem, widget: ManifestWidget, session: PlaybackSess
     LaunchedEffect(item.id, startOffsetMs) { delay(((item.durationMs ?: 30_000) - startOffsetMs).coerceAtLeast(1)); onDone() }
     CompositionLocalProvider(LocalTilecastServerNow provides { session.content.serverNow() }) {
     when (widget.provider) {
-        "clock" -> runCatching { Json.decodeFromJsonElement<ClockWidgetConfig>(widget.configuration) }.onSuccess { ClockWidget(it) }.onFailure { onFailure("Clock Widget configuration is invalid") }
-        "date" -> runCatching { Json.decodeFromJsonElement<DateWidgetConfig>(widget.configuration) }.onSuccess { DateWidget(it) }.onFailure { onFailure("Date Widget configuration is invalid") }
-        "qrcode" -> runCatching { Json.decodeFromJsonElement<QRCodeWidgetConfig>(widget.configuration) }.onSuccess { QRCodeWidget(it) }.onFailure { onFailure("QR Code Widget configuration is invalid") }
-        "countdown" -> runCatching { Json.decodeFromJsonElement<CountdownWidgetConfig>(widget.configuration) }.onSuccess { ExpandedCountdownWidget(it) }.onFailure { onFailure("Countdown Widget configuration is invalid") }
+        "clock" -> runCatching { Json.decodeFromJsonElement<ClockWidgetConfig>(widget.configuration) }.onSuccess { ClockWidget(it) }.onFailure { onFailure("Неверные настройки виджета «Часы»") }
+        "date" -> runCatching { Json.decodeFromJsonElement<DateWidgetConfig>(widget.configuration) }.onSuccess { DateWidget(it) }.onFailure { onFailure("Неверные настройки виджета «Дата»") }
+        "qrcode" -> runCatching { Json.decodeFromJsonElement<QRCodeWidgetConfig>(widget.configuration) }.onSuccess { QRCodeWidget(it) }.onFailure { onFailure("Неверные настройки виджета «QR-код»") }
+        "countdown" -> runCatching { Json.decodeFromJsonElement<CountdownWidgetConfig>(widget.configuration) }.onSuccess { ExpandedCountdownWidget(it) }.onFailure { onFailure("Неверные настройки виджета «Обратный отсчёт»") }
         "ticker" -> runCatching { Json.decodeFromJsonElement<TickerWidgetConfig>(widget.configuration) }.onSuccess { config ->
-            val data = session.content.manifest.dataSources.firstOrNull { it.id == config.dataSourceId } ?: return@onSuccess onFailure("Ticker data is unavailable")
+            val data = session.content.manifest.dataSources.firstOrNull { it.id == config.dataSourceId } ?: return@onSuccess onFailure("Данные бегущей строки недоступны")
             if(session.content.manifest.schemaVersion>=12){
-                val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Ticker data is invalid")}
+                val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Неверные данные бегущей строки")}
                 ExpandedTickerWidget(config,typed)
                 return@onSuccess
             }
-            val structured = runCatching { Json.decodeFromJsonElement<StructuredSourceConfig>(data.configuration) }.getOrElse { return@onSuccess onFailure("Ticker data is invalid") }
+            val structured = runCatching { Json.decodeFromJsonElement<StructuredSourceConfig>(data.configuration) }.getOrElse { return@onSuccess onFailure("Неверные данные бегущей строки") }
             TickerWidget(config, structured)
-        }.onFailure { onFailure("Ticker Widget configuration is invalid") }
+        }.onFailure { onFailure("Неверные настройки виджета «Бегущая строка»") }
         "menu" -> runCatching { Json.decodeFromJsonElement<DisplayWidgetConfig>(widget.configuration) }.onSuccess { config ->
-            val data = session.content.manifest.dataSources.firstOrNull { it.id == config.dataSourceId } ?: return@onSuccess onFailure("Menu data is unavailable")
+            val data = session.content.manifest.dataSources.firstOrNull { it.id == config.dataSourceId } ?: return@onSuccess onFailure("Данные меню недоступны")
             if(session.content.manifest.schemaVersion>=12){
-                val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Menu data is invalid")}
+                val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Неверные данные меню")}
                 ExpandedDisplayWidget("menu",widget.name,config,typed)
                 return@onSuccess
             }
-            if (data.provider != "csv" && data.provider != "json") return@onSuccess onFailure("Menu data is incompatible")
+            if (data.provider != "csv" && data.provider != "json") return@onSuccess onFailure("Данные меню несовместимы с виджетом")
             runCatching { Json.decodeFromJsonElement<StructuredSourceConfig>(data.configuration) }
                 .onSuccess { MenuWidget(widget.name, config, it) }
-                .onFailure { onFailure("Menu data is invalid") }
-        }.onFailure { onFailure("Menu Widget configuration is invalid") }
+                .onFailure { onFailure("Неверные данные меню") }
+        }.onFailure { onFailure("Неверные настройки виджета «Меню»") }
         "list", "table", "agenda" -> runCatching { Json.decodeFromJsonElement<DisplayWidgetConfig>(widget.configuration) }.onSuccess { config ->
-            val data = session.content.manifest.dataSources.firstOrNull { it.id == config.dataSourceId } ?: return@onSuccess onFailure("Widget data is unavailable")
+            val data = session.content.manifest.dataSources.firstOrNull { it.id == config.dataSourceId } ?: return@onSuccess onFailure("Данные виджета недоступны")
             if(session.content.manifest.schemaVersion>=12){
-                val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Widget data is invalid")}
+                val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Неверные данные виджета")}
                 ExpandedDisplayWidget(widget.provider,widget.name,config,typed)
                 return@onSuccess
             }
             when (data.provider) {
-                "calendar" -> runCatching { Json.decodeFromJsonElement<org.tilecast.player.network.CalendarSourceConfig>(data.configuration) }.onSuccess { DisplayCalendarWidget(config, it) }.onFailure { onFailure("Agenda data is invalid") }
-                else -> runCatching { Json.decodeFromJsonElement<StructuredSourceConfig>(data.configuration) }.onSuccess { DisplayStructuredWidget(config, it) }.onFailure { onFailure("Widget data is invalid") }
+                "calendar" -> runCatching { Json.decodeFromJsonElement<org.tilecast.player.network.CalendarSourceConfig>(data.configuration) }.onSuccess { DisplayCalendarWidget(config, it) }.onFailure { onFailure("Неверные данные расписания событий") }
+                else -> runCatching { Json.decodeFromJsonElement<StructuredSourceConfig>(data.configuration) }.onSuccess { DisplayStructuredWidget(config, it) }.onFailure { onFailure("Неверные данные виджета") }
             }
-        }.onFailure { onFailure("Widget configuration is invalid") }
+        }.onFailure { onFailure("Неверные настройки виджета") }
         "metric" -> runCatching { Json.decodeFromJsonElement<MetricWidgetConfig>(widget.configuration) }.onSuccess { config ->
-            val data=session.content.manifest.dataSources.firstOrNull{it.id==config.dataSourceId}?:return@onSuccess onFailure("Metric data is unavailable")
-            val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Metric data is invalid")}
+            val data=session.content.manifest.dataSources.firstOrNull{it.id==config.dataSourceId}?:return@onSuccess onFailure("Данные показателя недоступны")
+            val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Неверные данные показателя")}
             ExpandedMetricWidget(config,typed)
-        }.onFailure { onFailure("Metric Widget configuration is invalid") }
+        }.onFailure { onFailure("Неверные настройки виджета «Показатель»") }
         "cards" -> runCatching { Json.decodeFromJsonElement<CardsWidgetConfig>(widget.configuration) }.onSuccess { config ->
-            val data=session.content.manifest.dataSources.firstOrNull{it.id==config.dataSourceId}?:return@onSuccess onFailure("Cards data is unavailable")
-            val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Cards data is invalid")}
+            val data=session.content.manifest.dataSources.firstOrNull{it.id==config.dataSourceId}?:return@onSuccess onFailure("Данные карточек недоступны")
+            val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Неверные данные карточек")}
             ExpandedCardsWidget(config,typed)
-        }.onFailure { onFailure("Cards Widget configuration is invalid") }
+        }.onFailure { onFailure("Неверные настройки виджета «Карточки»") }
         "weather" -> runCatching { Json.decodeFromJsonElement<WeatherWidgetConfig>(widget.configuration) }.onSuccess { config ->
-            val data=session.content.manifest.dataSources.firstOrNull{it.id==config.dataSourceId}?:return@onSuccess onFailure("Weather data is unavailable")
-            val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Weather data is invalid")}
+            val data=session.content.manifest.dataSources.firstOrNull{it.id==config.dataSourceId}?:return@onSuccess onFailure("Данные о погоде недоступны")
+            val typed=runCatching{Json.decodeFromJsonElement<TypedRecordData>(data.configuration)}.getOrElse{return@onSuccess onFailure("Неверные данные о погоде")}
             ExpandedWeatherWidget(config,typed)
-        }.onFailure { onFailure("Weather Widget configuration is invalid") }
+        }.onFailure { onFailure("Неверные настройки виджета «Погода»") }
     }
     }
 }
@@ -252,7 +252,7 @@ private fun MenuWidget(name: String, config: DisplayWidgetConfig, data: Structur
                 if (record.date.isNotBlank()) Text(record.date, color = parseColor(config.foregroundColor).copy(alpha = 0.72f), fontSize = (18f * contentScale).sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 values.forEachIndexed { index, (field, value) ->
                     Text(
-                        if (index == 0) "TODAY'S LUNCH" else menuFieldLabel(field).uppercase(),
+                        if (index == 0) "ОБЕД СЕГОДНЯ" else menuFieldLabel(field).uppercase(),
                         color = parseColor(config.foregroundColor).copy(alpha = 0.72f),
                         fontSize = ((if (index == 0) 20f else 16f) * contentScale).sp,
                         fontWeight = FontWeight.SemiBold,
@@ -309,8 +309,8 @@ private fun structuredFieldValue(record: org.tilecast.player.network.StructuredR
 
 internal fun menuFieldLabel(field: String): String {
     return when (field.lowercase()) {
-        "option_2", "alternative", "secondary", "secondary_option" -> "Alternative"
-        "option_1", "primary", "primary_option", "entree", "entrée" -> "Entrée"
+        "option_2", "alternative", "secondary", "secondary_option" -> "Другой вариант"
+        "option_1", "primary", "primary_option", "entree", "entrée" -> "Основное блюдо"
         else -> field.replace('_', ' ').replace('-', ' ').trim().split(Regex("\\s+")).filter(String::isNotBlank).joinToString(" ") { token -> token.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() } }
     }
 }
@@ -319,7 +319,7 @@ private fun DisplayCalendarWidget(config: DisplayWidgetConfig, data: org.tilecas
     val rows = data.data.events.take(config.maximumItems).map { event ->
         listOf(event.start, event.title, event.location).filter(String::isNotBlank).joinToString("  ")
     }
-    DisplayRows(config, rows, "No items available")
+    DisplayRows(config, rows, "Нет элементов")
 }
 
 @Composable

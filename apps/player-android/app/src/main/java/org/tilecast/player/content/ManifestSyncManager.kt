@@ -192,8 +192,8 @@ class ManifestSyncManager(
         if (response.notModified) return null
         val manifest = response.manifest ?: return null
 		val clockOffset=manifest.serverTime?.let { serverClock.sync(it) }
-		try{validateManifest(manifest,screenId)}catch(error:Exception){progress(SyncProgress(pendingVersion=manifest.manifestVersion,cacheUsedBytes=cacheUsed(),error="Manifest validation failed"));return null}
-        val raw = response.rawJson ?: error("Manifest response was empty")
+		try{validateManifest(manifest,screenId)}catch(error:Exception){progress(SyncProgress(pendingVersion=manifest.manifestVersion,cacheUsedBytes=cacheUsed(),error="Плейлист не прошёл проверку"));return null}
+        val raw = response.rawJson ?: error("Сервер вернул пустой плейлист")
             database.manifests().save(StoredManifest(manifest.manifestVersion, manifest.schemaVersion, raw, response.etag, "preparing", System.currentTimeMillis(), installationId=identity.installationId, screenId=identity.screenId, normalizedServerUrl=identity.normalizedServerUrl))
         return try {
 			database.cachedAssets().clearPendingRequirements()
@@ -220,7 +220,7 @@ class ManifestSyncManager(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            val safe = error.message ?: "Content could not be prepared"
+            val safe = error.message ?: "Не удалось подготовить контент"
             database.manifests().setState(manifest.manifestVersion, "failed", null, safe)
 			progress(SyncProgress(manifest.manifestVersion,cacheUsedBytes=cacheUsed(),error = safe))
             null
@@ -252,7 +252,7 @@ class ManifestSyncManager(
 				database.cachedAssets().save(CachedAsset(asset.variantId,asset.assetId,asset.sha256,asset.fileSize,final.absolutePath,"downloading",part.takeIf{it.exists()}?.length()?:0,requiredByActiveManifest=wasActive,requiredByPendingManifest=true,installationId=currentCacheIdentity?.installationId,screenId=currentCacheIdentity?.screenId,normalizedServerUrl=currentCacheIdentity?.normalizedServerUrl))
                 api.downloadVariant(serverUrl, asset.downloadPath, credential, part, asset.sha256, asset.fileSize, progress)
                 final.delete()
-                check(part.renameTo(final)) { "Verified media could not be activated" }
+                check(part.renameTo(final)) { "Не удалось включить проверенные медиафайлы" }
 				database.cachedAssets().save(CachedAsset(asset.variantId,asset.assetId,asset.sha256,asset.fileSize,final.absolutePath,"ready",asset.fileSize,System.currentTimeMillis(),requiredByActiveManifest=wasActive,requiredByPendingManifest=true,installationId=currentCacheIdentity?.installationId,screenId=currentCacheIdentity?.screenId,normalizedServerUrl=currentCacheIdentity?.normalizedServerUrl))
                 return
             } catch (error: CancellationException) {
@@ -263,7 +263,7 @@ class ManifestSyncManager(
             }
         }
 		database.cachedAssets().save(CachedAsset(asset.variantId,asset.assetId,asset.sha256,asset.fileSize,final.absolutePath,"failed",part.takeIf{it.exists()}?.length()?:0,requiredByActiveManifest=wasActive,requiredByPendingManifest=true,failureReason=lastError?.message,installationId=currentCacheIdentity?.installationId,screenId=currentCacheIdentity?.screenId,normalizedServerUrl=currentCacheIdentity?.normalizedServerUrl))
-        throw lastError ?: IllegalStateException("Media download failed")
+        throw lastError ?: IllegalStateException("Не удалось загрузить медиафайл")
     }
 
 	private suspend fun cleanupUnneeded() {
@@ -276,7 +276,7 @@ class ManifestSyncManager(
         val media = mediaDirectory(); val used = media.walkTopDown().filter { it.isFile }.sumOf { it.length() }
         val cacheAvailable = (cacheLimitBytes - used).coerceAtLeast(0)
         val diskAvailable = (media.usableSpace - minimumFreeBytes).coerceAtLeast(0)
-        require(requiredBytes <= minOf(cacheAvailable, diskAvailable)) { "Insufficient storage to prepare this manifest" }
+        require(requiredBytes <= minOf(cacheAvailable, diskAvailable)) { "Недостаточно места для загрузки контента" }
     }
     private fun mediaDirectory() = File(context.filesDir, "media-cache").apply { mkdirs() }
 	private fun isValidCachedFile(file:File,size:Long,sha256:String)=runCatching{ContentPolicy.verify(file,size,sha256)}.getOrDefault(false)
@@ -284,7 +284,7 @@ class ManifestSyncManager(
     private fun finalFile(asset: ManifestAsset) = File(mediaDirectory(), "${asset.variantId}.${extension(asset.mimeType)}")
     private fun extension(mime: String) = when (mime) { "video/mp4" -> "mp4"; "image/png" -> "png"; "image/webp" -> "webp"; "image/gif" -> "gif"; else -> "jpg" }
 	private fun validateManifest(manifest: PlayerManifest, screenId: String) {
-		require(manifest.schemaVersion in setOf(11,12,13,14,15) && manifest.mode in setOf("single-zone", "presentation") && manifest.screenId == screenId) { "Manifest validation failed" }
+		require(manifest.schemaVersion in setOf(11,12,13,14,15) && manifest.mode in setOf("single-zone", "presentation") && manifest.screenId == screenId) { "Плейлист не прошёл проверку" }
 		val assets = manifest.assets.associateBy { it.variantId }
 		val websites = manifest.websites.associateBy { it.assetId }
 		val widgets = manifest.widgets.associateBy { it.assetId }
@@ -292,49 +292,49 @@ class ManifestSyncManager(
 		val playlists = manifest.playlists + listOfNotNull(manifest.directFallbackPlaylist, manifest.playlist)
 		val playlistIds = playlists.map { it.id }.toSet()
 		val layoutIds = manifest.layouts.map { it.id }.toSet()
-		require(manifest.schedules.all { schedule -> schedule.layoutId?.let(layoutIds::contains) ?: (schedule.playlistId?.let(playlistIds::contains) ?: false) } && manifest.effectiveTakeover?.playlistId?.let(playlistIds::contains) != false) { "Manifest references an unavailable presentation" }
+		require(manifest.schedules.all { schedule -> schedule.layoutId?.let(layoutIds::contains) ?: (schedule.playlistId?.let(playlistIds::contains) ?: false) } && manifest.effectiveTakeover?.playlistId?.let(playlistIds::contains) != false) { "Плейлист ссылается на недоступную презентацию" }
 		manifest.layouts.forEach { layout ->
 			LayoutValidator.validate(layout.document)
-			require(layout.document.canvas.backgroundAssetId == null || (layout.document.canvas.backgroundVariantId != null && manifest.assets.any { it.assetId == layout.document.canvas.backgroundAssetId && it.variantId == layout.document.canvas.backgroundVariantId })) { "Layout background is unavailable" }
-			require(layout.document.placements.all { placement -> when (placement.type) { "widget" -> placement.widgetId?.let(widgets::containsKey) == true; "asset" -> placement.assetId != null && placement.variantId != null && manifest.assets.any { it.assetId == placement.assetId && it.variantId == placement.variantId }; "playlistZone" -> placement.playlistId?.let(playlistIds::contains) == true; else -> true } }) { "Layout dependency is unavailable" }
-			require(layout.document.placements.all { placement -> placement.primitive?.binding?.dataSourceId?.let(dataSources::containsKey) != false }) { "Layout binding Data Source is unavailable" }
+			require(layout.document.canvas.backgroundAssetId == null || (layout.document.canvas.backgroundVariantId != null && manifest.assets.any { it.assetId == layout.document.canvas.backgroundAssetId && it.variantId == layout.document.canvas.backgroundVariantId })) { "Фон макета недоступен" }
+			require(layout.document.placements.all { placement -> when (placement.type) { "widget" -> placement.widgetId?.let(widgets::containsKey) == true; "asset" -> placement.assetId != null && placement.variantId != null && manifest.assets.any { it.assetId == placement.assetId && it.variantId == placement.variantId }; "playlistZone" -> placement.playlistId?.let(playlistIds::contains) == true; else -> true } }) { "Элемент макета недоступен" }
+			require(layout.document.placements.all { placement -> placement.primitive?.binding?.dataSourceId?.let(dataSources::containsKey) != false }) { "Источник данных макета недоступен" }
 		}
-		require(manifest.layout?.id?.let(layoutIds::contains) != false && manifest.directFallbackLayout?.id?.let(layoutIds::contains) != false) { "Root Layout is unavailable" }
+		require(manifest.layout?.id?.let(layoutIds::contains) != false && manifest.directFallbackLayout?.id?.let(layoutIds::contains) != false) { "Макет недоступен" }
 		playlists.flatMap { it.items }.forEach { item ->
 			when (item.assetType) {
-				"layout" -> require(item.layoutId?.let(layoutIds::contains) == true && (item.durationMs ?: 0) > 0 && item.deliveryPolicy == "stream") { "Layout item is invalid" }
-				"website" -> require(websites[item.assetId] != null && (item.durationMs ?: 0) > 0 && item.deliveryPolicy == "stream") { "Website item is invalid" }
-				"widget" -> require((if(manifest.schemaVersion>=13) widgets[item.assetId]?.presentation!=null else widgets[item.assetId]?.provider in setOf("website", "youtube", "clock", "date", "qrcode", "countdown", "ticker", "menu", "list", "table", "agenda", "metric", "cards", "weather")) && item.deliveryPolicy == "stream") { "Widget item is invalid" }
-				else -> require(item.variantId != null && assets[item.variantId]?.assetId == item.assetId) { "Manifest item references an unavailable variant" }
+				"layout" -> require(item.layoutId?.let(layoutIds::contains) == true && (item.durationMs ?: 0) > 0 && item.deliveryPolicy == "stream") { "Неверный элемент макета" }
+				"website" -> require(websites[item.assetId] != null && (item.durationMs ?: 0) > 0 && item.deliveryPolicy == "stream") { "Неверный элемент «Сайт»" }
+				"widget" -> require((if(manifest.schemaVersion>=13) widgets[item.assetId]?.presentation!=null else widgets[item.assetId]?.provider in setOf("website", "youtube", "clock", "date", "qrcode", "countdown", "ticker", "menu", "list", "table", "agenda", "metric", "cards", "weather")) && item.deliveryPolicy == "stream") { "Неверный элемент «Виджет»" }
+				else -> require(item.variantId != null && assets[item.variantId]?.assetId == item.assetId) { "Элемент плейлиста ссылается на недоступный файл" }
 			}
-			require(item.fitMode in listOf("contain", "cover", "stretch") && item.transition in (if (manifest.schemaVersion >= 14) listOf("none", "fade", "crossfade") else listOf("none", "fade")) && item.deliveryPolicy in listOf("download", "stream", "automatic") && item.volume in 0f..1f) { "Manifest item settings are invalid" }
+			require(item.fitMode in listOf("contain", "cover", "stretch") && item.transition in (if (manifest.schemaVersion >= 14) listOf("none", "fade", "crossfade") else listOf("none", "fade")) && item.deliveryPolicy in listOf("download", "stream", "automatic") && item.volume in 0f..1f) { "Неверные настройки элемента плейлиста" }
 			val availableFrom = item.availableFrom?.let(Instant::parse)
 			val expiresAt = item.expiresAt?.let(Instant::parse)
-			require(availableFrom == null || expiresAt == null || availableFrom.isBefore(expiresAt)) { "Manifest item availability is invalid" }
-			if (item.variantId?.let { assets[it]?.mimeType?.startsWith("image/") } == true) require((item.durationMs ?: 0) > 0 || item.usePlayerDefaults) { "Image duration is invalid" }
-			if (item.videoEndOffsetMs != null) require(item.videoEndOffsetMs > (item.videoStartOffsetMs ?: 0)) { "Video offsets are invalid" }
+			require(availableFrom == null || expiresAt == null || availableFrom.isBefore(expiresAt)) { "Неверный период показа элемента плейлиста" }
+			if (item.variantId?.let { assets[it]?.mimeType?.startsWith("image/") } == true) require((item.durationMs ?: 0) > 0 || item.usePlayerDefaults) { "Неверная длительность показа изображения" }
+			if (item.videoEndOffsetMs != null) require(item.videoEndOffsetMs > (item.videoStartOffsetMs ?: 0)) { "Неверные границы фрагмента видео" }
 		}
 		manifest.websites.forEach { site ->
-			require(site.allowedHosts.isNotEmpty() && site.allowedHosts.size <= 25 && site.url.length <= 2048 && site.loadTimeoutSeconds in 1..120 && site.zoomPercent in 50..200) { "Website configuration is invalid" }
-			site.fallbackVariantId?.let { require(assets[it]?.assetId == site.fallbackImageAssetId) { "Website fallback is invalid" } }
+			require(site.allowedHosts.isNotEmpty() && site.allowedHosts.size <= 25 && site.url.length <= 2048 && site.loadTimeoutSeconds in 1..120 && site.zoomPercent in 50..200) { "Неверные настройки сайта" }
+			site.fallbackVariantId?.let { require(assets[it]?.assetId == site.fallbackImageAssetId) { "Неверная замена для сайта" } }
 		}
 		if(manifest.schemaVersion==11) manifest.dataSources.filter { it.provider == "calendar" }.forEach { source ->
 			val config = Json.decodeFromJsonElement<CalendarSourceConfig>(source.configuration)
-			require(config.displayMode in listOf("today", "upcoming", "this_week", "agenda") && config.maxEvents in 1..100 && config.emptyState.length <= 240 && config.data.events.size <= 2000) { "Calendar Data Source configuration is invalid" }
+			require(config.displayMode in listOf("today", "upcoming", "this_week", "agenda") && config.maxEvents in 1..100 && config.emptyState.length <= 240 && config.data.events.size <= 2000) { "Неверные настройки календаря" }
 			java.time.ZoneId.of(config.timezone)
 			config.data.events.forEach { event ->
-				require(event.id.length <= 64 && event.title.length <= 300 && event.location.length <= 300 && event.descriptionExcerpt.length <= 500) { "Calendar event is invalid" }
+				require(event.id.length <= 64 && event.title.length <= 300 && event.location.length <= 300 && event.descriptionExcerpt.length <= 500) { "Неверное событие календаря" }
 				val start = Instant.parse(event.start)
 				val end = Instant.parse(event.end)
-				require(!end.isBefore(start)) { "Calendar event range is invalid" }
+				require(!end.isBefore(start)) { "Неверное время события календаря" }
 			}
 		}
 		if(manifest.schemaVersion==11) manifest.dataSources.filter { it.provider in setOf("rss", "atom", "json", "csv") }.forEach { source ->
 			val config = Json.decodeFromJsonElement<StructuredSourceConfig>(source.configuration)
-			require(config.emptyState.length <= 240 && config.data.records.size <= 200) { "Structured Data Source configuration is invalid" }
+			require(config.emptyState.length <= 240 && config.data.records.size <= 200) { "Неверные настройки источника данных" }
 			if(config.dateSelection.enabled){require(config.dateSelection.mode in setOf("today","tomorrow","next_available","current_week","custom_range")&&config.dateSelection.noMatchBehavior in setOf("fallback_text","next_available","empty","hide","last_known_good"));java.time.ZoneId.of(config.dateSelection.timezone)}
 			config.data.records.forEach { record ->
-				require(record.id.length <= 64 && record.title.length <= 240 && record.subtitle.length <= 240 && record.description.length <= 500 && record.values.size <= 12) { "Structured Data Source record is invalid" }
+				require(record.id.length <= 64 && record.title.length <= 240 && record.subtitle.length <= 240 && record.description.length <= 500 && record.values.size <= 12) { "Неверная запись источника данных" }
 			}
 		}
 		if(manifest.schemaVersion==12) manifest.dataSources.forEach { source ->
@@ -345,8 +345,8 @@ class ManifestSyncManager(
 			data.dateSelection?.let{selection->require(selection.mode in setOf("today","tomorrow","next_available","current_week","custom_range"));java.time.ZoneId.of(selection.timezone)}
 		}
 		if(manifest.schemaVersion>=13){
-			manifest.dataSources.forEach{source->validateDataDocument(source.dataDocument?:error("Data document is missing"))}
-			manifest.widgets.forEach{widget->validatePresentation(widget.presentation?:error("Presentation is missing"),dataSources)}
+			manifest.dataSources.forEach{source->validateDataDocument(source.dataDocument?:error("Нет документа с данными"))}
+			manifest.widgets.forEach{widget->validatePresentation(widget.presentation?:error("Нет презентации"),dataSources)}
 			return
 		}
 		manifest.widgets.forEach { widget -> when(widget.provider){
@@ -390,10 +390,10 @@ class ManifestSyncManager(
 		require(presentation.schemaVersion==1&&presentation.kind in setOf("native","web"))
 		presentation.requiredCapabilities.forEach{(capability,version)->
 			val supported=if(capability=="web.remote")PresentationCapabilities.webRuntimeVersion else PresentationCapabilities.native[capability]?:0
-			require(supported>=version){"Missing presentation capability $capability@$version"}
+			require(supported>=version){"Плеер не поддерживает возможность презентации $capability@$version"}
 		}
 		if(presentation.kind=="native"){
-			val root=presentation.native?.root?:error("Native root is missing")
+			val root=presentation.native?.root?:error("В презентации нет содержимого")
 			var nodes=0;var animations=0
 			fun visit(value:org.tilecast.player.network.PresentationNode,depth:Int){
 				require(depth<=24);nodes++;require(nodes<=500)
@@ -423,7 +423,7 @@ class ManifestSyncManager(
 			}
 			visit(root,0);require(animations<=4)
 		}else{
-			val web=presentation.web?:error("Web descriptor is missing")
+			val web=presentation.web?:error("Нет описания веб-презентации")
 			require(web.mode in setOf("remote","bundle")&&web.allowedHosts.size<=25&&web.loadTimeoutSeconds in 1..120&&web.warmSeconds in 0..300)
 			web.reload?.let { reload -> require(reload.mode=="periodic"&&reload.intervalSeconds in 30..86400) }
 			if(web.mode=="remote")require(web.onlineOnly&&android.net.Uri.parse(web.url).scheme=="https")

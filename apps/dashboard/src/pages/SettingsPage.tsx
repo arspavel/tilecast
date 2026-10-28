@@ -415,12 +415,12 @@ function BrandingPreview({ values }: { values: Record<string, unknown> }) {
           }}
         >
           <strong>
-            {text(values["branding.no_content_title"], "No content assigned")}
+            {text(values["branding.no_content_title"], "Контент не назначен")}
           </strong>
           <span>
             {text(
               values["branding.no_content_message"],
-              "This screen is ready for content.",
+              "Экран готов к показу контента.",
             )}
           </span>
           <small>{text(values["branding.footer_text"], "Tilecast")}</small>

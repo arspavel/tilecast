@@ -54,7 +54,7 @@ class OutsideActiveHoursScreenTest {
             ).text,
         )
         assertEquals(
-            "Powered by Tilecast",
+            "Работает на Tilecast",
             outsideActiveHoursPresentation(
                 PlayerPowerPolicy(outsideActiveHoursDisplay = "custom_text"),
                 PlayerBranding(),

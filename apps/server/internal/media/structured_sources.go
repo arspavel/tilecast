@@ -110,7 +110,7 @@ func (p structuredSourceProvider) Normalize(ctx context.Context, raw json.RawMes
 	}
 	c.EmptyState = sanitizeCalendarText(c.EmptyState, 240)
 	if c.EmptyState == "" {
-		c.EmptyState = "No items available"
+		c.EmptyState = "Нет элементов"
 	}
 	if p.provider == "json" || p.provider == "csv" {
 		if c.Mapping == nil {

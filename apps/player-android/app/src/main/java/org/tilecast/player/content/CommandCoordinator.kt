@@ -118,7 +118,7 @@ class CommandCoordinator internal constructor(
                     CommandOutcome(
                         true,
                         "command_already_applied",
-                        "Command was already applied by this player",
+                        "Команда уже выполнена этим плеером",
                     ),
                     onOperationFailure,
                 )
@@ -148,9 +148,9 @@ class CommandCoordinator internal constructor(
                 throw error
             } catch (error: ApiException) {
                 if (isCredentialRejection(error)) throw error
-                CommandOutcome(false, "command_failed", "The player could not complete the command")
+                CommandOutcome(false, "command_failed", "Плееру не удалось выполнить команду")
             } catch (_: Exception) {
-                CommandOutcome(false, "command_failed", "The player could not complete the command")
+                CommandOutcome(false, "command_failed", "Плееру не удалось выполнить команду")
             }
 
             // Completion is local action state. Persist it before reporting so a failed result POST

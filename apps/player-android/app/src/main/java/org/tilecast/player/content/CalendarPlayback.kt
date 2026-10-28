@@ -87,7 +87,7 @@ fun CalendarSourceItem(
         Spacer(Modifier.height(24.dp))
         if (config.data.unavailable || events.isEmpty()) {
             Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(if(config.data.unavailable) "Calendar temporarily unavailable" else config.emptyState, color = Color(0xFFB8C2CC), fontSize = 26.sp)
+                Text(if(config.data.unavailable) "Календарь временно недоступен" else config.emptyState, color = Color(0xFFB8C2CC), fontSize = 26.sp)
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -105,8 +105,8 @@ private fun CalendarEventRow(event: CalendarEvent, config: CalendarSourceConfig)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
         if (config.fields.date || config.fields.startTime || config.fields.endTime) {
             Column(Modifier.fillMaxWidth(0.24f)) {
-                if (config.fields.date) Text(start.format(DateTimeFormatter.ofPattern("EEE, MMM d")), color = Color(0xFF9FB7CB), fontSize = 18.sp)
-                if (event.allDay) Text("All day", color = Color(0xFFF5F7FA), fontSize = 20.sp)
+                if (config.fields.date) Text(start.format(DateTimeFormatter.ofPattern("EEE, d MMM")), color = Color(0xFF9FB7CB), fontSize = 18.sp)
+                if (event.allDay) Text("Весь день", color = Color(0xFFF5F7FA), fontSize = 20.sp)
                 else if (config.fields.startTime) {
                     val range = if (config.fields.endTime) "${formatTime(start)} - ${formatTime(end)}" else formatTime(start)
                     Text(range, color = Color(0xFFF5F7FA), fontSize = 20.sp)
@@ -114,7 +114,7 @@ private fun CalendarEventRow(event: CalendarEvent, config: CalendarSourceConfig)
             }
         }
         Column(Modifier.weight(1f)) {
-            if (config.fields.title) Text(event.title.ifBlank { "Untitled event" }, color = Color(0xFFF5F7FA), fontSize = 24.sp, fontWeight = FontWeight.Medium)
+            if (config.fields.title) Text(event.title.ifBlank { "Без названия" }, color = Color(0xFFF5F7FA), fontSize = 24.sp, fontWeight = FontWeight.Medium)
             if (config.fields.location && event.location.isNotBlank()) Text(event.location, color = Color(0xFFB8C2CC), fontSize = 17.sp)
             if (config.fields.descriptionExcerpt && event.descriptionExcerpt.isNotBlank()) Text(event.descriptionExcerpt, color = Color(0xFFB8C2CC), fontSize = 16.sp, maxLines = 2)
         }
@@ -122,4 +122,4 @@ private fun CalendarEventRow(event: CalendarEvent, config: CalendarSourceConfig)
     HorizontalDivider(Modifier.padding(top = 12.dp), color = Color(0xFF273642))
 }
 
-private fun formatTime(value: ZonedDateTime): String = value.format(DateTimeFormatter.ofPattern("h:mm a"))
+private fun formatTime(value: ZonedDateTime): String = value.format(DateTimeFormatter.ofPattern("HH:mm"))

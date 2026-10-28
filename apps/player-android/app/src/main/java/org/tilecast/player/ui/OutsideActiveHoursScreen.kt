@@ -49,7 +49,7 @@ internal fun outsideActiveHoursPresentation(
     }
     val text = power?.outsideActiveHoursText.orEmpty().trim()
         .ifBlank { branding?.footerText.orEmpty().trim() }
-        .ifBlank { "Powered by Tilecast" }
+        .ifBlank { "Работает на Tilecast" }
     return OutsideActiveHoursPresentation(display, text)
 }
 
@@ -106,7 +106,7 @@ private fun BouncingTilecastLogo() {
         )
         Image(
             painter = painterResource(R.drawable.tilecast_wordmark),
-            contentDescription = "Tilecast logo",
+            contentDescription = "Логотип Tilecast",
             modifier = Modifier.offset(x.dp, y.dp).width(logoWidth).height(logoHeight),
             contentScale = ContentScale.Fit,
         )

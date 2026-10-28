@@ -66,7 +66,7 @@ internal fun formatCountdown(
     val resolvedTarget = resolveCountdownTarget(target, timezone, recurrence, now)
     val complete = mode == "countdown" && recurrence == "none" && !now.isBefore(resolvedTarget)
     if (complete && completionAction == "hide") return null
-    if (complete && completionAction == "completed_text") return completionText.ifBlank { "Complete" }
+    if (complete && completionAction == "completed_text") return completionText.ifBlank { "Завершено" }
     val countUp = mode == "count_up" || (complete && completionAction == "count_up")
     val duration = Duration.between(if (countUp) resolvedTarget else now, if (countUp) now else resolvedTarget).abs()
     var seconds = duration.seconds
@@ -74,9 +74,9 @@ internal fun formatCountdown(
     val hours = seconds / 3_600; seconds %= 3_600
     val minutes = seconds / 60; seconds %= 60
     return buildList {
-        if (visibleUnits.getOrNull(0) == '1') add("${days}d")
-        if (visibleUnits.getOrNull(1) == '1') add("${hours}h")
-        if (visibleUnits.getOrNull(2) == '1') add("${minutes}m")
-        if (visibleUnits.getOrNull(3) == '1') add("${seconds}s")
+        if (visibleUnits.getOrNull(0) == '1') add("${days} д")
+        if (visibleUnits.getOrNull(1) == '1') add("${hours} ч")
+        if (visibleUnits.getOrNull(2) == '1') add("${minutes} мин")
+        if (visibleUnits.getOrNull(3) == '1') add("${seconds} с")
     }.joinToString(" ")
 }

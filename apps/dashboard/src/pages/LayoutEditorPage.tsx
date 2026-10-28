@@ -953,7 +953,7 @@ export function LayoutEditorPage() {
                     "",
                   values: record.values,
                 })),
-                emptyState: "No items available",
+                emptyState: "Нет элементов",
               },
             ] as const;
           }
@@ -2992,7 +2992,7 @@ function tickerText(
     .filter((value) => value.trim().length > 0);
   return parts.length
     ? parts.join(cfg.separator || " • ")
-    : source?.emptyState || "No items available";
+    : source?.emptyState || "Нет элементов";
 }
 
 export function widgetContentArea(
@@ -3188,7 +3188,7 @@ function MenuWidget({
         style={{ background: bg, padding }}
       >
         <FittedText
-          text={source?.emptyState || "No items available"}
+          text={source?.emptyState || "Нет элементов"}
           color={fg}
           fontPx={Math.max(area.width, area.height) * scale}
           weight={500}
@@ -3297,7 +3297,7 @@ function DisplayWidget({
         style={{ background: bg, padding }}
       >
         <FittedText
-          text={source?.emptyState || "No items available"}
+          text={source?.emptyState || "Нет элементов"}
           color={fg}
           fontPx={Math.max(area.width, area.height) * scale}
           weight={400}

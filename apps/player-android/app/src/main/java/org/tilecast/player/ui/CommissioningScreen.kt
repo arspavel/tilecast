@@ -50,25 +50,25 @@ fun CommissioningScreen(
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(Modifier.fillMaxWidth(.82f)) {
-            Text("Harden this player", color = SignalText, fontSize = 42.sp, fontWeight = FontWeight.SemiBold)
-            Text("Commissioning verifies local Android capabilities before unattended playback.", color = SignalMuted, fontSize = 20.sp)
+            Text("Подготовка плеера к работе без присмотра", color = SignalText, fontSize = 42.sp, fontWeight = FontWeight.SemiBold)
+            Text("Мастер проверяет возможности Android, которые нужны для работы без присмотра.", color = SignalMuted, fontSize = 20.sp)
             Spacer(Modifier.height(28.dp))
-            Text("Step $stepNumber of ${activeSteps.size}", color = SignalBlue, fontSize = 16.sp)
+            Text("Шаг $stepNumber из ${activeSteps.size}", color = SignalBlue, fontSize = 16.sp)
             Spacer(Modifier.height(12.dp))
             CommissioningStepBody(state, setPin, openAccessibility, openInstallPermission, refresh, advance, runSelfTest)
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
             when (state.step) {
-                CommissioningStep.RESULT -> SignalButton(onClick = finish) { Text("Finish commissioning") }
+                CommissioningStep.RESULT -> SignalButton(onClick = finish) { Text("Завершить настройку") }
                 CommissioningStep.ADMIN_PIN -> Unit
-                CommissioningStep.ACCESSIBILITY -> SignalButton(onClick = advance, enabled = !state.accessibilitySupported || state.accessibilityEnabled) { Text("Continue") }
-                CommissioningStep.INSTALL_PERMISSION -> SignalButton(onClick = advance, enabled = state.installPermissionGranted) { Text("Continue") }
-                CommissioningStep.BOOT_RECOVERY -> SignalButton(onClick = advance, enabled = state.bootLaunchVerified) { Text("Continue") }
+                CommissioningStep.ACCESSIBILITY -> SignalButton(onClick = advance, enabled = !state.accessibilitySupported || state.accessibilityEnabled) { Text("Продолжить") }
+                CommissioningStep.INSTALL_PERMISSION -> SignalButton(onClick = advance, enabled = state.installPermissionGranted) { Text("Продолжить") }
+                CommissioningStep.BOOT_RECOVERY -> SignalButton(onClick = advance, enabled = state.bootLaunchVerified) { Text("Продолжить") }
                 CommissioningStep.PRESENTATION -> SignalButton(
                     onClick = advance,
                     enabled = !state.presentationVerificationRequired || (state.immersiveVerified && state.keepAwakeVerified),
-                ) { Text(if (state.presentationVerificationRequired) "Continue" else "Continue with warning") }
-                CommissioningStep.SELF_TEST -> SignalButton(onClick = advance, enabled = state.selfTestResult != null) { Text("View result") }
+                ) { Text(if (state.presentationVerificationRequired) "Продолжить" else "Продолжить с предупреждением") }
+                CommissioningStep.SELF_TEST -> SignalButton(onClick = advance, enabled = state.selfTestResult != null) { Text("Показать результат") }
                 CommissioningStep.CACHED_FALLBACK -> Unit
             }
         }
@@ -88,13 +88,13 @@ private fun CommissioningStepBody(
     when (state.step) {
         CommissioningStep.ADMIN_PIN -> {
             var pin by remember { mutableStateOf("") }
-            Text("Set a local administrator PIN", color = SignalText, fontSize = 30.sp)
-            Text("The PIN opens only Tilecast’s bounded local maintenance tools and is stored as a secure hash.", color = SignalMuted, fontSize = 18.sp)
+            Text("Задайте PIN администратора", color = SignalText, fontSize = 30.sp)
+            Text("PIN открывает только меню обслуживания Tilecast и хранится в виде защищённого хеша.", color = SignalMuted, fontSize = 18.sp)
             Spacer(Modifier.height(18.dp))
             OutlinedTextField(
                 value = pin,
                 onValueChange = { pin = it.filter(Char::isDigit).take(12) },
-                label = { Text("4–12 digit PIN") },
+                label = { Text("PIN из 4–12 цифр") },
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                 singleLine = true,
@@ -107,73 +107,73 @@ private fun CommissioningStepBody(
                     advance()
                 },
                 enabled = pin.length >= 4,
-            ) { Text(if (state.adminPinSet) "Replace PIN" else "Set PIN") }
+            ) { Text(if (state.adminPinSet) "Сменить PIN" else "Задать PIN") }
         }
         CommissioningStep.ACCESSIBILITY -> {
             if (!state.accessibilitySupported) {
-                Text("Accessibility Control is optional on Fire TV", color = SignalText, fontSize = 30.sp)
+                Text("На Fire TV служба специальных возможностей необязательна", color = SignalText, fontSize = 30.sp)
                 Text(
-                    "Fire OS does not expose the standard Android screen for enabling Tilecast’s accessibility service. You may continue without it, or enable it manually with ADB using the command shown in Tilecast Studio under this screen’s Reliability tab.",
+                    "В Fire OS нет стандартного экрана Android для включения службы специальных возможностей Tilecast. Можно продолжить без неё или включить её вручную через ADB командой, которая показана в Tilecast Studio в карточке этого экрана.",
                     color = SignalMuted,
                     fontSize = 18.sp,
                 )
                 Spacer(Modifier.height(14.dp))
                 if (state.accessibilityEnabled) {
-                    StatusLine("ADB-enabled Accessibility Control", true)
+                    StatusLine("Служба специальных возможностей (включена через ADB)", true)
                 } else {
-                    Text("Optional: enable ADB debugging on the Fire TV, run the Studio command, then choose Verify again.", color = SignalWarning, fontSize = 17.sp)
+                    Text("Необязательно: включите отладку по ADB на Fire TV, выполните команду из Studio и нажмите «Проверить снова».", color = SignalWarning, fontSize = 17.sp)
                 }
             } else {
                 CapabilityStep(
-                    "Enable Accessibility Control",
-                    "Tilecast uses its disclosed accessibility service only to detect an unexpected foreground app, return to playback, and request Android’s lock action. It cannot approve dialogs or click settings.",
+                    "Включите службу специальных возможностей",
+                    "Tilecast использует службу специальных возможностей только чтобы заметить постороннее приложение на экране, вернуться к показу и попросить Android заблокировать экран. Служба не может подтверждать диалоги или нажимать кнопки в настройках.",
                     state.accessibilityEnabled,
-                    "Open Accessibility Settings",
+                    "Открыть специальные возможности",
                     openAccessibility,
                     refresh,
                 )
             }
         }
         CommissioningStep.INSTALL_PERMISSION -> CapabilityStep(
-            "Allow signed Player updates",
-            "Grant this one-time Android permission so Tilecast can install its verified updates. Android 12 and newer can complete eligible self-updates unattended; older system installers may still require local confirmation.",
+            "Разрешите обновления плеера",
+            "Выдайте это разрешение Android один раз, чтобы Tilecast мог устанавливать свои проверенные обновления. На Android 12 и новее обновление проходит без участия человека; на старых версиях установку может понадобиться подтвердить на устройстве.",
             state.installPermissionGranted,
-            "Open install permission",
+            "Открыть разрешение на установку",
             openInstallPermission,
             refresh,
         )
         CommissioningStep.BOOT_RECOVERY -> CapabilityStep(
-            "Verify launch after boot",
-            "Restart the device once. Tilecast records the boot broadcast, bounded launch attempts, and a healthy foreground return. A firmware-blocked launch remains visible as not verified.",
+            "Проверьте запуск после включения",
+            "Перезагрузите устройство один раз. Tilecast зафиксирует сигнал загрузки, попытки запуска и успешный выход на экран. Если прошивка блокирует автозапуск, шаг останется непроверенным.",
             state.bootLaunchVerified,
-            "Check boot result",
+            "Проверить результат",
             refresh,
             refresh,
         )
         CommissioningStep.PRESENTATION -> {
-            Text("Verify fullscreen presentation", color = SignalText, fontSize = 30.sp)
-            StatusLine("Immersive mode", state.immersiveVerified)
-            StatusLine("Keep screen awake", state.keepAwakeVerified)
+            Text("Проверьте полноэкранный режим", color = SignalText, fontSize = 30.sp)
+            StatusLine("Полноэкранный режим", state.immersiveVerified)
+            StatusLine("Экран не гаснет", state.keepAwakeVerified)
             if (!state.presentationVerificationRequired && (!state.immersiveVerified || !state.keepAwakeVerified)) {
                 Text(
-                    "This device does not identify itself as Android TV. Some mobile Android firmware does not report TV presentation flags consistently, so you can continue and verify fullscreen playback on the device.",
+                    "Устройство не определяется как Android TV. Некоторые прошивки для телефонов и планшетов не сообщают признаки ТВ-режима, поэтому можно продолжить и проверить полноэкранный показ на самом устройстве.",
                     color = SignalWarning,
                     fontSize = 17.sp,
                 )
             }
-            SignalOutlinedButton(onClick = refresh) { Text("Verify again") }
+            SignalOutlinedButton(onClick = refresh) { Text("Проверить снова") }
         }
         CommissioningStep.SELF_TEST -> {
-            Text("Run unattended-readiness test", color = SignalText, fontSize = 30.sp)
-            Text("The test checks the PIN, protected Android permissions, boot evidence, and current recovery state without changing system settings.", color = SignalMuted, fontSize = 18.sp)
-            state.selfTestResult?.let { Text(it.replace('_', ' '), color = if (it == "passed") SignalBlue else SignalWarning, fontSize = 20.sp) }
+            Text("Проверка готовности к работе без присмотра", color = SignalText, fontSize = 30.sp)
+            Text("Тест проверяет PIN, защищённые разрешения Android, данные о загрузке и состояние восстановления, не меняя системных настроек.", color = SignalMuted, fontSize = 18.sp)
+            state.selfTestResult?.let { Text(resultLabel(it), color = if (it == "passed") SignalBlue else SignalWarning, fontSize = 20.sp) }
             Spacer(Modifier.height(14.dp))
-            SignalButton(onClick = runSelfTest) { Text("Run self-test") }
+            SignalButton(onClick = runSelfTest) { Text("Запустить проверку") }
         }
         CommissioningStep.RESULT -> {
-            Text("Zero-Touch Readiness", color = SignalText, fontSize = 30.sp)
-            Text(state.readiness.replace('_', ' '), color = if (state.readiness == "ready") SignalBlue else SignalWarning, fontSize = 26.sp, fontWeight = FontWeight.SemiBold)
-            Text("Ready means all locally verifiable safeguards passed. Partial readiness remains explicit in Studio and does not claim recovery from power, network-credential, hardware, or Android approval failures.", color = SignalMuted, fontSize = 18.sp)
+            Text("Готовность к работе без присмотра", color = SignalText, fontSize = 30.sp)
+            Text(resultLabel(state.readiness), color = if (state.readiness == "ready") SignalBlue else SignalWarning, fontSize = 26.sp, fontWeight = FontWeight.SemiBold)
+            Text("«Готов» означает, что пройдены все проверки, доступные на устройстве. Частичная готовность отмечается в Studio и не гарантирует восстановления после сбоев питания, сети, оборудования или подтверждений Android.", color = SignalMuted, fontSize = 18.sp)
         }
         CommissioningStep.CACHED_FALLBACK -> Unit
     }
@@ -183,14 +183,23 @@ private fun CommissioningStepBody(
 private fun CapabilityStep(title: String, description: String, verified: Boolean, action: String, open: () -> Unit, refresh: () -> Unit) {
     Text(title, color = SignalText, fontSize = 30.sp)
     Text(description, color = SignalMuted, fontSize = 18.sp)
-    StatusLine("Verification", verified)
+    StatusLine("Проверка", verified)
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         SignalButton(onClick = open) { Text(action) }
-        SignalOutlinedButton(onClick = refresh) { Text("Verify again") }
+        SignalOutlinedButton(onClick = refresh) { Text("Проверить снова") }
     }
+}
+
+private fun resultLabel(code: String) = when (code) {
+    "passed" -> "Проверка пройдена"
+    "completed_with_warnings" -> "Проверка завершена с предупреждениями"
+    "ready" -> "Готов"
+    "partially_ready" -> "Готов частично"
+    "needs_setup" -> "Требуется настройка"
+    else -> code.replace('_', ' ')
 }
 
 @Composable
 private fun StatusLine(label: String, verified: Boolean) {
-    Text("$label: ${if (verified) "Verified" else "Not verified"}", color = if (verified) SignalBlue else SignalWarning, fontSize = 19.sp, modifier = Modifier.padding(vertical = 12.dp))
+    Text("$label: ${if (verified) "проверено" else "не проверено"}", color = if (verified) SignalBlue else SignalWarning, fontSize = 19.sp, modifier = Modifier.padding(vertical = 12.dp))
 }

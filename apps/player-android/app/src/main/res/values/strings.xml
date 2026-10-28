@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tilecast Player</string>
-    <string name="accessibility_control_disclosure">Optional Tilecast Control Assist observes only the foreground application name, can return to Tilecast after an approved delay, and can request Android lock for Power Assist. It never reads page text, passwords, clicks buttons, performs gestures, or approves installations.</string>
-    <string name="device_admin_description">Tilecast Managed Kiosk keeps the player pinned on screen, makes it the Home app, and relaunches it automatically. It is active only after deliberate device-owner provisioning.</string>
+    <string name="accessibility_control_disclosure">Необязательная служба Tilecast видит только название приложения на экране, может вернуть Tilecast после заданной задержки и попросить Android заблокировать экран для перехода в сон. Она никогда не читает текст страниц и пароли, не нажимает кнопки, не выполняет жесты и не подтверждает установки.</string>
+    <string name="device_admin_description">Режим киоска Tilecast закрепляет плеер на экране, делает его главным приложением и автоматически перезапускает. Он включается только после намеренной настройки устройства как управляемого (device owner).</string>
 </resources>

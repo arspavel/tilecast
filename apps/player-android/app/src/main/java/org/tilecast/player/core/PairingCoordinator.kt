@@ -19,8 +19,8 @@ class PairingCoordinator(private val gateway: PairingGateway, private val creden
                     val token = requireNotNull(result.enrollmentToken) { "Claimed pairing did not contain an enrollment token" }
                     return gateway.enroll(sessionId, token).also { credentials.save(it.deviceCredential) }
                 }
-                "rejected" -> error(result.failureReason ?: "Pairing rejected")
-                else -> error("Pairing ${result.status}")
+                "rejected" -> error(result.failureReason ?: "Привязка отклонена")
+                else -> error("Привязка: ${result.status}")
             }
         }
     }

@@ -9,13 +9,13 @@ object ServerUrlPolicy {
         var candidate = input.trim()
         if (!candidate.contains("://")) candidate = "https://$candidate"
         val uri = URI(candidate)
-        val scheme = uri.scheme?.lowercase() ?: error("Enter an HTTP or HTTPS server address")
-        require(scheme == "http" || scheme == "https") { "Only HTTP and HTTPS addresses are supported" }
-        require(uri.host != null && uri.userInfo == null && uri.query == null && uri.fragment == null) { "Enter a valid server address" }
-        require(uri.path.isNullOrEmpty() || uri.path == "/") { "The server address cannot include a path" }
+        val scheme = uri.scheme?.lowercase() ?: error("Введите адрес сервера, начинающийся с http:// или https://")
+        require(scheme == "http" || scheme == "https") { "Поддерживаются только адреса HTTP и HTTPS" }
+        require(uri.host != null && uri.userInfo == null && uri.query == null && uri.fragment == null) { "Введите корректный адрес сервера" }
+        require(uri.path.isNullOrEmpty() || uri.path == "/") { "Адрес сервера не должен содержать путь" }
         val host = uri.host.lowercase()
         val localHttp = scheme == "http" && isLocalHost(host)
-        require(scheme == "https" || localHttp) { "Public Tilecast servers require HTTPS" }
+        require(scheme == "https" || localHttp) { "Для серверов Tilecast в интернете нужен HTTPS" }
         val displayHost = if (host.contains(":")) "[$host]" else host
         val port = if (uri.port > 0) ":${uri.port}" else ""
         NormalizedServerUrl("$scheme://$displayHost$port", localHttp)

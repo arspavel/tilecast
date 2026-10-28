@@ -104,8 +104,8 @@ internal fun resolveCountdownBar(
                     urgencyStage = urgencyStage,
                     urgencyLabel =
                         when (urgencyStage) {
-                            "starting_soon" -> "Starting soon"
-                            "urgent", "final" -> "Urgent"
+                            "starting_soon" -> "Скоро начало"
+                            "urgent", "final" -> "Срочно"
                             else -> ""
                         },
                     pulse = urgencyStage == "final",

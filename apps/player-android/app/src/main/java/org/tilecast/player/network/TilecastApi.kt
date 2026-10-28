@@ -130,19 +130,19 @@ class TilecastApi(
                     while (true) { val count = input.read(buffer); if (count < 0) break; output.write(buffer, 0, count); written += count; progress(written) }
                     output.fd.sync()
                 } }
-                if (partFile.length() != expectedSize) throw IllegalStateException("Downloaded file size did not match the manifest")
+                if (partFile.length() != expectedSize) throw IllegalStateException("Размер загруженного файла не совпал с ожидаемым")
                 val digest = MessageDigest.getInstance("SHA-256"); partFile.inputStream().use { input -> val buffer=ByteArray(128*1024); while(true){val count=input.read(buffer);if(count<0)break;digest.update(buffer,0,count)} }
                 val actual = digest.digest().joinToString("") { "%02x".format(it) }
-                if (actual != expectedHash) { partFile.delete(); throw IllegalStateException("Downloaded file failed SHA-256 verification") }
+                if (actual != expectedHash) { partFile.delete(); throw IllegalStateException("Загруженный файл не прошёл проверку SHA-256") }
                 return@withContext
             }
         }
-        throw IllegalStateException("Could not resume media download")
+        throw IllegalStateException("Не удалось продолжить загрузку медиафайла")
     }
 
     fun decodeManifest(envelope: String): PlayerManifest = json.decodeFromString(DataEnvelope.serializer(PlayerManifest.serializer()), envelope).data
     fun decodePlayerConfig(envelope:String):PlayerConfig=json.decodeFromString(DataEnvelope.serializer(PlayerConfig.serializer()),envelope).data
-    private fun apiException(status: Int, body: String): ApiException { val error=runCatching{json.decodeFromString(ErrorEnvelope.serializer(),body).error}.getOrNull();return ApiException(status,error?.code?:"http_$status",error?.message?:"Tilecast returned HTTP $status") }
+    private fun apiException(status: Int, body: String): ApiException { val error=runCatching{json.decodeFromString(ErrorEnvelope.serializer(),body).error}.getOrNull();return ApiException(status,error?.code?:"http_$status",error?.message?:"Сервер Tilecast ответил HTTP $status") }
 
     private suspend inline fun <reified T> get(serverUrl: String, path: String, authorization: String? = null): T = execute(
         Request.Builder().url(serverUrl + path).apply { if (authorization != null) header("Authorization", authorization) }.get().build(),
@@ -165,7 +165,7 @@ class TilecastApi(
             val body = response.body?.string().orEmpty()
             if (!response.isSuccessful) {
                 val error = runCatching { json.decodeFromString(ErrorEnvelope.serializer(), body).error }.getOrNull()
-                throw ApiException(response.code, error?.code ?: "http_${response.code}", error?.message ?: "Tilecast returned HTTP ${response.code}")
+                throw ApiException(response.code, error?.code ?: "http_${response.code}", error?.message ?: "Сервер Tilecast ответил HTTP ${response.code}")
             }
             json.decodeFromString(DataEnvelope.serializer(kotlinx.serialization.serializer<T>()), body).data
         }

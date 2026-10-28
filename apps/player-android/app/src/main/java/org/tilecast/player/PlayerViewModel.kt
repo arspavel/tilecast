@@ -230,7 +230,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 emit(PlayerEvent.IdentityConfirmed(selectedUrl!!, identity))
             }
         } catch (error: CancellationException) { throw error
-        } catch (error: Exception) { emit(PlayerEvent.Failed(error.message ?: "Could not reach the Tilecast server")) }
+        } catch (error: Exception) { emit(PlayerEvent.Failed(error.message ?: "Не удалось связаться с сервером Tilecast")) }
     }
 
     fun discover() { viewModelScope.launch {
@@ -243,15 +243,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun showManualEntry() = emit(PlayerEvent.EnterManualAddress)
 
     fun validateServer(value: String) { viewModelScope.launch {
-        val normalized = ServerUrlPolicy.normalize(value).getOrElse { emit(PlayerEvent.Failed(it.message ?: "Invalid server address")); return@launch }
+        val normalized = ServerUrlPolicy.normalize(value).getOrElse { emit(PlayerEvent.Failed(it.message ?: "Неверный адрес сервера")); return@launch }
         emit(PlayerEvent.Validate(normalized.value))
         try {
             val identity = api.identity(normalized.value)
-            require(identity.product == "tilecast" && identity.apiVersion == "v1") { "This address is not a compatible Tilecast server" }
+            require(identity.product == "tilecast" && identity.apiVersion == "v1") { "По этому адресу нет совместимого сервера Tilecast" }
             selectedUrl = normalized; selectedIdentity = identity
             emit(PlayerEvent.IdentityConfirmed(normalized, identity))
         } catch (error: CancellationException) { throw error
-        } catch (error: Exception) { emit(PlayerEvent.Failed(error.message ?: "Could not connect to Tilecast")) }
+        } catch (error: Exception) { emit(PlayerEvent.Failed(error.message ?: "Не удалось подключиться к Tilecast")) }
     } }
 
     fun chooseServer(server: DiscoveredServer) = validateServer(server.baseUrl)
@@ -273,7 +273,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             emit(PlayerEvent.PairingCreated(url.value, identity.organizationName, session))
             startPairingPoll(url.value, session.id, session.pollSecret, session.pollingIntervalSeconds)
         } catch (error: CancellationException) { throw error
-        } catch (error: Exception) { emit(PlayerEvent.Failed(error.message ?: "Pairing request failed")) }
+        } catch (error: Exception) { emit(PlayerEvent.Failed(error.message ?: "Не удалось запросить код привязки")) }
     } }
 
     private fun startPairingPoll(url: String, sessionId: String, pollSecret: String, interval: Int) {
@@ -288,8 +288,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 val result = api.pollPairing(url, sessionId, pollSecret)
                 when (result.status) {
                     "pending", "approved" -> continue
-                    "rejected" -> { emit(PlayerEvent.Failed(result.failureReason ?: "The pairing request was rejected")); return }
-                    "expired", "cancelled" -> { current?.let{current=configuration.clearPairingSession(it)};emit(PlayerEvent.Failed("The pairing code expired. Request a new code.")); return }
+                    "rejected" -> { emit(PlayerEvent.Failed(result.failureReason ?: "Запрос привязки отклонён")); return }
+                    "expired", "cancelled" -> { current?.let{current=configuration.clearPairingSession(it)};emit(PlayerEvent.Failed("Срок действия кода истёк. Запросите новый код.")); return }
                     "claimed" -> {
                         val token = result.enrollmentToken ?: return
                         emit(PlayerEvent.EnrollmentStarted)
@@ -324,7 +324,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             api.heartbeat(url, credential, heartbeat())
         } catch (error: ApiException) {
             if (error.code == "device_credential_revoked" || error.code == "device_credential_invalid") { revokeLocally(screenName); return }
-            if (error.code == "screen_disabled") { emit(PlayerEvent.Disconnected(screenName, "This screen is disabled in Tilecast Studio")); return }
+            if (error.code == "screen_disabled") { emit(PlayerEvent.Disconnected(screenName, "Экран отключён в Tilecast Studio")); return }
             if (error.status in 400..499) { emit(PlayerEvent.Failed(error.message)); return }
         } catch (error: CancellationException) { throw error
         } catch (_: Exception) { }
@@ -340,7 +340,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 if (!connectionEpoch.isCurrent(epoch) || socket !== webSocket) return
                 reconnectJob?.cancel(); reconnectJob = null
-                if (attempt > 0) recordReliabilityEvent("connection.restored", "info", result = "recovered", failureMessage = "Reconnected after $attempt attempt(s)")
+                if (attempt > 0) recordReliabilityEvent("connection.restored", "info", result = "recovered", failureMessage = "Связь восстановлена, попыток: $attempt")
                 socketOpenedAtElapsed = SystemClock.elapsedRealtime()
                 // Server reachable again: clear this outage's self-heal escalation state.
                 getApplication<Application>().getSharedPreferences("tilecast-reliability", Application.MODE_PRIVATE).edit().putString("offline-last-action", "NONE").apply()
@@ -417,7 +417,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         if (reconnectJob?.isActive == true) return
         reconnectJob = viewModelScope.launch {
             emit(PlayerEvent.Disconnected(name, reason))
-            if (attempt <= 1) recordReliabilityEvent("connection.lost", "warning", result = "failed", failureMessage = reason ?: "Connection lost")
+            if (attempt <= 1) recordReliabilityEvent("connection.lost", "warning", result = "failed", failureMessage = reason ?: "Связь потеряна")
             maybeSelfHeal()
             delay(backoff.delayMillis(attempt))
             if (!connectionEpoch.isCurrent(epoch)) return@launch
@@ -436,7 +436,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 throw error
             } catch (_: Exception) {
                 reconnectJob = null
-                scheduleReconnect(url, name, credential, attempt + 1, "Server unavailable", epoch)
+                scheduleReconnect(url, name, credential, attempt + 1, "Сервер недоступен", epoch)
             }
         }
     }
@@ -473,7 +473,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             if (action == OfflineAction.VERIFY_FALLBACK) "warning" else "error",
             result = "unknown",
             failureCode = action.name.lowercase(),
-            failureMessage = "Offline ${offlineFor.toMinutes()}m, no playback progress for ${progressStaleFor.toMinutes()}m; attempting ${action.name.lowercase()}",
+            failureMessage = "Нет связи ${offlineFor.toMinutes()} мин, показ не продвигается ${progressStaleFor.toMinutes()} мин; действие: ${action.name.lowercase()}",
         )
         when (action) {
             // Re-show cached content locally; this never contacts the unavailable server.
@@ -500,10 +500,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private suspend fun verifyAfterAuthFailure(url: String, name: String, credential: String, epoch: Long) {
         if (!connectionEpoch.isCurrent(epoch)) return
-        try { api.heartbeat(url, credential, heartbeat()); if (connectionEpoch.isCurrent(epoch)) scheduleReconnect(url, name, credential, 1, "Connection interrupted", epoch) }
+        try { api.heartbeat(url, credential, heartbeat()); if (connectionEpoch.isCurrent(epoch)) scheduleReconnect(url, name, credential, 1, "Соединение прервано", epoch) }
         catch (error: CancellationException) { throw error }
         catch (error: ApiException) { if (!connectionEpoch.isCurrent(epoch)) return; if (error.code == "device_credential_revoked" || error.code == "device_credential_invalid") revokeLocally(name) else emit(PlayerEvent.Disconnected(name, error.message)) }
-        catch (_: Exception) { if (connectionEpoch.isCurrent(epoch)) scheduleReconnect(url, name, credential, 1, "Connection interrupted", epoch) }
+        catch (_: Exception) { if (connectionEpoch.isCurrent(epoch)) scheduleReconnect(url, name, credential, 1, "Соединение прервано", epoch) }
     }
 
     private fun stopConnectionWork() {
@@ -585,7 +585,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 					refreshCommissioning()
 				}
 					catch(error:CancellationException){throw error}
-					catch(error:Exception){syncProgress=SyncProgress(cacheUsedBytes=syncProgress.cacheUsedBytes,error=error.message?:"Manifest synchronization failed");scheduleSyncRetry(url,credential)}
+					catch(error:Exception){syncProgress=SyncProgress(cacheUsedBytes=syncProgress.cacheUsedBytes,error=error.message?:"Не удалось синхронизировать контент");scheduleSyncRetry(url,credential)}
 			} while (syncPending)
 		}
 		syncJob?.join()
@@ -637,7 +637,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		currentScheduleId=selection.scheduleId;currentPlaylistId=selection.playlistId;assignedPlaylistId=prepared.manifest.directFallbackPlaylist?.id;selectionSource=selection.source;nextTransition=selection.nextTransition;scheduleError=selection.error
 		if(takeover.active){activeTakeoverId=prepared.manifest.effectiveTakeover?.id;activePresentationOverrideId=null;takeoverState="active";currentScheduleId=null;currentPlaylistId=playlist?.id;selectionSource="takeover";nextTransition=takeover.nextTransition}else{activeTakeoverId=null;activePresentationOverrideId=if(selection.source=="quick_present")effectiveManifest.presentationOverride?.id else null;takeoverState=null}
 		evaluateActiveHours()
-		if(selection.source=="schedule"&&(playlist==null||playlist.items.isEmpty())&&layout==null){playlist=effectiveManifest.directFallbackPlaylist?.takeIf{it.items.isNotEmpty()};layout=effectiveManifest.directFallbackLayout;currentPlaylistId=playlist?.id;selectionSource=if(playlist!=null||layout!=null)"direct_fallback" else "none";scheduleError="Scheduled presentation is unavailable"}
+		if(selection.source=="schedule"&&(playlist==null||playlist.items.isEmpty())&&layout==null){playlist=effectiveManifest.directFallbackPlaylist?.takeIf{it.items.isNotEmpty()};layout=effectiveManifest.directFallbackLayout;currentPlaylistId=playlist?.id;selectionSource=if(playlist!=null||layout!=null)"direct_fallback" else "none";scheduleError="Презентация по расписанию недоступна"}
 		val hasAssignedPresentation = selection.playlistId != null || selection.layoutId != null || takeover.active || quickPresent || effectiveManifest.directFallbackPlaylist != null || effectiveManifest.directFallbackLayout != null
 		mutableUnavailableKnown.value = (hasAssignedPresentation && playlist == null && layout == null) || (hasAssignedPresentation && playlist != null && playlist.items.isEmpty())
 		val selected=effectivePrepared.copy(manifest=effectiveManifest.copy(playlist=playlist,layout=layout))
@@ -660,53 +660,53 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 			poll={commandCoordinator.fetchAndRun(url,credential,onOperationFailure=failed){command->
 		lastCommandId=command.id;lastCommandState="running"
 		val outcome=when(command.type){
-			"sync_now"->{reconcileManifest(url,credential);CommandOutcome(true,"manifest_sync_started","Manifest synchronization started")}
-			"reload_playback"->{val active=mutableContent.value;mutableContent.value=null;delay(100);mutableContent.value=active;CommandOutcome(true,"playback_reloaded","Playback reloaded")}
-			"identify_screen"->{val seconds=command.payload["durationSeconds"]?.jsonPrimitive?.content?.toIntOrNull()?:30;val location=mutablePlayerConfig.value?.playback?.takeIf{it.identifyShowsLocation}?.screenLocation.orEmpty();mutableIdentify.value="${current?.screenName ?: "Tilecast screen"}${if(location.isNotEmpty())"\n$location" else ""}\n${current?.screenId?.takeLast(8).orEmpty()}";viewModelScope.launch{delay(seconds*1000L);mutableIdentify.value=null};CommandOutcome(true,"screen_identified","Identification overlay displayed")}
-			"clear_media_cache"->{val success=synchronizer.clearUnprotectedCache();reconcileManifest(url,credential);CommandOutcome(success,if(success)"cache_cleared" else "cache_cleanup_partial",if(success)"Unprotected media cache cleared" else "Some protected content was retained")}
-			"clear_website_data"->{var success=false;WebsiteDataManager.clear(getApplication()){success=it};delay(250);CommandOutcome(success,if(success)"website_data_cleared" else "website_data_clear_failed",if(success)"Website data cleared" else "Website data could not be cleared")}
-			"disable_playback"->{commandCoordinator.setPlaybackDisabled(true);mutablePlaybackDisabled.value=true;scheduleContent?.let{activateScheduleSelection(it,url,credential)};CommandOutcome(true,"playback_disabled","Playback disabled")}
-			"enable_playback"->{commandCoordinator.setPlaybackDisabled(false);mutablePlaybackDisabled.value=false;scheduleContent?.let{activateScheduleSelection(it,url,credential)};CommandOutcome(true,"playback_enabled","Playback enabled")}
+			"sync_now"->{reconcileManifest(url,credential);CommandOutcome(true,"manifest_sync_started","Синхронизация контента запущена")}
+			"reload_playback"->{val active=mutableContent.value;mutableContent.value=null;delay(100);mutableContent.value=active;CommandOutcome(true,"playback_reloaded","Показ перезапущен")}
+			"identify_screen"->{val seconds=command.payload["durationSeconds"]?.jsonPrimitive?.content?.toIntOrNull()?:30;val location=mutablePlayerConfig.value?.playback?.takeIf{it.identifyShowsLocation}?.screenLocation.orEmpty();mutableIdentify.value="${current?.screenName ?: "Экран Tilecast"}${if(location.isNotEmpty())"\n$location" else ""}\n${current?.screenId?.takeLast(8).orEmpty()}";viewModelScope.launch{delay(seconds*1000L);mutableIdentify.value=null};CommandOutcome(true,"screen_identified","Показана надпись для опознания экрана")}
+			"clear_media_cache"->{val success=synchronizer.clearUnprotectedCache();reconcileManifest(url,credential);CommandOutcome(success,if(success)"cache_cleared" else "cache_cleanup_partial",if(success)"Кэш медиафайлов очищен" else "Часть защищённого контента сохранена")}
+			"clear_website_data"->{var success=false;WebsiteDataManager.clear(getApplication()){success=it};delay(250);CommandOutcome(success,if(success)"website_data_cleared" else "website_data_clear_failed",if(success)"Данные сайтов очищены" else "Не удалось очистить данные сайтов")}
+			"disable_playback"->{commandCoordinator.setPlaybackDisabled(true);mutablePlaybackDisabled.value=true;scheduleContent?.let{activateScheduleSelection(it,url,credential)};CommandOutcome(true,"playback_disabled","Показ отключён")}
+			"enable_playback"->{commandCoordinator.setPlaybackDisabled(false);mutablePlaybackDisabled.value=false;scheduleContent?.let{activateScheduleSelection(it,url,credential)};CommandOutcome(true,"playback_enabled","Показ включён")}
 			"install_player_update"->updateManager.prepare(url,credential,command,{activeTakeoverId!=null||!mutableActiveHours.value}){mutableUpdate.value=it}
-			"retry_player_recovery"->{reliabilitySupervisor.exitSafeMode();reliabilityController.setSafeMode(false);mutableSafeMode.value=false;reconcileManifest(url,credential);CommandOutcome(true,"player_recovery_retried","Player recovery was retried")}
-			"exit_safe_mode"->{reliabilitySupervisor.exitSafeMode();reliabilityController.setSafeMode(false);mutableSafeMode.value=false;scheduleContent?.let{activateScheduleSelection(it,url,credential)};CommandOutcome(true,"safe_mode_exited","Safe mode was cleared")}
-			"power_assist_sleep"->{if(activeTakeoverId!=null)CommandOutcome(false,"power_assist_deferred_takeover","Power Assist sleep was delayed by takeover playback")else{mutableRemoteSleep.value=true;mutableContent.value=null;val result=reliabilityController.requestBlackScreenSleep();CommandOutcome(true,result,"Playback stopped and the black screen was enabled")}}
-				"power_assist_wake"->{mutableRemoteSleep.value=false;val url=current?.serverUrl;val credential=credentials.read();if(url!=null&&credential!=null)scheduleContent?.let{activateScheduleSelection(it,url,credential)};val result=reliabilityController.requestWake();CommandOutcome(true,result,"The player resumed scheduled playback")}
-				"retry_current_item"->{retryCurrentItem();CommandOutcome(true,"current_item_retried","Current item was restarted")}
-				"skip_current_item"->{skipCurrentItem();CommandOutcome(true,"current_item_skipped","Player advanced to the next item")}
-				"recreate_renderer"->{recreateRenderer();CommandOutcome(true,"renderer_recreated","Playback renderer was recreated")}
-				"recreate_playback_session"->{recreatePlaybackSession();CommandOutcome(true,"playback_session_recreated","Playback session was recreated")}
+			"retry_player_recovery"->{reliabilitySupervisor.exitSafeMode();reliabilityController.setSafeMode(false);mutableSafeMode.value=false;reconcileManifest(url,credential);CommandOutcome(true,"player_recovery_retried","Повторена попытка восстановления плеера")}
+			"exit_safe_mode"->{reliabilitySupervisor.exitSafeMode();reliabilityController.setSafeMode(false);mutableSafeMode.value=false;scheduleContent?.let{activateScheduleSelection(it,url,credential)};CommandOutcome(true,"safe_mode_exited","Безопасный режим выключен")}
+			"power_assist_sleep"->{if(activeTakeoverId!=null)CommandOutcome(false,"power_assist_deferred_takeover","Переход в сон отложен: идёт временный показ")else{mutableRemoteSleep.value=true;mutableContent.value=null;val result=reliabilityController.requestBlackScreenSleep();CommandOutcome(true,result,"Показ остановлен, включён чёрный экран")}}
+				"power_assist_wake"->{mutableRemoteSleep.value=false;val url=current?.serverUrl;val credential=credentials.read();if(url!=null&&credential!=null)scheduleContent?.let{activateScheduleSelection(it,url,credential)};val result=reliabilityController.requestWake();CommandOutcome(true,result,"Плеер вернулся к показу по расписанию")}
+				"retry_current_item"->{retryCurrentItem();CommandOutcome(true,"current_item_retried","Текущий элемент запущен заново")}
+				"skip_current_item"->{skipCurrentItem();CommandOutcome(true,"current_item_skipped","Плеер перешёл к следующему элементу")}
+				"recreate_renderer"->{recreateRenderer();CommandOutcome(true,"renderer_recreated","Модуль воспроизведения перезапущен")}
+				"recreate_playback_session"->{recreatePlaybackSession();CommandOutcome(true,"playback_session_recreated","Сеанс воспроизведения перезапущен")}
 				"display_set_volume"->{
 				        val value=command.payload["volume"]?.jsonPrimitive?.content?.toIntOrNull()
 				        if(value==null||value !in 0..100)
-				                CommandOutcome(false,"volume_invalid","Volume must be between 0 and 100")
+				                CommandOutcome(false,"volume_invalid","Громкость должна быть от 0 до 100")
 				        else{
 				                val applied=org.tilecast.player.reliability.AndroidDeviceControl(getApplication()).setVolume(value)
-				                CommandOutcome(true,"volume_applied","Media volume set to $applied percent")
+				                CommandOutcome(true,"volume_applied","Громкость: $applied%")
 				        }
 				}
 				"display_mute"->{
 				        org.tilecast.player.reliability.AndroidDeviceControl(getApplication()).mute()
-				        CommandOutcome(true,"volume_muted","Media volume muted")
+				        CommandOutcome(true,"volume_muted","Звук выключен")
 				}
 				"display_unmute"->{
 				        val applied=org.tilecast.player.reliability.AndroidDeviceControl(getApplication()).unmute()
-				        CommandOutcome(true,"volume_unmuted","Media volume restored to $applied percent")
+				        CommandOutcome(true,"volume_unmuted","Громкость восстановлена: $applied%")
 				}
 				"display_set_brightness"->{
 				        val value=command.payload["brightness"]?.jsonPrimitive?.content?.toIntOrNull()
 				        if(value==null||value !in 1..100)
-				                CommandOutcome(false,"brightness_invalid","Brightness must be between 1 and 100")
+				                CommandOutcome(false,"brightness_invalid","Яркость должна быть от 1 до 100")
 				        else{
 				                val applied=org.tilecast.player.reliability.AndroidDeviceControl(getApplication()).setBrightness(value)
-				                CommandOutcome(true,"brightness_applied","Tilecast brightness set to $applied percent")
+				                CommandOutcome(true,"brightness_applied","Яркость: $applied%")
 				        }
 				}
-				"restart_activity"->{reliabilityController.restartActivity();CommandOutcome(true,"activity_restart_requested","Player activity restart was requested")}
-				"restart_player_process"->{viewModelScope.launch{delay(1500);reliabilityController.restartProcess()};CommandOutcome(true,"process_restart_requested","Controlled player process restart was requested")}
-				"resynchronize_player"->{reconcileManifest(url,credential);reconcilePlayerConfig(url,credential);CommandOutcome(true,"player_resynchronized","Manifest and configuration synchronization completed")}
-				"run_player_self_test"->{val result=runSelfTest();CommandOutcome(result=="passed","player_self_test_$result",if(result=="passed")"Player self-test passed" else "Player self-test completed with warnings")}
-			else->CommandOutcome(false,"command_unsupported","Command is not supported")}
+				"restart_activity"->{reliabilityController.restartActivity();CommandOutcome(true,"activity_restart_requested","Запрошен перезапуск экрана плеера")}
+				"restart_player_process"->{viewModelScope.launch{delay(1500);reliabilityController.restartProcess()};CommandOutcome(true,"process_restart_requested","Запрошен перезапуск приложения плеера")}
+				"resynchronize_player"->{reconcileManifest(url,credential);reconcilePlayerConfig(url,credential);CommandOutcome(true,"player_resynchronized","Контент и настройки синхронизированы")}
+				"run_player_self_test"->{val result=runSelfTest();CommandOutcome(result=="passed","player_self_test_$result",if(result=="passed")"Самопроверка плеера пройдена" else "Самопроверка плеера завершена с предупреждениями")}
+			else->CommandOutcome(false,"command_unsupported","Команда не поддерживается")}
 		lastCommandState=if(outcome.success)"succeeded" else "failed";lastCommandResult=outcome.code;lastCommandCompletedAt=Instant.now().toString();outcome
 		}},
 			onFailure={failed(it)},
@@ -721,7 +721,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		} else commandFailureCount=0
 	}
 	private fun recordCommandPollFailure(code:String){lastCommandState="poll_failed";lastCommandResult=code;lastCommandCompletedAt=Instant.now().toString()}
-		private suspend fun reconcilePlayerConfig(url:String,credential:String){try{configManager.reconcile(url,credential,selectedIdentity?.installationId,current?.screenId)?.let{mutablePlayerConfig.value=it;applyPlayerConfig(it)};configurationError=null}catch(error:CancellationException){throw error}catch(error:Exception){val detail=error.message?.replace(Regex("[\\r\\n]+")," ")?.take(160).orEmpty();configurationError="Player configuration could not be applied: ${error::class.simpleName}${if(detail.isNotBlank())": $detail" else ""}"}}
+		private suspend fun reconcilePlayerConfig(url:String,credential:String){try{configManager.reconcile(url,credential,selectedIdentity?.installationId,current?.screenId)?.let{mutablePlayerConfig.value=it;applyPlayerConfig(it)};configurationError=null}catch(error:CancellationException){throw error}catch(error:Exception){val detail=error.message?.replace(Regex("[\\r\\n]+")," ")?.take(160).orEmpty();configurationError="Не удалось применить настройки плеера: ${error::class.simpleName}${if(detail.isNotBlank())": $detail" else ""}"}}
 	private fun applyPlayerConfig(config:PlayerConfig){activeConfigRevision=config.configRevision;synchronizer.applyPolicy(config.cache.maximumBytes,config.cache.minimumFreeBytes,config.cache.automaticThresholdBytes,config.cache.concurrentDownloads);if(WebsiteStartupClearGate.shouldClear(config.website.clearOnRestart))WebsiteDataManager.clear(getApplication()){};reliabilitySupervisor=ReliabilitySupervisor(config.reliability.maximumProcessRestarts,Duration.ofMinutes(config.reliability.restartWindowMinutes.toLong()),config.reliability.safeModeEnabled,PreferencesRecoveryStateStore(getApplication()));getApplication<Application>().getSharedPreferences("tilecast-reliability",Application.MODE_PRIVATE).edit().putBoolean("launch-after-boot",config.reliability.launchAfterBoot).putBoolean("accessibility-enabled-by-policy",config.accessibility.controlAssistEnabled).putBoolean("report-foreground-package",config.accessibility.reportForegroundPackage).putBoolean("pause-accessibility-during-updates",config.accessibility.pauseDuringUpdates).putBoolean("pause-accessibility-during-admin",config.accessibility.pauseDuringAdminSession).putInt("return-delay",config.accessibility.returnDelaySeconds).putInt("maximum-returns",config.accessibility.maximumReturns).putInt("return-window",config.accessibility.returnWindowMinutes).putStringSet("allowed-packages",config.accessibility.allowedPackages.toSet()).apply();mutableContent.value=mutableContent.value?.copy(playbackDefaults=config.playback,websitePolicy=config.website);mutableSafeMode.value=reliabilitySupervisor.safeMode;evaluateActiveHours();refreshCommissioning() }
 	private fun evaluateActiveHours(){val config=mutablePlayerConfig.value?:return;val rule=ActiveHoursRule(config.power.activeHoursEnabled,config.power.activeHoursTimezone,config.power.activeHoursDays.map{DayOfWeek.of(it)}.toSet(),LocalTime.parse(config.power.activeHoursStart),LocalTime.parse(config.power.activeHoursEnd));val overrideActive=activePresentationOverrideId!=null;val now=serverClock.now();val result=runCatching{ActiveHoursEngine.evaluate(now,rule,activeTakeoverId!=null||overrideActive)}.getOrNull()?:return;activeHoursNextTransition=result.nextTransition;val changed=mutableActiveHours.value!=result.active;mutableActiveHours.value=result.active;if(changed&&result.active)reliabilityController.requestWake();if(changed&&!result.active&&config.power.sleepOutsideActiveHours&&activeTakeoverId==null&&!overrideActive)reliabilityController.requestSleep();if(!result.active&&activeTakeoverId==null&&!overrideActive)mutableContent.value=null else if(changed){val url=current?.serverUrl;val credential=credentials.read();if(url!=null&&credential!=null)scheduleContent?.let{activateScheduleSelection(it,url,credential)}};powerJob?.cancel();result.nextTransition?.let{next->if(!result.active&&!overrideActive)reliabilityController.scheduleWake(next.minusSeconds(config.power.startupGraceSeconds.toLong()));powerJob=viewModelScope.launch{delay(Duration.between(serverClock.now(),next).toMillis().coerceAtLeast(0)+100);evaluateActiveHours()}}}
 
@@ -767,7 +767,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		fun openUpdatePermission(){updateManager.openPermissionSettings()}
 	fun refreshUpdatePermission(){mutableUpdate.value?.let{state->val changed=updateManager.installerFailure(state)?:updateManager.permissionGranted(state);changed?.let{updated->mutableUpdate.value=updated;val url=current?.serverUrl;val credential=credentials.read();if(updated.state=="failed"&&url!=null&&credential!=null)scheduleContent?.let{activateScheduleSelection(it,url,credential)};if(url!=null&&credential!=null)viewModelScope.launch{runCatching{api.updateStatus(url,credential,updated.deploymentId,updated.state,updated.downloadedBytes,if(updated.permissionRequired)"required" else "granted",error=if(updated.state=="failed")updated.errorCode?:"installer_failed" else "")}}}}}
 	fun resumeUpdateSchedule(){val state=mutableUpdate.value?:return;val url=current?.serverUrl?:return;val credential=credentials.read()?:return;updateManager.resumeMaintenance(url,credential,state,{activeTakeoverId!=null}){mutableUpdate.value=it}}
-	fun installUpdate(){mutableUpdate.value?.let{state->if(updateManager.install(state)){mutableContent.value=null;val installing=state.copy(state="installing",message="Complete installation in the Android prompt");mutableUpdate.value=installing;val url=current?.serverUrl;val credential=credentials.read();if(url!=null&&credential!=null)viewModelScope.launch{runCatching{api.updateStatus(url,credential,state.deploymentId,"installing",state.downloadedBytes,"granted","system_installer_started")}}}}}
+	fun installUpdate(){mutableUpdate.value?.let{state->if(updateManager.install(state)){mutableContent.value=null;val installing=state.copy(state="installing",message="Подтвердите установку в окне Android");mutableUpdate.value=installing;val url=current?.serverUrl;val credential=credentials.read();if(url!=null&&credential!=null)viewModelScope.launch{runCatching{api.updateStatus(url,credential,state.deploymentId,"installing",state.downloadedBytes,"granted","system_installer_started")}}}}}
 
     private fun deviceMetadata(playerId: String): DeviceMetadata { val metrics = getApplication<Application>().resources.displayMetrics; return DeviceMetadata(playerId, if (Build.MANUFACTURER.equals("Amazon", true)) "fire-tv" else "android-tv", Build.MANUFACTURER ?: "Unknown", Build.MODEL ?: "Unknown", Build.VERSION.RELEASE ?: Build.VERSION.SDK_INT.toString(), BuildConfig.VERSION_NAME, metrics.widthPixels, metrics.heightPixels, metrics.density, Locale.getDefault().toLanguageTag(), TimeZone.getDefault().id) }
 	/** Round trip to the server for the service overlay; runs only while the overlay is visible. */

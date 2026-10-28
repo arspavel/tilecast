@@ -211,7 +211,7 @@ func (p tickerWidgetProvider) Normalize(ctx context.Context, raw json.RawMessage
 	}
 	c.EmptyState = sanitizeCalendarText(c.EmptyState, 240)
 	if c.EmptyState == "" {
-		c.EmptyState = "No items available"
+		c.EmptyState = "Нет элементов"
 	}
 	if err := normalizeWidgetColors(&c.ForegroundColor, &c.BackgroundColor); err != nil {
 		return nil, err
@@ -252,7 +252,7 @@ func (p displayWidgetProvider) Normalize(ctx context.Context, raw json.RawMessag
 	c.Fields = normalizedFields
 	c.EmptyState = sanitizeCalendarText(c.EmptyState, 240)
 	if c.EmptyState == "" {
-		c.EmptyState = "No items available"
+		c.EmptyState = "Нет элементов"
 	}
 	if c.RowSpacing == "" {
 		c.RowSpacing = "comfortable"
@@ -325,7 +325,7 @@ func (p metricWidgetProvider) Normalize(ctx context.Context, raw json.RawMessage
 	c.Suffix = sanitizeCalendarText(c.Suffix, 20)
 	c.EmptyState = sanitizeCalendarText(c.EmptyState, 240)
 	if c.EmptyState == "" {
-		c.EmptyState = "No value available"
+		c.EmptyState = "Нет значения"
 	}
 	if c.Format == "" {
 		c.Format = "number"
@@ -381,7 +381,7 @@ func (p cardsWidgetProvider) Normalize(ctx context.Context, raw json.RawMessage)
 	}
 	c.EmptyState = sanitizeCalendarText(c.EmptyState, 240)
 	if c.EmptyState == "" {
-		c.EmptyState = "No items available"
+		c.EmptyState = "Нет элементов"
 	}
 	if err := normalizeWidgetColors(&c.ForegroundColor, &c.BackgroundColor); err != nil {
 		return nil, err

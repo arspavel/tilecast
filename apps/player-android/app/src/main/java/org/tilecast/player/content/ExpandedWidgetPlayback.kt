@@ -256,15 +256,15 @@ internal fun ExpandedDisplayWidget(provider:String,name:String,config:DisplayWid
     val current=data.records.firstOrNull{it.values["kind"]=="current"}
     val forecast=data.records.filter{it.values["kind"]=="forecast"}.take(config.forecastDays)
     WidgetSurface(config.backgroundColor,config.contentPadding){
-        if(current==null){EmptyExpanded("Weather temporarily unavailable",config.foregroundColor);return@WidgetSurface}
+        if(current==null){EmptyExpanded("Погода временно недоступна",config.foregroundColor);return@WidgetSurface}
         Column(Modifier.fillMaxSize(),verticalArrangement=Arrangement.SpaceBetween){
             Column{
                 if(config.showLocation)Text(field(current,"location"),color=parseExpandedColor(config.foregroundColor),fontSize=25.sp,fontWeight=FontWeight.Bold)
                 if(config.showCurrent)Text("${field(current,"temperature")}${field(current,"temperatureUnit")}  ${field(current,"condition")}",color=parseExpandedColor(config.foregroundColor),fontSize=(44f*widgetAuthorScale(config.textScale)).sp,fontWeight=FontWeight.Bold)
                 Row(horizontalArrangement=Arrangement.spacedBy(20.dp)){
-                    if(config.showHumidity)Text("Humidity ${field(current,"humidity")}%",color=parseExpandedColor(config.foregroundColor).copy(alpha=.75f))
-                    if(config.showWind)Text("Wind ${field(current,"windSpeed")} ${field(current,"windUnit")}",color=parseExpandedColor(config.foregroundColor).copy(alpha=.75f))
-                    if(config.showPrecipitation)Text("Precip ${field(current,"precipitation")} ${field(current,"precipitationUnit")}",color=parseExpandedColor(config.foregroundColor).copy(alpha=.75f))
+                    if(config.showHumidity)Text("Влажность ${field(current,"humidity")}%",color=parseExpandedColor(config.foregroundColor).copy(alpha=.75f))
+                    if(config.showWind)Text("Ветер ${field(current,"windSpeed")} ${field(current,"windUnit")}",color=parseExpandedColor(config.foregroundColor).copy(alpha=.75f))
+                    if(config.showPrecipitation)Text("Осадки ${field(current,"precipitation")} ${field(current,"precipitationUnit")}",color=parseExpandedColor(config.foregroundColor).copy(alpha=.75f))
                 }
             }
             if(forecast.isNotEmpty())Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){forecast.forEach{day->Column(horizontalAlignment=Alignment.CenterHorizontally){Text(field(day,"date").takeLast(5),color=parseExpandedColor(config.foregroundColor).copy(alpha=.72f));Text(field(day,"condition"),color=parseExpandedColor(config.foregroundColor),maxLines=1,overflow=TextOverflow.Ellipsis);Text("${field(day,"high")}/${field(day,"low")}${field(day,"temperatureUnit")}",color=parseExpandedColor(config.foregroundColor),fontWeight=FontWeight.Bold)}}}

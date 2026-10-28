@@ -106,7 +106,7 @@ fun YouTubeWidgetItem(
     if (duration != null) LaunchedEffect(item.id, duration, startOffsetMs) { delay((duration-startOffsetMs).coerceAtLeast(1)); onDone() }
     if (error != null) {
         if (config.failureBehavior == "skip") {
-            LaunchedEffect(error) { onFailure("YouTube source failed") }
+            LaunchedEffect(error) { onFailure("Не удалось загрузить YouTube") }
             return
         }
         val fallback = config.fallbackVariantId?.let(session.content.localFiles::get)
@@ -116,7 +116,7 @@ fun YouTubeWidgetItem(
             return
         }
         Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
-            Text("YouTube unavailable", color = Color.White)
+            Text("YouTube недоступен", color = Color.White)
         }
         return
     }

@@ -305,7 +305,7 @@ const nativeDefault = (provider: NativeProvider): NativeConfig => {
       format: "number",
       precision: 0,
       alignment: "center",
-      emptyState: "No value available",
+      emptyState: "Нет значения",
       ...colors,
     };
   if (provider === "cards")
@@ -315,7 +315,7 @@ const nativeDefault = (provider: NativeProvider): NativeConfig => {
       columns: 2,
       maximumItems: 6,
       density: "comfortable",
-      emptyState: "No items available",
+      emptyState: "Нет элементов",
       ...colors,
     };
   if (provider === "weather")
@@ -395,7 +395,7 @@ const nativeDefault = (provider: NativeProvider): NativeConfig => {
       dataSourceId: "",
       fields: ["title", "subtitle"],
       maximumItems: provider === "menu" ? 2 : 20,
-      emptyState: "No items available",
+      emptyState: "Нет элементов",
       rowSpacing: "comfortable",
       mode: provider === "menu" ? "single_record" : "records",
       ...colors,
@@ -406,7 +406,7 @@ const nativeDefault = (provider: NativeProvider): NativeConfig => {
     separator: " • ",
     speed: "normal",
     direction: "left",
-    emptyState: "No items available",
+    emptyState: "Нет элементов",
     ...colors,
   };
 };

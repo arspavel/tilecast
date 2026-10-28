@@ -11,7 +11,7 @@ class CountdownFormattingTest {
     @Test
     fun dailyCountdownRollsToTheNextLocalOccurrence() {
         assertEquals(
-            "2h 0m",
+            "2 ч 0 мин",
             formatCountdown(
                 target = "2026-07-20T14:00:00",
                 timezone = "UTC",

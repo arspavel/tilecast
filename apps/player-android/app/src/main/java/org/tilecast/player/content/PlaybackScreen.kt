@@ -135,7 +135,7 @@ fun FullscreenPlayback(
     }
     val playlist = session.content.manifest.playlist
     if (playlist == null || playlist.items.isEmpty()) {
-        EmptyPlayback("No content assigned")
+        EmptyPlayback("Контент не назначен")
         return
     }
 
@@ -205,14 +205,14 @@ fun FullscreenPlayback(
 
     if (asset == null && website == null && widget == null && layout == null) {
         LaunchedEffect(item.id, cursor.cycle) {
-            onError("Manifest item has no content")
+            onError("В элементе плейлиста нет контента")
             delay(1_000)
             advance(true)
         }
         return
     }
     if (synchronizedTimeline == null && consecutiveFailures >= playlist.items.size) {
-        EmptyPlayback("No playable content")
+        EmptyPlayback("Нет контента для показа")
         LaunchedEffect(consecutiveFailures) {
             delay(5_000)
             consecutiveFailures = 0
@@ -220,7 +220,7 @@ fun FullscreenPlayback(
         return
     }
     if (synchronizedTimeline == null && consecutiveEmptySkips >= playlist.items.size) {
-        EmptyPlayback("No playlist items currently have content")
+        EmptyPlayback("Сейчас в плейлисте нечего показывать")
         LaunchedEffect(consecutiveEmptySkips) {
             delay(30_000)
             consecutiveEmptySkips = 0
@@ -359,7 +359,7 @@ internal fun RenderedItem(
     } else if (session.content.manifest.schemaVersion >= 13 && widget?.presentation?.kind == "web") {
         val descriptor = widget.presentation.web
         if (descriptor == null || descriptor.mode != "remote") {
-            failed("Web presentation is unavailable")
+            failed("Веб-презентация недоступна")
             return
         }
         val reloadInterval = descriptor.reload?.takeIf { it.mode == "periodic" }?.intervalSeconds
@@ -369,7 +369,7 @@ internal fun RenderedItem(
         }
     } else if (widget?.provider == "website") {
         val config = runCatching { Json.decodeFromJsonElement<WebsiteSourceConfig>(widget.configuration) }.getOrElse {
-            failed("Website widget configuration is invalid")
+            failed("Неверные настройки виджета «Сайт»")
             return
         }
         WebsiteItem(item, ManifestWebsite(widget.assetId, widget.name, config.url, config.allowedHosts, config.javascriptEnabled, config.domStorageEnabled, config.cookiePolicy, config.reloadPolicy, config.refreshIntervalSeconds, config.loadTimeoutSeconds, config.zoomPercent, config.scrollX, config.scrollY, config.customUserAgent, config.backgroundColor, config.failureBehavior, config.fallbackImageAssetId, config.fallbackVariantId), session, done, startOffsetMs, onFirstFrame) { status ->
@@ -378,7 +378,7 @@ internal fun RenderedItem(
         }
     } else if (widget?.provider == "youtube") {
         val config = runCatching { Json.decodeFromJsonElement<YouTubeSourceConfig>(widget.configuration) }.getOrElse {
-            failed("YouTube widget configuration is invalid")
+            failed("Неверные настройки виджета YouTube")
             return
         }
         YouTubeWidgetItem(item, widget, config, session, done, failed, onWidgetStatus, startOffsetMs)
@@ -422,12 +422,12 @@ private fun ImageItem(
                     ?: OkHttpClient().newCall(
                         Request.Builder().url(session.serverUrl + asset.downloadPath).header("Authorization", "Bearer ${session.credential}").build(),
                     ).execute().use { response ->
-                        if (!response.isSuccessful) error("Image stream unavailable")
+                        if (!response.isSuccessful) error("Поток изображений недоступен")
                         BitmapFactory.decodeStream(response.body?.byteStream())
                     }
             }
         }.getOrElse {
-            onFailure("Image could not be displayed")
+            onFailure("Не удалось показать изображение")
             return@LaunchedEffect
         }
         // Report progress periodically for the whole dwell, not just once at load: the stall
@@ -500,7 +500,7 @@ private fun VideoItem(
                 if (state == Player.STATE_ENDED && latestSynchronizedPosition.value == null) onDone()
             }
 
-            override fun onPlayerError(error: PlaybackException) { onFailure("Video playback failed") }
+            override fun onPlayerError(error: PlaybackException) { onFailure("Не удалось воспроизвести видео") }
 
             override fun onRenderedFirstFrame() { onFirstFrame() }
 
