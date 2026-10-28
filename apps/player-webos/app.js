@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.3.1";
+  var VERSION = "0.3.2";
   var VERSION_CODE = 6;
   var STORE = "tilecast.webos.";
   // Media is kept in memory between playlist cycles so a loop does not

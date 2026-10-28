@@ -1,6 +1,6 @@
 {
   "id": "org.tilecast.player.webos",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "vendor": "LSR signage",
   "type": "web",
   "main": "index.html",
