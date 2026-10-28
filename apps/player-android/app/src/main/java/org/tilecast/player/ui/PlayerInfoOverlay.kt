@@ -79,7 +79,7 @@ fun PlayerInfoOverlay(snapshot: () -> PlayerDiagnostics, measureLatency: suspend
 internal fun infoLines(info: PlayerDiagnostics, now: Instant): List<String> {
     val lines = mutableListOf<String>()
     val inventory = info.inventoryNumber?.takeIf { it.isNotBlank() }?.let { " · инв. № $it" }.orEmpty()
-    lines += "Экран: ${info.screenName ?: "не привязан"}$inventory · Tilecast ${info.playerVersion}"
+    lines += "Экран: ${info.screenName ?: "не привязан"}$inventory · LSR signage ${info.playerVersion}"
     val connection = if (info.connected) {
         "на связи ${DiagnosticsFormat.duration(info.connectedForMillis)}"
     } else {

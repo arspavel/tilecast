@@ -475,7 +475,7 @@
       },
       "setup": {
         "eyebrow": "Sports news",
-        "tip": "Choose an ESPN feed. Tilecast refreshes and caches it on the Server for offline playback."
+        "tip": "Choose an ESPN feed. LSR signage refreshes and caches it on the Server for offline playback."
       },
       "deprecation": {}
     },
@@ -618,9 +618,9 @@
         "eyebrow": "Public feed",
         "steps": [
           "Copy the provider's public RSS URL.",
-          "Paste it here; Tilecast validates and fetches it on the Server."
+          "Paste it here; LSR signage validates and fetches it on the Server."
         ],
-        "tip": "Feed images are not displayed until Tilecast can cache them through its managed asset pipeline."
+        "tip": "Feed images are not displayed until LSR signage can cache them through its managed asset pipeline."
       },
       "deprecation": {}
     },
@@ -759,7 +759,7 @@
       },
       "setup": {
         "eyebrow": "Public feed",
-        "tip": "Tilecast fetches, normalizes, and caches the feed on the Server."
+        "tip": "LSR signage fetches, normalizes, and caches the feed on the Server."
       },
       "deprecation": {}
     },
@@ -988,7 +988,7 @@
       },
       "setup": {
         "eyebrow": "Headline strip",
-        "tip": "Tilecast fetches the feed on the Server; Players only receive the normalized cached records."
+        "tip": "LSR signage fetches the feed on the Server; Players only receive the normalized cached records."
       },
       "deprecation": {}
     },

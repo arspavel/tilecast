@@ -31,7 +31,7 @@ func (s *server) configureGitHubOAuth(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, updates.ErrGitHubClientIDConnected):
 			writeError(w, http.StatusConflict, "github_client_id_connected", err.Error())
 		case errors.Is(err, updates.ErrGitHubAuthUnavailable):
-			writeError(w, http.StatusServiceUnavailable, "github_sign_in_unavailable", "This Tilecast server cannot use GitHub device authorization.")
+			writeError(w, http.StatusServiceUnavailable, "github_sign_in_unavailable", "This LSR signage server cannot use GitHub device authorization.")
 		default:
 			s.internalError(w, r, err)
 		}

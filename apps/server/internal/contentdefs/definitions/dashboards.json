@@ -65,7 +65,7 @@
           "Paste its HTTPS URL.",
           "Enter the URL's exact hostname or IP address to explicitly trust that destination."
         ],
-        "tip": "Self-hosted and private-network Grafana hosts are supported only when you explicitly trust the exact host. Tilecast cannot bypass Grafana authentication, CSP, or embedding policy."
+        "tip": "Self-hosted and private-network Grafana hosts are supported only when you explicitly trust the exact host. LSR signage cannot bypass Grafana authentication, CSP, or embedding policy."
       },
       "deprecation": {}
     },
@@ -281,7 +281,7 @@
       },
       "setup": {
         "eyebrow": "Airtable",
-        "tip": "Use the embed link from a public shared view. Tilecast cannot open private bases."
+        "tip": "Use the embed link from a public shared view. LSR signage cannot open private bases."
       },
       "deprecation": {}
     },

@@ -415,7 +415,7 @@ describe("Emergency Alerts plugin", () => {
         responseMode: "ticker",
         presentationMode: "builtin",
       }),
-    ).toBe("Tilecast live NWS ticker bar");
+    ).toBe("LSR signage live NWS ticker bar");
     expect(
       emergencyDisplayLabel({
         responseMode: "takeover",

@@ -330,7 +330,7 @@ export function OperationsDashboard() {
                 <CircleAlert size={20} aria-hidden="true" />
                 <strong>Не удалось получить состояние экранов</strong>
                 <span>
-                  Обновите страницу или проверьте связь с сервером Tilecast.
+                  Обновите страницу или проверьте связь с сервером LSR signage.
                 </span>
               </div>
             ) : attention.length === 0 ? (

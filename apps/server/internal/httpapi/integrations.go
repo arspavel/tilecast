@@ -178,7 +178,7 @@ func (s *server) createIntegrationToken(w http.ResponseWriter, r *http.Request) 
 		"token": token,
 		// Returned exactly once. No route reads it back.
 		"secret": secret,
-		"notice": "Copy this token now. Tilecast does not show it again. Anything it does is recorded as " +
+		"notice": "Copy this token now. LSR signage does not show it again. Anything it does is recorded as " +
 			user.Name + ", and it stops working if that account is removed.",
 	}})
 }

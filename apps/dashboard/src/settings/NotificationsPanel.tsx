@@ -95,8 +95,8 @@ export function NotificationsPanel({ manageable }: { manageable: boolean }) {
         <header>
           <h3>Email delivery</h3>
           <p>
-            Tilecast sends through an SMTP relay configured on the server, not
-            through an account in Studio.
+            LSR signage sends through an SMTP relay configured on the server,
+            not through an account in Studio.
           </p>
         </header>
         {status.isLoading ? (
@@ -174,8 +174,8 @@ export function NotificationsPanel({ manageable }: { manageable: boolean }) {
             <header>
               <h3>Recent deliveries</h3>
               <p>
-                What Tilecast tried to send, and what happened. A failure here
-                means the message did not arrive.
+                What LSR signage tried to send, and what happened. A failure
+                here means the message did not arrive.
               </p>
             </header>
             {deliveries.isLoading ? (
@@ -254,15 +254,15 @@ function WebhookSection({
       <header>
         <h3>Webhooks</h3>
         <p>
-          Tilecast posts signed JSON to a URL you control. Use a relay to reach
-          a chat service; Tilecast has no per-service integrations.
+          LSR signage posts signed JSON to a URL you control. Use a relay to
+          reach a chat service; LSR signage has no per-service integrations.
         </p>
       </header>
 
       {newSecret && (
         <div className="notice" role="status">
-          <strong>Copy this signing secret now.</strong> Tilecast does not show
-          it again, and there is no way to read it back.
+          <strong>Copy this signing secret now.</strong> LSR signage does not
+          show it again, and there is no way to read it back.
           <pre className="secret-value">{newSecret}</pre>
           Verify a request by computing{" "}
           <code>HMAC-SHA256(secret, timestamp + "." + body)</code> and comparing

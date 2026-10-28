@@ -226,7 +226,7 @@ func TestComposeEmailDigestGroupsAndOrdersBySeverity(t *testing.T) {
 }
 
 func TestBuildMIMEEscapesLeadingDotAndEncodesSubject(t *testing.T) {
-	from := mail.Address{Name: "Tilecast", Address: "signage@example.org"}
+	from := mail.Address{Name: "LSR signage", Address: "signage@example.org"}
 	to := mail.Address{Address: "caretaker@example.org"}
 	raw := string(buildMIME(from, to, Message{
 		Subject:  "Screen offline — Café",

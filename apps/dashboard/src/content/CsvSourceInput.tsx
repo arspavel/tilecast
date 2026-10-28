@@ -120,7 +120,7 @@ export function CsvSourceInput({
       return;
     }
     if (inspection.columns.length < 1) {
-      setError("Tilecast could not find any column names in the first row.");
+      setError("LSR signage could not find any column names in the first row.");
       return;
     }
     setError("");
@@ -281,7 +281,7 @@ export function CsvSourceInput({
       {mode === "url" && (
         <Field
           label="Direct CSV URL"
-          description="Tilecast refreshes a public HTTPS URL automatically. Use a direct CSV response, not a spreadsheet sharing page."
+          description="LSR signage refreshes a public HTTPS URL automatically. Use a direct CSV response, not a spreadsheet sharing page."
         >
           <Input
             type="url"

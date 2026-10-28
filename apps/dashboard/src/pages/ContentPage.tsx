@@ -2183,7 +2183,7 @@ export function WebsiteEditor({
               )
             }
           >
-            <option value="placeholder">Show Tilecast placeholder</option>
+            <option value="placeholder">Show LSR signage placeholder</option>
             <option value="last_success">Keep last rendered page</option>
             <option value="fallback_image">Show fallback image</option>
             <option value="skip">Skip item</option>

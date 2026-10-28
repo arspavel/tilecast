@@ -422,7 +422,7 @@ func urlUUID(w http.ResponseWriter, r *http.Request, name string) (uuid.UUID, bo
 func (s *server) writeDeviceError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, devices.ErrWrongInstallation):
-		writeError(w, http.StatusConflict, "installation_identity_mismatch", "The Tilecast server identity does not match.")
+		writeError(w, http.StatusConflict, "installation_identity_mismatch", "The LSR signage server identity does not match.")
 	case errors.Is(err, devices.ErrNotFound), errors.Is(err, devices.ErrInvalidCode):
 		writeError(w, http.StatusNotFound, "not_found", "The requested pairing or screen was not found.")
 	case errors.Is(err, devices.ErrExpired):

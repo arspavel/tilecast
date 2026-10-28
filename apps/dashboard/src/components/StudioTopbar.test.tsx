@@ -165,7 +165,7 @@ describe("StudioTopbar", () => {
 
     fireEvent.keyDown(document, { key: "k", metaKey: true });
     const searchInput = await screen.findByRole("combobox", {
-      name: "Search Tilecast",
+      name: "Search LSR signage",
     });
     fireEvent.change(searchInput, { target: { value: "Amazon" } });
     const result = await screen.findByRole("option", {
@@ -187,7 +187,7 @@ describe("StudioTopbar", () => {
     renderTopbar();
     await waitFor(() => expect(api.screens).toHaveBeenCalled());
 
-    fireEvent.click(screen.getByRole("button", { name: "Search Tilecast" }));
+    fireEvent.click(screen.getByRole("button", { name: "Search LSR signage" }));
 
     expect(
       await screen.findByText("Quick actions", {
@@ -206,9 +206,9 @@ describe("StudioTopbar", () => {
     renderTopbar();
     await waitFor(() => expect(api.screens).toHaveBeenCalled());
 
-    fireEvent.click(screen.getByRole("button", { name: "Search Tilecast" }));
+    fireEvent.click(screen.getByRole("button", { name: "Search LSR signage" }));
     const searchInput = await screen.findByRole("combobox", {
-      name: "Search Tilecast",
+      name: "Search LSR signage",
     });
     fireEvent.change(searchInput, { target: { value: "sync" } });
 

@@ -20,11 +20,11 @@ import (
 )
 
 func printUsage() {
-	fmt.Print(`Tilecast server
+	fmt.Print(`LSR signage server
 
 Usage:
-  tilecast                          Run the Tilecast server (default)
-  tilecast serve                    Run the Tilecast server
+  tilecast                          Run the LSR signage server (default)
+  tilecast serve                    Run the LSR signage server
   tilecast backup create            Create a full backup into TILECAST_BACKUP_ROOT
   tilecast backup verify <file>     Fully verify a backup archive
   tilecast backup inspect <file>    Show a backup archive's manifest
@@ -138,7 +138,7 @@ func cliBackupCreate(ctx context.Context, logger *slog.Logger) {
 		logger.Warn("backup finished but registering it in the catalog failed", "error", err)
 	}
 	fmt.Printf("\nBackup complete: %s (%d bytes)\n", result.Path, result.SizeBytes)
-	fmt.Printf("  Tilecast version: %s\n  Schema version: %d\n  Files: %d\n", result.Manifest.TilecastVersion, result.Manifest.SchemaVersion, len(result.Manifest.Files))
+	fmt.Printf("  LSR signage version: %s\n  Schema version: %d\n  Files: %d\n", result.Manifest.TilecastVersion, result.Manifest.SchemaVersion, len(result.Manifest.Files))
 }
 
 func registerCLIResult(ctx context.Context, service *backup.Service, result backup.CreateResult) error {
@@ -192,7 +192,7 @@ func printManifestSummary(manifest backup.Manifest, size int64) {
 	fmt.Printf("  Organization: %s\n", manifest.OrganizationName)
 	fmt.Printf("  Installation: %s\n", manifest.InstallationID)
 	fmt.Printf("  Created: %s\n", manifest.CreatedAt.Format("2006-01-02 15:04:05 MST"))
-	fmt.Printf("  Tilecast version: %s\n", manifest.TilecastVersion)
+	fmt.Printf("  LSR signage version: %s\n", manifest.TilecastVersion)
 	fmt.Printf("  Schema version: %d\n", manifest.SchemaVersion)
 	fmt.Printf("  Archive size: %d bytes\n", size)
 	fmt.Printf("  Components:\n")
@@ -260,7 +260,7 @@ func cliRestoreApply(ctx context.Context, logger *slog.Logger, args []string) {
 		cliFail("check server lock", err)
 	}
 	if !free && !*force {
-		cliFail("cannot restore", errors.New("the Tilecast server appears to be running; stop it first (or pass --force if you are certain it is stopped)"))
+		cliFail("cannot restore", errors.New("the LSR signage server appears to be running; stop it first (or pass --force if you are certain it is stopped)"))
 	}
 
 	plan, err := backup.Plan(ctx, db, path, cliLimits(cfg))

@@ -128,7 +128,7 @@ func (p *WorkerPool) fail(ctx context.Context, j job, cause error) {
 	if errors.Is(cause, ErrInspectionFailed) {
 		code = "media_inspection_failed"
 	}
-	safe := "Tilecast could not process this media file."
+	safe := "LSR signage could not process this media file."
 	status := "queued"
 	runAfter := time.Now().Add(time.Duration(j.Attempts*j.Attempts) * 5 * time.Second)
 	if j.Attempts >= j.MaxAttempts {

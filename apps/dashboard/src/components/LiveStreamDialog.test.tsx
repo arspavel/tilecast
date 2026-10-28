@@ -50,7 +50,9 @@ describe("LiveStreamDialog", () => {
       />,
     );
 
-    const image = await screen.findByAltText("Live Tilecast output from Lobby");
+    const image = await screen.findByAltText(
+      "Live LSR signage output from Lobby",
+    );
     expect(image.getAttribute("src")).toBe(
       "/api/v1/screens/screen-1/live-stream/session-1/mjpeg",
     );

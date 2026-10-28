@@ -252,7 +252,7 @@ export function EmergencyAlertsPage() {
           <header>
             <h3>Prepare automatic emergency content</h3>
             <p>
-              Tilecast can generate a fullscreen alert directly from live NWS
+              LSR signage can generate a fullscreen alert directly from live NWS
               data. A custom playlist remains optional for organizations with
               their own response content. This plugin configures automatic
               responses; a manual Takeover is the separate “show this now”
@@ -497,9 +497,9 @@ export function EmergencyAlertsPage() {
             <p>
               Event names match NWS wording exactly. Leave the field empty to
               match every event at or above the selected severity and urgency.
-              Tilecast's live fullscreen alert is the default; a ticker bar is
-              the alternative for alerts that should inform without interrupting
-              what is playing.
+              LSR signage's live fullscreen alert is the default; a ticker bar
+              is the alternative for alerts that should inform without
+              interrupting what is playing.
             </p>
           </header>
           <div className="takeover-rule-list">
@@ -610,10 +610,10 @@ export function EmergencyAlertsPage() {
                     }}
                   >
                     <option value="builtin">
-                      Tilecast live NWS alert — fullscreen
+                      LSR signage live NWS alert — fullscreen
                     </option>
                     <option value="ticker">
-                      Tilecast live NWS alert — ticker bar
+                      LSR signage live NWS alert — ticker bar
                     </option>
                     <option value="playlist">
                       Use a custom playlist — fullscreen
@@ -869,8 +869,8 @@ export const emergencyDisplayLabel = (
     "responseMode" | "presentationMode" | "playlistName"
   >,
 ) => {
-  if (rule.responseMode === "ticker") return "Tilecast live NWS ticker bar";
-  if (rule.presentationMode === "builtin") return "Tilecast live NWS alert";
+  if (rule.responseMode === "ticker") return "LSR signage live NWS ticker bar";
+  if (rule.presentationMode === "builtin") return "LSR signage live NWS alert";
   return rule.playlistName || "No playlist";
 };
 

@@ -7,7 +7,7 @@ import { MemoryRouter } from "react-router";
 import { SnapshotHistoryPanel } from "./SnapshotHistoryPanel";
 import { api } from "../api/client";
 
-const proofNote = "Captured from Tilecast Player.";
+const proofNote = "Captured from LSR signage Player.";
 
 function renderPanel() {
   const client = new QueryClient({

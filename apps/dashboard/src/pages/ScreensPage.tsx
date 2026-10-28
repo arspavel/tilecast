@@ -1196,7 +1196,7 @@ export function ScreenListContent({
         </span>
         <h3>No screens paired</h3>
         <p>
-          Install Tilecast Player on a TV device, connect it to this server,
+          Install LSR signage Player on a TV device, connect it to this server,
           then enter the pairing code shown on the TV.
         </p>
         {canManage ? (
@@ -2305,7 +2305,7 @@ export function PairScreenPage() {
         </span>
         <div>
           <h2>Pair a screen</h2>
-          <p>Enter the six-character code displayed by Tilecast Player.</p>
+          <p>Enter the six-character code displayed by LSR signage Player.</p>
         </div>
       </header>
       {error && (
@@ -2334,7 +2334,7 @@ export function PairScreenPage() {
       <div className="pair-help">
         <strong>On the TV</strong>
         <p>
-          Open Tilecast Player, connect to this server, and leave the pairing
+          Open LSR signage Player, connect to this server, and leave the pairing
           code visible while you approve it.
         </p>
       </div>
@@ -2443,8 +2443,8 @@ function ApprovalPanel({
           <p className="step-label">Pairing request</p>
           <h2>Review this player</h2>
           <p>
-            Confirm the device details before granting it an individual Tilecast
-            credential.
+            Confirm the device details before granting it an individual LSR
+            signage credential.
           </p>
         </div>
         <span className="expiry-label">
@@ -2786,7 +2786,7 @@ export function ScreenDetailPage() {
     mutationFn: () =>
       api.revokeScreen(
         id,
-        "Revoked in Tilecast Studio",
+        "Revoked in LSR signage",
         auth.status?.csrfToken ?? "",
       ),
     onSuccess: async () => {
@@ -3831,7 +3831,7 @@ export function ScreenDetailPage() {
                           Installs the player's own systemd user service so it
                           starts with the graphical session and restarts after
                           any exit. Setting up is safe while the player is
-                          running: Tilecast captures this AppImage's display,
+                          running: LSR signage captures this AppImage's display,
                           data directory, and server address, writes and enables
                           the service, and does not start a duplicate process.
                           The current manual process keeps running until the

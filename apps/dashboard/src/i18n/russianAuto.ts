@@ -29,8 +29,8 @@ export const russianAuto: Record<string, string> = {
   "A starter field is included": "Стартовое поле уже добавлено",
   "A web link.": "Веб-ссылка.",
   "A whole number.": "Целое число.",
-  "A wide organization logo for Tilecast Studio and supported player screens.":
-    "Широкий логотип организации для Tilecast Studio и поддерживаемых экранов-плееров.",
+  "A wide organization logo for LSR signage and supported player screens.":
+    "Широкий логотип организации для LSR signage и поддерживаемых экранов-плееров.",
   Acknowledge: "Взять в работу",
   "Active filters": "Активные фильтры",
   "Active incidents": "Активные инциденты",
@@ -97,8 +97,8 @@ export const russianAuto: Record<string, string> = {
   "Applies configured retention policies to eligible operational records.":
     "Применяет настроенные политики хранения к подходящим операционным записям.",
   "Applies to future processing only": "Применяется только к будущей обработке",
-  "Apply one change to many screens. Tilecast shows exactly what will change before anything happens, including screens pulled in by a Display Group.":
-    "Примените одно изменение к множеству экранов. Tilecast покажет, что именно изменится, до выполнения — включая экраны, добавленные группой экранов.",
+  "Apply one change to many screens. LSR signage shows exactly what will change before anything happens, including screens pulled in by a Display Group.":
+    "Примените одно изменение к множеству экранов. LSR signage покажет, что именно изменится, до выполнения — включая экраны, добавленные группой экранов.",
   "Approvals pages": "Страницы согласований",
   Approved: "Одобрено",
   "Arrange content on a presentation canvas":
@@ -143,8 +143,8 @@ export const russianAuto: Record<string, string> = {
     "Создавайте формы, управляйте ответами и делайте одобренные записи доступными для показа.",
   "Build the playback rule, then review its effect before saving.":
     "Постройте правило воспроизведения, затем проверьте его эффект перед сохранением.",
-  "Built-in Tilecast features that can affect Player behavior outside playlists and Layout zones.":
-    "Встроенные функции Tilecast, которые могут влиять на поведение плеера вне плейлистов и зон макета.",
+  "Built-in LSR signage features that can affect Player behavior outside playlists and Layout zones.":
+    "Встроенные функции LSR signage, которые могут влиять на поведение плеера вне плейлистов и зон макета.",
   "CA certificate": "Сертификат CA",
   "CSV connection": "Подключение CSV",
   "CSV connection type": "Тип подключения CSV",
@@ -380,8 +380,8 @@ export const russianAuto: Record<string, string> = {
   English: "Английский",
   "Enter an Android package name such as com.android.settings.":
     "Введите имя Android-пакета, например com.android.settings.",
-  "Enter the six-character code displayed by Tilecast Player.":
-    "Введите шестизначный код, показанный в Tilecast Player.",
+  "Enter the six-character code displayed by LSR signage Player.":
+    "Введите шестизначный код, показанный в LSR signage Player.",
   "Enterprise identity": "Корпоративная личность",
   "Every field below is part of the next immutable campaign release.":
     "Каждое поле ниже — часть следующего неизменяемого релиза кампании.",
@@ -501,8 +501,8 @@ export const russianAuto: Record<string, string> = {
   "Keep a set of screens on the same content, schedule, and playback position. Mirror groups preserve synchronized playback.":
     "Держите набор экранов на одном контенте, расписании и позиции воспроизведения. Зеркальные группы сохраняют синхронное воспроизведение.",
   "Label field": "Поле метки",
-  "Language used by Tilecast Studio in this browser.":
-    "Язык, используемый Tilecast Studio в этом браузере.",
+  "Language used by LSR signage in this browser.":
+    "Язык, используемый LSR signage в этом браузере.",
   "Large — 140px": "Крупно — 140px",
   "Last 24 hours": "Последние 24 часа",
   "Last 30 days": "Последние 30 дней",
@@ -597,8 +597,8 @@ export const russianAuto: Record<string, string> = {
   "Longest incident": "Самый долгий инцидент",
   "Lower padding gives the message and countdown more room.":
     "Нижние отступы дают сообщению и отсчёту больше места.",
-  "Maintain a small typed dataset directly in Tilecast Studio.":
-    "Ведите небольшой типизированный набор данных прямо в Tilecast Studio.",
+  "Maintain a small typed dataset directly in LSR signage.":
+    "Ведите небольшой типизированный набор данных прямо в LSR signage.",
   "Manage form": "Управление формой",
   "Manage screen sections": "Управление разделами экрана",
   Manifest: "Манифест",
@@ -760,16 +760,16 @@ export const russianAuto: Record<string, string> = {
     "Плееры ниже сейчас не сообщают об онлайн-подключении.",
   "Players install at or after this local time on each screen.":
     "Плееры устанавливают обновление в это местное время или позже на каждом экране.",
-  "Players with revoked pairings are retained for history but are detached from all live Tilecast configuration.":
-    "Плееры с отозванным подключением сохраняются для истории, но отсоединены от всей живой конфигурации Tilecast.",
+  "Players with revoked pairings are retained for history but are detached from all live LSR signage configuration.":
+    "Плееры с отозванным подключением сохраняются для истории, но отсоединены от всей живой конфигурации LSR signage.",
   "Playlist contents": "Содержимое плейлиста",
   "Playlist preview": "Предпросмотр плейлиста",
   "Playlist preview unavailable": "Предпросмотр плейлиста недоступен",
   "Playlist view": "Просмотр плейлиста",
   "Please try again.": "Пожалуйста, попробуйте ещё раз.",
   "Policy:": "Политика:",
-  "Portable, non-secret Tilecast configuration.":
-    "Переносимая, несекретная конфигурация Tilecast.",
+  "Portable, non-secret LSR signage configuration.":
+    "Переносимая, несекретная конфигурация LSR signage.",
   "Power off all": "Выключить питание у всех",
   "Power on all": "Включить питание у всех",
   "Preferred presentation gateway": "Предпочтительный шлюз презентации",
@@ -816,8 +816,8 @@ export const russianAuto: Record<string, string> = {
   "Record limit": "Лимит записей",
   "Recovered on their own": "Восстановились сами",
   "Recurring problems": "Повторяющиеся проблемы",
-  "Refresh the page or check the Tilecast server connection.":
-    "Обновите страницу или проверьте подключение к серверу Tilecast.",
+  "Refresh the page or check the LSR signage server connection.":
+    "Обновите страницу или проверьте подключение к серверу LSR signage.",
   "Relative, not decibels": "Относительное значение, не децибелы",
   Reliability: "Надёжность",
   "Reload settings": "Перезагрузить настройки",
@@ -1054,8 +1054,8 @@ export const russianAuto: Record<string, string> = {
     "Не удалось прочитать подключённые данные.",
   "The dependency graph could not be loaded.":
     "Не удалось загрузить граф зависимостей.",
-  "The full-screen image behind the Tilecast Studio sign-in panel.":
-    "Полноэкранное изображение за панелью входа Tilecast Studio.",
+  "The full-screen image behind the LSR signage sign-in panel.":
+    "Полноэкранное изображение за панелью входа LSR signage.",
   "The layout could not be created.": "Не удалось создать макет.",
   "The layout could not be deleted because it is still in use.":
     "Не удалось удалить макет, так как он ещё используется.",
@@ -1102,18 +1102,18 @@ export const russianAuto: Record<string, string> = {
   "This page could not be displayed.": "Не удалось отобразить эту страницу.",
   "This submission could not be loaded or you no longer have access to it.":
     "Не удалось загрузить эту заявку, или у вас больше нет к ней доступа.",
-  "Tilecast asks again before it issues codes.":
-    "Tilecast запрашивает подтверждение снова, прежде чем выдать коды.",
-  "Tilecast could not complete the request.":
-    "Tilecast не смог выполнить запрос.",
-  "Tilecast live NWS alert — fullscreen":
-    "Живое оповещение NWS в Tilecast — полноэкранное",
-  "Tilecast live NWS alert — ticker bar":
-    "Живое оповещение NWS в Tilecast — бегущая строка",
-  "Tilecast named this from the authenticator that created it.":
-    "Tilecast назвал это по аутентификатору, который его создал.",
-  "Tilecast refreshes a public HTTPS URL automatically. Use a direct CSV response, not a spreadsheet sharing page.":
-    "Tilecast автоматически обновляет публичный HTTPS-URL. Используйте прямой ответ CSV, а не страницу общего доступа к таблице.",
+  "LSR signage asks again before it issues codes.":
+    "LSR signage запрашивает подтверждение снова, прежде чем выдать коды.",
+  "LSR signage could not complete the request.":
+    "LSR signage не смог выполнить запрос.",
+  "LSR signage live NWS alert — fullscreen":
+    "Живое оповещение NWS в LSR signage — полноэкранное",
+  "LSR signage live NWS alert — ticker bar":
+    "Живое оповещение NWS в LSR signage — бегущая строка",
+  "LSR signage named this from the authenticator that created it.":
+    "LSR signage назвал это по аутентификатору, который его создал.",
+  "LSR signage refreshes a public HTTPS URL automatically. Use a direct CSV response, not a spreadsheet sharing page.":
+    "LSR signage автоматически обновляет публичный HTTPS-URL. Используйте прямой ответ CSV, а не страницу общего доступа к таблице.",
   "Time too loud": "Время «слишком шумно»",
   "Timed bars run independently of the playlist and keep evaluating from the Player's cached manifest.":
     "Панели по времени работают независимо от плейлиста и продолжают вычисляться из кэшированного манифеста плеера.",
@@ -1151,8 +1151,8 @@ export const russianAuto: Record<string, string> = {
     "До остановки (предельный срок безопасности 24 часа)",
   "Up to date": "Актуально",
   Updates: "Обновления",
-  "Upload a CSV or connect a hosted CSV, map its columns, and preview the rows Tilecast will cache.":
-    "Загрузите CSV или подключите размещённый CSV, сопоставьте его столбцы и просмотрите строки, которые Tilecast закэширует.",
+  "Upload a CSV or connect a hosted CSV, map its columns, and preview the rows LSR signage will cache.":
+    "Загрузите CSV или подключите размещённый CSV, сопоставьте его столбцы и просмотрите строки, которые LSR signage закэширует.",
   "Upload failed.": "Не удалось загрузить.",
   "Upload limits, delivery defaults, and future media-processing behavior.":
     "Лимиты загрузки, значения доставки по умолчанию и будущее поведение обработки медиа.",
@@ -1175,8 +1175,8 @@ export const russianAuto: Record<string, string> = {
     "Используется для поиска этого виджета в контенте и плейлистах.",
   "Value field": "Поле значения",
   "Verification code": "Код подтверждения",
-  "Verified Tilecast Player releases and update deployments.":
-    "Проверенные релизы Tilecast Player и развёртывания обновлений.",
+  "Verified LSR signage Player releases and update deployments.":
+    "Проверенные релизы LSR signage Player и развёртывания обновлений.",
   "Verify an archive before relying on it or starting a restore.":
     "Проверьте архив, прежде чем полагаться на него или начинать восстановление.",
   "Video transport": "Транспорт видео",
@@ -1194,8 +1194,8 @@ export const russianAuto: Record<string, string> = {
   "Watch live": "Смотреть вживую",
   "Watch official NWS weather alerts and take matching screens over automatically, then restore normal playback when the alert clears.":
     "Отслеживайте официальные погодные оповещения NWS и автоматически перехватывайте подходящие экраны, затем восстанавливайте обычное воспроизведение, когда оповещение снимается.",
-  "What Tilecast tells you about when you are not looking at Studio.":
-    "О чём Tilecast сообщает вам, когда вы не смотрите в Studio.",
+  "What LSR signage tells you about when you are not looking at Studio.":
+    "О чём LSR signage сообщает вам, когда вы не смотрите в Studio.",
   "Where the red zone begins and the bar can appear.":
     "Где начинается красная зона и может появиться панель.",
   "Where the yellow zone begins. The bar also hides below this level.":

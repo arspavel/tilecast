@@ -18,7 +18,7 @@ func (s *server) alertZones(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnprocessableEntity, "alert_area_invalid", err.Error())
 		return
 	} else if err != nil {
-		writeError(w, http.StatusBadGateway, "nws_zones_unavailable", "Tilecast could not retrieve NWS counties and forecast zones.")
+		writeError(w, http.StatusBadGateway, "nws_zones_unavailable", "LSR signage could not retrieve NWS counties and forecast zones.")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": map[string]any{"items": zones}})
@@ -72,7 +72,7 @@ func (s *server) updateAlertMonitor(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) pollAlerts(w http.ResponseWriter, r *http.Request) {
 	if err := s.alerts.Poll(r.Context()); err != nil {
-		writeError(w, http.StatusBadGateway, "nws_poll_failed", "Tilecast could not retrieve active NWS alerts.")
+		writeError(w, http.StatusBadGateway, "nws_poll_failed", "LSR signage could not retrieve active NWS alerts.")
 		return
 	}
 	s.alertSettings(w, r)

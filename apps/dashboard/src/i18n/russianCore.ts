@@ -51,26 +51,26 @@ export const russianCore: Record<string, string> = {
   "Installation health and current player status":
     "Состояние установки и проигрывателей",
   "Set up GitHub connection": "Настройка подключения к GitHub",
-  "Create one GitHub OAuth App for this Tilecast installation. Tilecast only needs the public Client ID; do not create or paste a client secret.":
-    "Создайте одно приложение GitHub OAuth для этой установки Tilecast. Нужен только публичный Client ID; не создавайте и не вставляйте секрет клиента.",
+  "Create one GitHub OAuth App for this LSR signage installation. LSR signage only needs the public Client ID; do not create or paste a client secret.":
+    "Создайте одно приложение GitHub OAuth для этой установки LSR signage. Нужен только публичный Client ID; не создавайте и не вставляйте секрет клиента.",
   "Create the OAuth App": "Создайте приложение OAuth",
   "Open GitHub Developer Settings and register a new OAuth App.":
     "Откройте настройки разработчика GitHub и зарегистрируйте новое приложение OAuth.",
   "Open GitHub OAuth Apps": "Открыть приложения GitHub OAuth",
   "Enter these exact values": "Введите эти значения",
-  "GitHub requires a callback URL even though Tilecast signs in through Device Flow.":
-    "GitHub требует URL обратного вызова, хотя Tilecast использует Device Flow.",
+  "GitHub requires a callback URL even though LSR signage signs in through Device Flow.":
+    "GitHub требует URL обратного вызова, хотя LSR signage использует Device Flow.",
   "Application name": "Название приложения",
   "Homepage URL": "URL главной страницы",
   "Authorization callback URL": "URL обратного вызова авторизации",
   "Turn on Enable Device Flow before registering the application.":
     "Перед регистрацией приложения включите Enable Device Flow.",
   "Paste the Client ID": "Вставьте Client ID",
-  "After GitHub registers the app, copy its Client ID and paste it below. Tilecast saves it in persistent application data and then starts sign-in immediately.":
-    "После регистрации приложения скопируйте Client ID и вставьте его ниже. Tilecast сохранит его и сразу начнёт вход.",
+  "After GitHub registers the app, copy its Client ID and paste it below. LSR signage saves it in persistent application data and then starts sign-in immediately.":
+    "После регистрации приложения скопируйте Client ID и вставьте его ниже. LSR signage сохранит его и сразу начнёт вход.",
   "GitHub Client ID": "Client ID GitHub",
   "Save and connect": "Сохранить и подключить",
-  "Authorize Tilecast on GitHub": "Авторизовать Tilecast в GitHub",
+  "Authorize LSR signage on GitHub": "Авторизовать LSR signage в GitHub",
   Data: "Данные",
   "My Account": "Моя учётная запись",
   "My Forms": "Мои формы",
@@ -430,12 +430,12 @@ export const russianCore: Record<string, string> = {
   "Pairing request": "Запрос на подключение",
   "Pairing destination": "Назначение подключения",
   "Waiting for approval": "Ожидает подтверждения",
-  "Enter the six-character code displayed by Tilecast Player.":
-    "Введите шестизначный код, показанный в Tilecast Player.",
-  "Install Tilecast Player on a TV device, connect it to this server, then enter the pairing code shown on the TV.":
-    "Установите Tilecast Player на телевизор, подключите его к серверу и введите код с экрана телевизора.",
-  "Confirm the device details before granting it an individual Tilecast credential.":
-    "Проверьте сведения об устройстве перед выдачей учётных данных Tilecast.",
+  "Enter the six-character code displayed by LSR signage Player.":
+    "Введите шестизначный код, показанный в LSR signage Player.",
+  "Install LSR signage Player on a TV device, connect it to this server, then enter the pairing code shown on the TV.":
+    "Установите LSR signage Player на телевизор, подключите его к серверу и введите код с экрана телевизора.",
+  "Confirm the device details before granting it an individual LSR signage credential.":
+    "Проверьте сведения об устройстве перед выдачей учётных данных LSR signage.",
   "An Owner or Administrator can approve new screens.":
     "Новые экраны может подтверждать владелец или администратор.",
   "Editors and Viewers can monitor screens but cannot approve or reject pairing requests.":

@@ -347,7 +347,7 @@ function InterfaceLanguageSetting() {
     <div className="setting-row">
       <div className="setting-copy">
         <label htmlFor="interface-language">Interface language</label>
-        <p>Language used by Tilecast Studio in this browser.</p>
+        <p>Language used by LSR signage in this browser.</p>
       </div>
       <div className="setting-control">
         <select
@@ -423,11 +423,11 @@ function BrandingPreview({ values }: { values: Record<string, unknown> }) {
               "Экран готов к показу контента.",
             )}
           </span>
-          <small>{text(values["branding.footer_text"], "Tilecast")}</small>
+          <small>{text(values["branding.footer_text"], "LSR signage")}</small>
         </div>
       </div>
       <p>
-        Takeover keeps Tilecast’s fixed high-contrast treatment regardless of
+        Takeover keeps LSR signage’s fixed high-contrast treatment regardless of
         custom branding.
       </p>
     </div>

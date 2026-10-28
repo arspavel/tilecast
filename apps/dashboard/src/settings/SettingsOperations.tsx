@@ -110,7 +110,7 @@ export function SystemPanel({ canManage }: { canManage: boolean }) {
         ) : (
           <dl className="system-settings-grid">
             <Item
-              label="Tilecast"
+              label="LSR signage"
               value={`${s.tilecastVersion} · ${s.buildCommit}`}
             />
             <Item label="Uptime" value={formatDuration(s.uptimeSeconds)} />
@@ -232,8 +232,8 @@ export function ImportExportPanel({ owner }: { owner: boolean }) {
         <header>
           <h3>Import settings</h3>
           <p>
-            Tilecast validates the document and shows a preview before anything
-            changes.
+            LSR signage validates the document and shows a preview before
+            anything changes.
           </p>
         </header>
         <label className="file-input">
@@ -469,7 +469,7 @@ export function PlayerUpdatesPanel({
       api.createUpdateDeployment(
         {
           releaseId,
-          name: `Tilecast Player ${releases.data?.items?.find((item) => item.id === releaseId)?.versionName ?? "update"}`,
+          name: `LSR signage Player ${releases.data?.items?.find((item) => item.id === releaseId)?.versionName ?? "update"}`,
           mode,
           screenIds,
           groupIds,
@@ -707,8 +707,8 @@ export function PlayerUpdatesPanel({
               variant="danger"
               title="Player update verification is not configured."
             >
-              Set <code>TILECAST_UPDATE_MANIFEST_PUBLIC_KEY</code> on the
-              Tilecast server to the public Ed25519 key used by the Player
+              Set <code>TILECAST_UPDATE_MANIFEST_PUBLIC_KEY</code> on the LSR
+              signage server to the public Ed25519 key used by the Player
               release workflow, then restart the server.
             </Notice>
           )}
@@ -740,7 +740,7 @@ export function PlayerUpdatesPanel({
               `Releases could not be loaded. ${mutationError(releases.error)}`
             ) : platform === "windows" ? (
               <>
-                <strong>Tilecast Player для Windows 0.18.0</strong>
+                <strong>LSR signage Player для Windows 0.18.0</strong>
                 <p>
                   Windows-клиент устанавливается локально. Удалённое обновление
                   будет добавлено после реализации безопасной замены работающего
@@ -756,11 +756,11 @@ export function PlayerUpdatesPanel({
               </>
             ) : platform === "webos" ? (
               <>
-                <strong>Tilecast Player для LG webOS Signage</strong>
+                <strong>LSR signage Player для LG webOS Signage</strong>
                 <p>
                   Рекомендуемый вариант — запуск плеера через URL. Он не требует
                   установки IPK и автоматически получает обновления с сервера
-                  Tilecast.
+                  LSR signage.
                 </p>
                 <p>
                   На панели откройте{" "}
@@ -794,7 +794,7 @@ export function PlayerUpdatesPanel({
                 </p>
               </>
             ) : (
-              `No ${platformLabel} Player releases have been imported. Tilecast checks GitHub automatically; use Sync from GitHub to retry immediately.`
+              `No ${platformLabel} Player releases have been imported. LSR signage checks GitHub automatically; use Sync from GitHub to retry immediately.`
             )}
           </div>
         ) : (
@@ -978,7 +978,7 @@ export function PlayerUpdatesPanel({
                     variant="warning"
                     title="This release was uploaded directly."
                   >
-                    Tilecast cannot download it again. Deploying it later
+                    LSR signage cannot download it again. Deploying it later
                     requires uploading the same signed release once more.
                   </Notice>
                 )}
@@ -1525,8 +1525,8 @@ function PlayerReleaseUpload({
           Upload signed {platform === "android" ? "Android" : "Linux"} release
         </h4>
         <p>
-          All three files are verified before the {artifactLabel} enters
-          Tilecast&apos;s private update cache.
+          All three files are verified before the {artifactLabel} enters LSR
+          signage&apos;s private update cache.
         </p>
       </div>
       <label

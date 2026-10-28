@@ -24,7 +24,7 @@
           {
             "key": "sheetGid",
             "label": "Sheet tab ID",
-            "description": "Optional numeric gid from the sheet URL. Tilecast also detects #gid= automatically.",
+            "description": "Optional numeric gid from the sheet URL. LSR signage also detects #gid= automatically.",
             "control": "text",
             "maxLength": 20,
             "default": ""
@@ -170,7 +170,7 @@
           "Publish the presentation to the web or enable public view access.",
           "Paste the normal Google Slides URL."
         ],
-        "tip": "Tilecast converts supported links to Google's presentation embed URL."
+        "tip": "LSR signage converts supported links to Google's presentation embed URL."
       },
       "deprecation": {}
     },
@@ -178,7 +178,7 @@
       "id": "google-sheets-data",
       "version": 1,
       "name": "Google Sheets Data",
-      "description": "Read published spreadsheet rows as structured Tilecast records.",
+      "description": "Read published spreadsheet rows as structured LSR signage records.",
       "category": "Google",
       "icon": "google-sheets",
       "kind": "app",

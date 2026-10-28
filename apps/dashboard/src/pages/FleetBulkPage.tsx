@@ -112,7 +112,7 @@ export function FleetBulkPage() {
     <div className="bulk-page">
       <PageHeader
         title="Bulk changes"
-        description="Apply one change to many screens. Tilecast shows exactly what will change before anything happens, including screens pulled in by a Display Group."
+        description="Apply one change to many screens. LSR signage shows exactly what will change before anything happens, including screens pulled in by a Display Group."
       />
       <ScreenManagementTabs current="bulk" />
 

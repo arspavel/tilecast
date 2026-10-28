@@ -31,8 +31,8 @@ export const russianFinal: Record<string, string> = {
   "Regional formats": "Региональные форматы",
   "Support details": "Контакты поддержки",
   "Organization name": "Название организации",
-  "Name shown throughout Tilecast Studio":
-    "Название, отображаемое во всём Tilecast Studio",
+  "Name shown throughout LSR signage":
+    "Название, отображаемое во всём LSR signage",
   "Short name": "Краткое название",
   "Compact organization name": "Сокращённое название организации",
   "Default timezone": "Часовой пояс по умолчанию",
@@ -117,8 +117,8 @@ export const russianFinal: Record<string, string> = {
     "Публиковать сразу или в запрошенное время после согласования материала.",
   "Require multi-factor authentication":
     "Требовать многофакторную аутентификацию",
-  "Accounts in scope must enroll an authenticator app or a passkey before they can use Tilecast Studio.":
-    "Выбранные учётные записи должны настроить приложение-аутентификатор или ключ доступа перед использованием Tilecast Studio.",
+  "Accounts in scope must enroll an authenticator app or a passkey before they can use LSR signage.":
+    "Выбранные учётные записи должны настроить приложение-аутентификатор или ключ доступа перед использованием LSR signage.",
   Logo: "Логотип",
   "Square icon": "Квадратный значок",
   "Primary color": "Основной цвет",
@@ -179,18 +179,18 @@ export const russianFinal: Record<string, string> = {
   "Choose what remains visible when the player is outside active hours and the display does not sleep.":
     "Выберите, что показывать вне часов работы, если дисплей не переходит в спящий режим.",
   "Custom text": "Собственный текст",
-  "Centered text shown outside active hours. When empty, Tilecast uses the branding footer text.":
+  "Centered text shown outside active hours. When empty, LSR signage uses the branding footer text.":
     "Текст по центру экрана вне часов работы. Если поле пустое, используется текст из оформления.",
   "Lock task": "Закрепление приложения",
   "Block overlays where supported": "Блокировать наложения, где поддерживается",
   "Allow Settings during maintenance": "Разрешать настройки при обслуживании",
   "Maintenance session duration": "Длительность сеанса обслуживания",
   "Kiosk fullscreen": "Полноэкранный киоск",
-  "Keeps Tilecast in a frameless fullscreen kiosk window on Linux. TILECAST_WINDOWED=1 remains a local development override.":
-    "Запускает Tilecast в полноэкранном окне без рамки в Linux. TILECAST_WINDOWED=1 остаётся локальной настройкой разработки.",
+  "Keeps LSR signage in a frameless fullscreen kiosk window on Linux. TILECAST_WINDOWED=1 remains a local development override.":
+    "Запускает LSR signage в полноэкранном окне без рамки в Linux. TILECAST_WINDOWED=1 остаётся локальной настройкой разработки.",
   "Prevent display sleep": "Запретить отключение дисплея",
-  "Asks the Linux desktop session to keep the display awake while Tilecast Player is running.":
-    "Запрещает отключение дисплея Linux во время работы Tilecast Player.",
+  "Asks the Linux desktop session to keep the display awake while LSR signage Player is running.":
+    "Запрещает отключение дисплея Linux во время работы LSR signage Player.",
   "Accessibility Control Assist":
     "Помощник управления специальных возможностей",
   "Hardened players request this behavior by default, but the Android service still requires deliberate local enablement.":
@@ -281,9 +281,9 @@ export const russianFinal: Record<string, string> = {
   Grid: "Плитка",
   List: "Список",
   "Organization default": "По настройкам организации",
-  "Tilecast placeholder": "Заглушка Tilecast",
+  "LSR signage placeholder": "Заглушка LSR signage",
   "Reload on an interval": "Перезагружать с интервалом",
-  "Bouncing Tilecast logo": "Движущийся логотип Tilecast",
+  "Bouncing LSR signage logo": "Движущийся логотип LSR signage",
   "Black screen": "Чёрный экран",
   "Playback defaults": "Настройки воспроизведения по умолчанию",
   "Storage and delivery": "Хранение и доставка",

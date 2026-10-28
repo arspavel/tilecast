@@ -8,8 +8,8 @@
  */
 export const russianExtended: Record<string, string> = {
   "Interface language": "Язык интерфейса",
-  "Language used by Tilecast Studio in this browser.":
-    "Язык интерфейса Tilecast Studio в этом браузере.",
+  "Language used by LSR signage in this browser.":
+    "Язык интерфейса LSR signage в этом браузере.",
   // Screens, pairing, playback and device management.
   ") is selected": ") выбран(о)",
   "1 hour": "1 час",
@@ -65,8 +65,8 @@ export const russianExtended: Record<string, string> = {
   "Manage screen": "Управление экраном",
   "No presentation assigned": "Презентация не назначена",
   "On the TV": "На телевизоре",
-  "Open Tilecast Player, connect to this server, and leave the pairing code visible while you approve it.":
-    "Откройте Tilecast Player, подключитесь к этому серверу и оставьте код подключения на экране до подтверждения.",
+  "Open LSR signage Player, connect to this server, and leave the pairing code visible while you approve it.":
+    "Откройте LSR signage Player, подключитесь к этому серверу и оставьте код подключения на экране до подтверждения.",
   "Open details": "Открыть сведения",
   Paired: "Подключён",
   Playback: "Воспроизведение",
@@ -192,7 +192,7 @@ export const russianExtended: Record<string, string> = {
   "SHA-256": "SHA-256",
   "Save website": "Сохранить веб-сайт",
   "Select page": "Выбрать страницу",
-  "Show Tilecast placeholder": "Показать заглушку Tilecast",
+  "Show LSR signage placeholder": "Показать заглушку LSR signage",
   "Show fallback image": "Показать резервное изображение",
   "Skip item": "Пропустить элемент",
   "Tag name": "Название метки",
@@ -299,10 +299,10 @@ export const russianExtended: Record<string, string> = {
   "The release could not be cached.": "Не удалось сохранить выпуск в кэше.",
   "The release could not be removed.": "Не удалось удалить выпуск.",
   "This release was uploaded directly.": "Этот выпуск загружен напрямую.",
-  "Tilecast cannot download it again. Deploying it later requires uploading the same signed release once more.":
-    "Tilecast не сможет скачать его повторно. Для будущего развёртывания потребуется снова загрузить тот же подписанный выпуск.",
-  "Tilecast validates the document and shows a preview before anything changes.":
-    "Tilecast проверит документ и покажет предпросмотр до применения изменений.",
+  "LSR signage cannot download it again. Deploying it later requires uploading the same signed release once more.":
+    "LSR signage не сможет скачать его повторно. Для будущего развёртывания потребуется снова загрузить тот же подписанный выпуск.",
+  "LSR signage validates the document and shows a preview before anything changes.":
+    "LSR signage проверит документ и покажет предпросмотр до применения изменений.",
   "Upload a signed release directly or optionally synchronize from":
     "Загрузите подписанный выпуск напрямую или синхронизируйте его из",
   "Upload release": "Загрузить выпуск",
@@ -313,15 +313,15 @@ export const russianExtended: Record<string, string> = {
   Verifying: "Проверка",
   "Waiting for authorization…": "Ожидание авторизации…",
   "What this needs": "Что для этого требуется",
-  "enters Tilecast&apos;s private update cache.":
-    "попадёт в закрытый кэш обновлений Tilecast.",
+  "enters LSR signage&apos;s private update cache.":
+    "попадёт в закрытый кэш обновлений LSR signage.",
   "group policies and": "групповые политики и",
   "of server storage.": "хранилища сервера.",
   offline: "не в сети",
   "offline and will update after reconnecting.":
     "не в сети и обновятся после повторного подключения.",
-  "on the Tilecast server to the public Ed25519 key used by the Player release workflow, then restart the server.":
-    "на сервере Tilecast равным открытому ключу Ed25519 для выпусков проигрывателя, затем перезапустите сервер.",
+  "on the LSR signage server to the public Ed25519 key used by the Player release workflow, then restart the server.":
+    "на сервере LSR signage равным открытому ключу Ed25519 для выпусков проигрывателя, затем перезапустите сервер.",
   "or choose all three files": "или выберите все три файла",
   release: "выпуск",
   releases: "выпуски",
@@ -361,8 +361,8 @@ export const russianExtended: Record<string, string> = {
     "Указанные ниже проигрыватели сейчас не сообщают о подключении.",
   "Published player releases appear in the update center.":
     "Опубликованные выпуски проигрывателя появляются в центре обновлений.",
-  "Refresh the page or check the Tilecast server connection.":
-    "Обновите страницу или проверьте подключение к серверу Tilecast.",
+  "Refresh the page or check the LSR signage server connection.":
+    "Обновите страницу или проверьте подключение к серверу LSR signage.",
   Release: "Выпуск",
   "Schedules could not be loaded": "Не удалось загрузить расписания",
   Succeeded: "Успешно",
@@ -394,8 +394,8 @@ export const russianExtended: Record<string, string> = {
   "Player preview": "Предпросмотр проигрывателя",
   "Start and end times are identical. Choose a distinct range; an earlier end time is treated as overnight.":
     "Время начала и окончания совпадает. Выберите другой диапазон; более раннее время окончания считается переходом через полночь.",
-  "Takeover keeps Tilecast’s fixed high-contrast treatment regardless of custom branding.":
-    "Временный показ использует фиксированное контрастное оформление Tilecast независимо от фирменного оформления.",
+  "Takeover keeps LSR signage’s fixed high-contrast treatment regardless of custom branding.":
+    "Временный показ использует фиксированное контрастное оформление LSR signage независимо от фирменного оформления.",
   "The review queue": "Очередь проверки",
   "plugin. The defaults below apply to a Takeover started by hand and to player commands.":
     "плагине. Настройки ниже применяются к запущенному вручную временному показу и командам проигрывателя.",
@@ -430,8 +430,8 @@ export const russianExtended: Record<string, string> = {
   "No passkeys": "Нет ключей доступа",
   Passkeys: "Ключи доступа",
   "Recovery codes": "Коды восстановления",
-  "Save them somewhere safe now. Tilecast stores only their hashes and cannot show them again.":
-    "Сохраните их сейчас в безопасном месте. Tilecast хранит только хэши и не сможет показать коды снова.",
+  "Save them somewhere safe now. LSR signage stores only their hashes and cannot show them again.":
+    "Сохраните их сейчас в безопасном месте. LSR signage хранит только хэши и не сможет показать коды снова.",
   "Scan the code with your authenticator app, then enter the six-digit code it shows.":
     "Отсканируйте код приложением-аутентификатором и введите показанный шестизначный код.",
   "Set up": "Настроить",
@@ -443,8 +443,8 @@ export const russianExtended: Record<string, string> = {
   "Back to sign in": "Вернуться ко входу",
   "Create the first owner account for this installation.":
     "Создайте первую учётную запись владельца этой установки.",
-  "Manage your Tilecast displays.": "Управляйте экранами Tilecast.",
-  "Set up Tilecast": "Настроить Tilecast",
+  "Manage your LSR signage displays.": "Управляйте экранами LSR signage.",
+  "Set up LSR signage": "Настроить LSR signage",
   "Sign in with a passkey": "Войти с ключом доступа",
   "Use a passkey": "Использовать ключ доступа",
   or: "или",
@@ -453,10 +453,10 @@ export const russianExtended: Record<string, string> = {
   "Add your authenticator app": "Добавьте приложение-аутентификатор",
   "Confirm and continue": "Подтвердить и продолжить",
   "Creating a secret…": "Создание секрета…",
-  "Enter Tilecast Studio": "Перейти в Tilecast Studio",
+  "Enter LSR signage": "Перейти в LSR signage",
   "Generate codes": "Создать коды",
-  "Next time you sign in, Tilecast asks for your second step after your password. You can change any of this from My Account.":
-    "При следующем входе после пароля Tilecast запросит второй этап. Изменить его можно в разделе «Моя учётная запись».",
+  "Next time you sign in, LSR signage asks for your second step after your password. You can change any of this from My Account.":
+    "При следующем входе после пароля LSR signage запросит второй этап. Изменить его можно в разделе «Моя учётная запись».",
   "Not now": "Не сейчас",
   "Preparing your account…": "Подготовка учётной записи…",
   "Save your recovery codes": "Сохраните коды восстановления",
@@ -469,13 +469,13 @@ export const russianExtended: Record<string, string> = {
     "Не удалось загрузить настройки безопасности входа. Обновите страницу и повторите попытку.",
   "Skip for now": "Пропустить пока",
   Step: "Шаг",
-  "These are how you get back in if you lose your phone. Tilecast has no email reset, so keep them somewhere you can reach without this account.":
-    "С их помощью можно войти при потере телефона. В Tilecast нет сброса по электронной почте, поэтому храните их в доступном без этой учётной записи месте.",
+  "These are how you get back in if you lose your phone. LSR signage has no email reset, so keep them somewhere you can reach without this account.":
+    "С их помощью можно войти при потере телефона. В LSR signage нет сброса по электронной почте, поэтому храните их в доступном без этой учётной записи месте.",
   "This organization asks for a second step when you sign in. Setting it up takes about two minutes, and you only do it once.":
     "Для входа в этой организации требуется второй этап. Настройка занимает около двух минут и выполняется один раз.",
-  "Tilecast stores only their hashes and cannot show them again. Each code works one time.":
-    "Tilecast хранит только хэши и не сможет показать коды снова. Каждый код действует один раз.",
-  "Welcome to Tilecast Studio": "Добро пожаловать в Tilecast Studio",
+  "LSR signage stores only their hashes and cannot show them again. Each code works one time.":
+    "LSR signage хранит только хэши и не сможет показать коды снова. Каждый код действует один раз.",
+  "Welcome to LSR signage": "Добро пожаловать в LSR signage",
   "Appearance and workflow settings, stored with your account rather than this browser.":
     "Настройки оформления и рабочего процесса, сохранённые в учётной записи, а не в этом браузере.",
   "Signed in as": "Выполнен вход как",
@@ -508,17 +508,17 @@ export const russianExtended: Record<string, string> = {
   "Select none to receive every category.":
     "Не выбирайте ничего, чтобы получать все категории.",
   Test: "Проверить",
-  "Tilecast does not show it again, and there is no way to read it back.":
-    "Tilecast не покажет его повторно, и прочитать его впоследствии невозможно.",
-  "Tilecast posts signed JSON to a URL you control. Use a relay to reach a chat service; Tilecast has no per-service integrations.":
-    "Tilecast отправляет подписанный JSON на указанный вами URL. Для доставки в чат используйте промежуточный сервис; отдельных интеграций с чатами в Tilecast нет.",
-  "Tilecast sends through an SMTP relay configured on the server, not through an account in Studio.":
-    "Tilecast отправляет почту через настроенный на сервере SMTP, а не через учётную запись Studio.",
+  "LSR signage does not show it again, and there is no way to read it back.":
+    "LSR signage не покажет его повторно, и прочитать его впоследствии невозможно.",
+  "LSR signage posts signed JSON to a URL you control. Use a relay to reach a chat service; LSR signage has no per-service integrations.":
+    "LSR signage отправляет подписанный JSON на указанный вами URL. Для доставки в чат используйте промежуточный сервис; отдельных интеграций с чатами в LSR signage нет.",
+  "LSR signage sends through an SMTP relay configured on the server, not through an account in Studio.":
+    "LSR signage отправляет почту через настроенный на сервере SMTP, а не через учётную запись Studio.",
   URL: "URL",
   "Verify a request by computing": "Проверьте запрос, вычислив",
   Webhooks: "Вебхуки",
-  "What Tilecast tried to send, and what happened. A failure here means the message did not arrive.":
-    "Что Tilecast пытался отправить и с каким результатом. Ошибка здесь означает, что сообщение не доставлено.",
+  "What LSR signage tried to send, and what happened. A failure here means the message did not arrive.":
+    "Что LSR signage пытался отправить и с каким результатом. Ошибка здесь означает, что сообщение не доставлено.",
   "and comparing it with the": "и сравнив результат с заголовком",
   "header. Reject a request whose": "Отклоняйте запрос, если его",
   "is not recent.": "имеет устаревшее значение.",
@@ -710,8 +710,8 @@ export const russianExtended: Record<string, string> = {
     "Использование Open-Meteo этой установкой является некоммерческим",
   "This week": "На этой неделе",
   Ticker: "Бегущая строка",
-  "Tilecast fetches and sanitizes public iCalendar feeds for native playback.":
-    "Tilecast получает и очищает публичные ленты iCalendar для встроенного воспроизведения.",
+  "LSR signage fetches and sanitizes public iCalendar feeds for native playback.":
+    "LSR signage получает и очищает публичные ленты iCalendar для встроенного воспроизведения.",
   Title: "Заголовок",
   Today: "Сегодня",
   Tomorrow: "Завтра",
@@ -854,8 +854,8 @@ export const russianExtended: Record<string, string> = {
   "Target date and time": "Целевая дата и время",
   "Text and accent color": "Цвет текста и акцента",
   "Text or URL": "Текст или URL",
-  "Tilecast detects whether this is a video or playlist. No YouTube API key is required.":
-    "Tilecast определяет, является ли ссылка видео или плейлистом. Ключ API YouTube не требуется.",
+  "LSR signage detects whether this is a video or playlist. No YouTube API key is required.":
+    "LSR signage определяет, является ли ссылка видео или плейлистом. Ключ API YouTube не требуется.",
   "Time format": "Формат времени",
   "Title above countdown": "Заголовок над отсчётом",
   "Title beside countdown": "Заголовок рядом с отсчётом",
@@ -910,8 +910,8 @@ export const russianExtended: Record<string, string> = {
   "Emergency display": "Экстренный показ",
   "Enable this rule": "Включить это правило",
   Entire: "Целиком",
-  "Event names match NWS wording exactly. Leave the field empty to match every event at or above the selected severity and urgency. Tilecast's live fullscreen alert is the default; a ticker bar is the alternative for alerts that should inform without interrupting what is playing.":
-    "Названия событий должны точно совпадать с формулировками NWS. Оставьте поле пустым, чтобы учитывать все события выбранной или более высокой серьёзности и срочности. По умолчанию Tilecast показывает оповещение во весь экран; бегущая строка позволяет сообщить об угрозе без прерывания текущего контента.",
+  "Event names match NWS wording exactly. Leave the field empty to match every event at or above the selected severity and urgency. LSR signage's live fullscreen alert is the default; a ticker bar is the alternative for alerts that should inform without interrupting what is playing.":
+    "Названия событий должны точно совпадать с формулировками NWS. Оставьте поле пустым, чтобы учитывать все события выбранной или более высокой серьёзности и срочности. По умолчанию LSR signage показывает оповещение во весь экран; бегущая строка позволяет сообщить об угрозе без прерывания текущего контента.",
   "Extra large — 200px": "Очень крупная — 200 пикс.",
   "Keep local emergency procedures and Wireless Emergency Alerts in place. Studio shows poll health so upstream or network failures are visible.":
     "Сохраняйте местные процедуры реагирования и беспроводные экстренные оповещения. Studio показывает состояние опроса, чтобы были видны сбои источника или сети.",
@@ -955,12 +955,12 @@ export const russianExtended: Record<string, string> = {
   "Ticker height": "Высота бегущей строки",
   "Ticker placement": "Расположение бегущей строки",
   "Ticker speed": "Скорость бегущей строки",
-  "Tilecast can generate a fullscreen alert directly from live NWS data. A custom playlist remains optional for organizations with their own response content. This plugin configures automatic responses; a manual Takeover is the separate “show this now” action on Screens, and its defaults live in Settings.":
-    "Tilecast может создавать полноэкранное оповещение непосредственно из данных NWS. Организации со своим контентом могут дополнительно выбрать собственный плейлист. Этот плагин настраивает автоматические реакции; ручной временный показ запускается отдельным действием «Показать сейчас» на странице экранов, а его настройки находятся в разделе настроек.",
-  "Tilecast live NWS alert — fullscreen":
-    "Оповещение Tilecast NWS — весь экран",
-  "Tilecast live NWS alert — ticker bar":
-    "Оповещение Tilecast NWS — бегущая строка",
+  "LSR signage can generate a fullscreen alert directly from live NWS data. A custom playlist remains optional for organizations with their own response content. This plugin configures automatic responses; a manual Takeover is the separate “show this now” action on Screens, and its defaults live in Settings.":
+    "LSR signage может создавать полноэкранное оповещение непосредственно из данных NWS. Организации со своим контентом могут дополнительно выбрать собственный плейлист. Этот плагин настраивает автоматические реакции; ручной временный показ запускается отдельным действием «Показать сейчас» на странице экранов, а его настройки находятся в разделе настроек.",
+  "LSR signage live NWS alert — fullscreen":
+    "Оповещение LSR signage NWS — весь экран",
+  "LSR signage live NWS alert — ticker bar":
+    "Оповещение LSR signage NWS — бегущая строка",
   "Use a custom playlist — fullscreen":
     "Использовать свой плейлист — весь экран",
   "Weather event rules": "Правила погодных событий",
@@ -999,8 +999,8 @@ export const russianExtended: Record<string, string> = {
   "No countdown bars configured": "Полосы обратного отсчёта не настроены",
   "No noise meters configured": "Шумомеры не настроены",
   "Noise Meter": "Шумомер",
-  "Noise Meter runs on Linux Player only, using that player's default microphone. Audio is measured on the device and never sent to Tilecast, and nothing is recorded. Android Players ignore it.":
-    "Шумомер работает только в Linux Player и использует микрофон проигрывателя по умолчанию. Уровень звука измеряется на устройстве, не передаётся в Tilecast и не записывается. Android Player игнорирует эту функцию.",
+  "Noise Meter runs on Linux Player only, using that player's default microphone. Audio is measured on the device and never sent to LSR signage, and nothing is recorded. Android Players ignore it.":
+    "Шумомер работает только в Linux Player и использует микрофон проигрывателя по умолчанию. Уровень звука измеряется на устройстве, не передаётся в LSR signage и не записывается. Android Player игнорирует эту функцию.",
   "Noise meters could not be loaded.": "Не удалось загрузить шумомеры.",
   "Nothing behind the mark": "Без фона под отметкой",
   "One-time date": "Однократная дата",

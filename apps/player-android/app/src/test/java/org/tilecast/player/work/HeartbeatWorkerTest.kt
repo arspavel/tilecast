@@ -14,7 +14,7 @@ class HeartbeatWorkerTest {
         val api = object : BackgroundLivenessApi {
             override suspend fun identity(serverUrl: String): ServerIdentity {
                 calls += "identity:$serverUrl"
-                return ServerIdentity("Tilecast", "install-1", "District", "v1", true)
+                return ServerIdentity("LSR signage", "install-1", "District", "v1", true)
             }
 
             override suspend fun liveness(serverUrl: String, credential: String) {
@@ -32,7 +32,7 @@ class HeartbeatWorkerTest {
     fun installationMismatchNeverSendsCredentialOrChangesPlayerStatus() = runTest {
         var livenessCalled = false
         val api = object : BackgroundLivenessApi {
-            override suspend fun identity(serverUrl: String) = ServerIdentity("Tilecast", "other-install", "District", "v1", true)
+            override suspend fun identity(serverUrl: String) = ServerIdentity("LSR signage", "other-install", "District", "v1", true)
             override suspend fun liveness(serverUrl: String, credential: String) { livenessCalled = true }
         }
 

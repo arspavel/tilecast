@@ -152,22 +152,22 @@ func TestMFAPolicyScope(t *testing.T) {
 }
 
 func TestResolveWebAuthnConfig(t *testing.T) {
-	config, reason := ResolveWebAuthnConfig("Tilecast", "https://signage.example.org", "", "")
+	config, reason := ResolveWebAuthnConfig("LSR signage", "https://signage.example.org", "", "")
 	if reason != "" || config.RPID != "signage.example.org" || len(config.Origins) != 1 || config.Origins[0] != "https://signage.example.org" {
 		t.Fatalf("unexpected https configuration: %#v reason=%q", config, reason)
 	}
 	// A plain-HTTP LAN installation is the common Tilecast deployment and must
 	// report why passkeys are unavailable rather than half-configuring them.
-	if _, reason := ResolveWebAuthnConfig("Tilecast", "http://192.168.1.40:8080", "", ""); reason == "" {
+	if _, reason := ResolveWebAuthnConfig("LSR signage", "http://192.168.1.40:8080", "", ""); reason == "" {
 		t.Fatal("expected plain HTTP to disable passkeys")
 	}
-	if _, reason := ResolveWebAuthnConfig("Tilecast", "https://192.168.1.40:8443", "", ""); reason == "" {
+	if _, reason := ResolveWebAuthnConfig("LSR signage", "https://192.168.1.40:8443", "", ""); reason == "" {
 		t.Fatal("expected an IP address to disable passkeys")
 	}
-	if _, reason := ResolveWebAuthnConfig("Tilecast", "http://localhost:8080", "", ""); reason != "" {
+	if _, reason := ResolveWebAuthnConfig("LSR signage", "http://localhost:8080", "", ""); reason != "" {
 		t.Fatalf("expected localhost to remain usable for development: %s", reason)
 	}
-	override, reason := ResolveWebAuthnConfig("Tilecast", "http://tilecast:8080", "signage.example.org", "https://signage.example.org, https://alt.example.org")
+	override, reason := ResolveWebAuthnConfig("LSR signage", "http://tilecast:8080", "signage.example.org", "https://signage.example.org, https://alt.example.org")
 	if reason != "" || override.RPID != "signage.example.org" || len(override.Origins) != 2 {
 		t.Fatalf("expected the override to be used verbatim: %#v reason=%q", override, reason)
 	}

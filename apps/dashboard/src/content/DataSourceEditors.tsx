@@ -203,8 +203,8 @@ function StructuredDetectionNotice({
     return (
       <p className="source-detection source-detection--pending">
         {provider === "csv"
-          ? "Upload a CSV or enter a hosted CSV URL and Tilecast will read its columns."
-          : "Enter the endpoint URL and Tilecast will read the fields it returns."}
+          ? "Upload a CSV or enter a hosted CSV URL and LSR signage will read its columns."
+          : "Enter the endpoint URL and LSR signage will read the fields it returns."}
       </p>
     );
   if (inspection.isPending)
@@ -1404,8 +1404,8 @@ export function CalendarDataSourceEditor({
                 : "Create Calendar Data Source"}
             </h2>
             <p>
-              Tilecast fetches and sanitizes public iCalendar feeds for native
-              playback.
+              LSR signage fetches and sanitizes public iCalendar feeds for
+              native playback.
             </p>
           </div>
           <button className="icon-button" aria-label="Close" onClick={onClose}>
@@ -1968,7 +1968,7 @@ function ManualDataSourceEditor({
   return (
     <EditorFrame
       title={`${dataSource ? "Edit" : "Create"} Manual Table Data Source`}
-      description="Maintain a small typed dataset directly in Tilecast Studio."
+      description="Maintain a small typed dataset directly in LSR signage."
       page={page}
       onClose={onClose}
       footer={
@@ -2946,7 +2946,7 @@ function LiveDataSourceEditor({
           </label>
           <small>
             Commercial installations must configure a self-hosted air-quality
-            endpoint at deployment time. API keys are not stored by Tilecast.
+            endpoint at deployment time. API keys are not stored by LSR signage.
           </small>
         </>
       )}

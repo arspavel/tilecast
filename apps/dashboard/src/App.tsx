@@ -533,7 +533,7 @@ export const studioRoutes: RouteObject[] = [
           breadcrumb: "Settings",
           search: search(
             "Settings",
-            "Configure this Tilecast installation",
+            "Configure this LSR signage installation",
             "/settings/general",
           ),
         },

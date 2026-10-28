@@ -87,7 +87,7 @@ func TestCreateUpdateDeploymentPersistsHistoryAndCommand(t *testing.T) {
 	}
 	requestBody, err := json.Marshal(deploymentInput{
 		ReleaseID: releaseID,
-		Name:      "Tilecast Player 0.11.0",
+		Name:      "LSR signage Player 0.11.0",
 		Mode:      "install_now",
 		ScreenIDs: []uuid.UUID{screenID},
 	})
@@ -187,7 +187,7 @@ func TestCreateUpdateDeploymentPersistsHistoryAndCommand(t *testing.T) {
 	}
 	// The read reconciles first, so the deployment reports completed: its only
 	// target reached a terminal state, even though that state was a failure.
-	if detail.Data.Name != "Tilecast Player 0.11.0" || detail.Data.Mode != "install_now" || detail.Data.Status != "completed" {
+	if detail.Data.Name != "LSR signage Player 0.11.0" || detail.Data.Mode != "install_now" || detail.Data.Status != "completed" {
 		t.Errorf("detail header = %#v", detail.Data)
 	}
 	if detail.Data.VersionName != "0.11.0" || detail.Data.VersionCode != 11 || detail.Data.Platform != "android" || detail.Data.ArtifactSizeBytes != 1024 || detail.Data.RolloutMode != "full" {
@@ -274,7 +274,7 @@ func TestLinuxUpdateSettlesDespiteSyntheticItemIdentifier(t *testing.T) {
 	if _, err = pool.Exec(ctx, `INSERT INTO player_releases(id,platform,source,channel,version_code,version_name,release_notes,published_at,apk_name,apk_size,apk_sha256,signing_certificate_sha256,manifest,manifest_signature,cache_status,verification_status,imported_by) VALUES($1,'linux','upload','stable',2006,'0.2.6','',now(),'tilecast-player.AppImage',4096,$2,'','{}'::jsonb,'signature','cached','verified',$3)`, releaseID, "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", userID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'Tilecast Player for Linux 0.2.6','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
+	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'LSR signage Player for Linux 0.2.6','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
 		t.Fatal(err)
 	}
 	// The confirmed failure state: installed, reconnecting, previous 2005, expected 2006.
@@ -402,7 +402,7 @@ func TestStuckReconnectingTargetIsReconciled(t *testing.T) {
 	if _, err = pool.Exec(ctx, `INSERT INTO player_releases(id,platform,source,channel,version_code,version_name,release_notes,published_at,apk_name,apk_size,apk_sha256,signing_certificate_sha256,manifest,manifest_signature,cache_status,verification_status,imported_by) VALUES($1,'linux','upload','stable',2006,'0.2.6','',now(),'tilecast-player.AppImage',4096,$2,'','{}'::jsonb,'signature','cached','verified',$3)`, releaseID, "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", userID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'Tilecast Player for Linux 0.2.6','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
+	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'LSR signage Player for Linux 0.2.6','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = pool.Exec(ctx, `INSERT INTO screen_update_states(deployment_id,screen_id,previous_version_code,expected_version_code,state,install_started_at) VALUES($1,$2,2005,2006,'reconnecting',now()-interval '20 minutes')`, deploymentID, screenID); err != nil {
@@ -512,7 +512,7 @@ func TestLinuxDeploymentTargetsOnlyLinuxScreens(t *testing.T) {
 	}
 	requestBody, _ := json.Marshal(deploymentInput{
 		ReleaseID: releaseID,
-		Name:      "Tilecast Player for Linux 0.2.0",
+		Name:      "LSR signage Player for Linux 0.2.0",
 		Mode:      "install_now",
 		ScreenIDs: []uuid.UUID{linuxScreen, androidScreen},
 	})
@@ -613,7 +613,7 @@ func TestAndroidSocketHeartbeatSettlesInstallingTarget(t *testing.T) {
 	if _, err = pool.Exec(ctx, `INSERT INTO player_releases(id,platform,source,channel,version_code,version_name,release_notes,published_at,apk_name,apk_size,apk_sha256,signing_certificate_sha256,manifest,manifest_signature,cache_status,verification_status,imported_by) VALUES($1,'android','upload','stable',111,'0.11.1','',now(),'tilecast-player.apk',4096,$2,'','{}'::jsonb,'signature','cached','verified',$3)`, releaseID, "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", userID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'Tilecast Player 0.11.1','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
+	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'LSR signage Player 0.11.1','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
 		t.Fatal(err)
 	}
 	// Where the Android installer leaves a target: it reports `installing` and the
@@ -725,7 +725,7 @@ func TestLinuxTargetSettlesWhenStatusReportsWereLost(t *testing.T) {
 			if _, err = pool.Exec(ctx, `INSERT INTO player_releases(id,platform,source,channel,version_code,version_name,release_notes,published_at,apk_name,apk_size,apk_sha256,signing_certificate_sha256,manifest,manifest_signature,cache_status,verification_status,imported_by) VALUES($1,'linux','upload','stable',10000,'0.10.0','',now(),'tilecast-player.AppImage',4096,$2,'','{}'::jsonb,'signature','cached','verified',$3)`, releaseID, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", userID); err != nil {
 				t.Fatal(err)
 			}
-			if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'Tilecast Player for Linux 0.10.0','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
+			if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'LSR signage Player for Linux 0.10.0','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
 				t.Fatal(err)
 			}
 			if _, err = pool.Exec(ctx, `INSERT INTO screen_update_states(deployment_id,screen_id,previous_version_code,expected_version_code,state) VALUES($1,$2,9000,10000,$3)`, deploymentID, screenID, stranded); err != nil {
@@ -809,7 +809,7 @@ func TestStrandedTargetOnTheOldVersionIsNotSettled(t *testing.T) {
 	if _, err = pool.Exec(ctx, `INSERT INTO player_releases(id,platform,source,channel,version_code,version_name,release_notes,published_at,apk_name,apk_size,apk_sha256,signing_certificate_sha256,manifest,manifest_signature,cache_status,verification_status,imported_by) VALUES($1,'linux','upload','stable',10000,'0.10.0','',now(),'tilecast-player.AppImage',4096,$2,'','{}'::jsonb,'signature','cached','verified',$3)`, releaseID, "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", userID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'Tilecast Player for Linux 0.10.0','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
+	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'LSR signage Player for Linux 0.10.0','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = pool.Exec(ctx, `INSERT INTO screen_update_states(deployment_id,screen_id,previous_version_code,expected_version_code,state) VALUES($1,$2,9000,10000,'downloading')`, deploymentID, screenID); err != nil {
@@ -894,7 +894,7 @@ func TestInstallingTargetSettlesWhenTheDeviceClockRunsBehind(t *testing.T) {
 	if _, err = pool.Exec(ctx, `INSERT INTO player_releases(id,platform,source,channel,version_code,version_name,release_notes,published_at,apk_name,apk_size,apk_sha256,signing_certificate_sha256,manifest,manifest_signature,cache_status,verification_status,imported_by) VALUES($1,'linux','upload','stable',10000,'0.10.0','',now(),'tilecast-player.AppImage',4096,$2,'','{}'::jsonb,'signature','cached','verified',$3)`, releaseID, "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", userID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'Tilecast Player for Linux 0.10.0','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
+	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'LSR signage Player for Linux 0.10.0','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
 		t.Fatal(err)
 	}
 	// Reported `installing` a minute ago, stamped with the server's clock.
@@ -990,7 +990,7 @@ func TestSleepingScreenSettlesItsUpdate(t *testing.T) {
 	if _, err = pool.Exec(ctx, `INSERT INTO player_releases(id,platform,source,channel,version_code,version_name,release_notes,published_at,apk_name,apk_size,apk_sha256,signing_certificate_sha256,manifest,manifest_signature,cache_status,verification_status,imported_by) VALUES($1,'linux','upload','stable',14000,'0.14.0','',now(),'tilecast-player.AppImage',4096,$2,'','{}'::jsonb,'signature','cached','verified',$3)`, releaseID, "1111111111111111111111111111111111111111111111111111111111111111", userID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'Tilecast Player 0.14.0','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
+	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'LSR signage Player 0.14.0','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = pool.Exec(ctx, `INSERT INTO screen_update_states(deployment_id,screen_id,previous_version_code,expected_version_code,state,install_started_at) VALUES($1,$2,13001,14000,'reconnecting',now()-interval '3 minutes')`, deploymentID, screenID); err != nil {
@@ -1072,7 +1072,7 @@ func TestFreshlyStartedPlayerDoesNotSettleYet(t *testing.T) {
 	if _, err = pool.Exec(ctx, `INSERT INTO player_releases(id,platform,source,channel,version_code,version_name,release_notes,published_at,apk_name,apk_size,apk_sha256,signing_certificate_sha256,manifest,manifest_signature,cache_status,verification_status,imported_by) VALUES($1,'linux','upload','stable',14000,'0.14.0','',now(),'tilecast-player.AppImage',4096,$2,'','{}'::jsonb,'signature','cached','verified',$3)`, releaseID, "2222222222222222222222222222222222222222222222222222222222222222", userID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'Tilecast Player 0.14.0','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
+	if _, err = pool.Exec(ctx, `INSERT INTO update_deployments(id,release_id,name,mode,status,created_by) VALUES($1,$2,'LSR signage Player 0.14.0','install_now','active',$3)`, deploymentID, releaseID, userID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = pool.Exec(ctx, `INSERT INTO screen_update_states(deployment_id,screen_id,previous_version_code,expected_version_code,state,install_started_at) VALUES($1,$2,13001,14000,'reconnecting',now()-interval '10 seconds')`, deploymentID, screenID); err != nil {

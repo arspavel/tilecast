@@ -37,7 +37,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
   const body = await response.text();
   if (!response.ok) {
-    let message = `Tilecast returned HTTP ${response.status}`;
+    let message = `LSR signage returned HTTP ${response.status}`;
     try {
       message = (JSON.parse(body) as ErrorEnvelope).error?.message ?? message;
     } catch {

@@ -155,7 +155,7 @@ func walkTarStream(r io.Reader, limits Limits, handle func(archiveEntry) error) 
 		}
 	}
 	if manifest == nil {
-		return Manifest{}, fmt.Errorf("archive has no manifest and cannot be a Tilecast backup")
+		return Manifest{}, fmt.Errorf("archive has no manifest and cannot be a LSR signage backup")
 	}
 	if err := manifest.Validate(); err != nil {
 		return Manifest{}, err

@@ -156,7 +156,7 @@ function WelcomeScreen({
   return (
     <>
       <header className="enrollment__intro">
-        <p className="enrollment__eyebrow">Welcome to Tilecast Studio</p>
+        <p className="enrollment__eyebrow">Welcome to LSR signage</p>
         <h1>{firstName ? `Hello, ${firstName}.` : "Hello."}</h1>
         <p className="enrollment__lede">
           This organization asks for a second step when you sign in. Setting it
@@ -327,8 +327,8 @@ function RecoveryStep({
       <header className="enrollment__step-header">
         <h1>Save your recovery codes</h1>
         <p>
-          These are how you get back in if you lose your phone. Tilecast has no
-          email reset, so keep them somewhere you can reach without this
+          These are how you get back in if you lose your phone. LSR signage has
+          no email reset, so keep them somewhere you can reach without this
           account.
         </p>
       </header>
@@ -344,7 +344,7 @@ function RecoveryStep({
           <FormField
             id="enroll-recovery-password"
             label="Confirm your password"
-            hint="Tilecast asks again before it issues codes."
+            hint="LSR signage asks again before it issues codes."
             type="password"
             autoComplete="current-password"
             autoFocus
@@ -369,8 +369,8 @@ function RecoveryStep({
           <div className="notice notice--warning">
             <strong>These codes are shown once.</strong>
             <p>
-              Tilecast stores only their hashes and cannot show them again. Each
-              code works one time.
+              LSR signage stores only their hashes and cannot show them again.
+              Each code works one time.
             </p>
           </div>
           <ul>
@@ -485,8 +485,8 @@ function DoneScreen({
         <p className="enrollment__eyebrow">Sign-in security</p>
         <h1>{firstName ? `You're set, ${firstName}.` : "You're set."}</h1>
         <p className="enrollment__lede">
-          Next time you sign in, Tilecast asks for your second step after your
-          password. You can change any of this from My Account.
+          Next time you sign in, LSR signage asks for your second step after
+          your password. You can change any of this from My Account.
         </p>
       </header>
       {summary.length > 0 && (
@@ -509,7 +509,7 @@ function DoneScreen({
             onFinish();
           }}
         >
-          Enter Tilecast Studio
+          Enter LSR signage
         </Button>
       </div>
     </>
@@ -534,7 +534,7 @@ function errorNotice(error: Error | null | undefined) {
   const message =
     error instanceof ApiError
       ? error.message
-      : "Tilecast could not complete the request.";
+      : "LSR signage could not complete the request.";
   return (
     <div className="notice notice--error" role="alert">
       {message}

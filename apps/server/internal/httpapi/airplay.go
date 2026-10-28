@@ -471,7 +471,7 @@ func (s *server) createAirplaySession(w http.ResponseWriter, r *http.Request) {
 		}
 		if _, _, queueErr := s.queueCommand(r.Context(), screen.ID, user.ID, "prepare_airplay_session", validated, uuid.New()); queueErr != nil {
 			s.failAirplaySession(r.Context(), record.ID, user.ID, "command_queue_failed")
-			writeError(w, 422, "airplay_activation_failed", "Tilecast could not queue AirPlay preparation for every display.")
+			writeError(w, 422, "airplay_activation_failed", "LSR signage could not queue AirPlay preparation for every display.")
 			return
 		}
 		s.devices.Notify(screen.ID, map[string]any{"type": "external_presentation.changed", "sessionId": record.ID})
@@ -678,7 +678,7 @@ func cleanAirplayReceiverName(value string) string {
 		runes = runes[:120]
 	}
 	if len(runes) == 0 {
-		return "Tilecast AirPlay"
+		return "LSR signage AirPlay"
 	}
 	return string(runes)
 }
@@ -1042,7 +1042,7 @@ func (s *server) fallbackAirplaySession(ctx context.Context, record airplaySessi
 	if tag, execErr := s.db.Exec(ctx, `UPDATE external_presentation_sessions SET transport='unicast',multicast_address=NULL,status='preparing',ended_at=NULL,end_reason=NULL,prepare_deadline_at=now()+make_interval(secs=>$2) WHERE id=$1 AND status IN ('preparing','waiting','active') AND transport='multicast'`, record.ID, fallbackWindow.Seconds()); execErr != nil || tag.RowsAffected() != 1 {
 		return false
 	}
-	_, _ = s.db.Exec(ctx, `UPDATE player_commands SET state='cancelled',completed_at=now(),updated_at=now(),safe_result_code='airplay_transport_fallback',safe_result_message='Multicast was unavailable; Tilecast is restarting this session over unicast.' WHERE type='prepare_airplay_session' AND payload->>'sessionId'=$1 AND state IN ('pending','delivered','acknowledged','running')`, record.ID.String())
+	_, _ = s.db.Exec(ctx, `UPDATE player_commands SET state='cancelled',completed_at=now(),updated_at=now(),safe_result_code='airplay_transport_fallback',safe_result_message='Multicast was unavailable; LSR signage is restarting this session over unicast.' WHERE type='prepare_airplay_session' AND payload->>'sessionId'=$1 AND state IN ('pending','delivered','acknowledged','running')`, record.ID.String())
 	_, _ = s.db.Exec(ctx, `UPDATE player_commands SET payload='{}'::jsonb WHERE type='prepare_airplay_session' AND payload->>'sessionId'=$1`, record.ID.String())
 	_, _ = s.db.Exec(ctx, `UPDATE external_presentation_screen_states SET state='preparing',last_updated_at=now(),failure_code='multicast_fallback',safe_failure_message='Multicast was unavailable; preparing a unicast receiver.' WHERE session_id=$1`, record.ID)
 	stopPayload, _ := s.validateCommand("stop_airplay_session", mustJSON(map[string]any{"sessionId": record.ID.String(), "reason": "multicast_fallback"}))

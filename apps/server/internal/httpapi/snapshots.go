@@ -8,7 +8,7 @@ import (
 	"github.com/tilecast/tilecast/apps/server/internal/snapshots"
 )
 
-const snapshotProofNote = "Captured from Tilecast Player."
+const snapshotProofNote = "Captured from LSR signage Player."
 
 func (s *server) listScreenSnapshots(w http.ResponseWriter, r *http.Request) {
 	id, ok := urlUUID(w, r, "id")

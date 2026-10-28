@@ -180,7 +180,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as ErrorResponse;
     throw new ApiError(
-      body.error?.message ?? "Tilecast could not complete the request.",
+      body.error?.message ?? "LSR signage could not complete the request.",
       response.status,
       body.error?.code ?? "unknown_error",
     );
@@ -334,7 +334,7 @@ async function requestLayout(path: string, init?: RequestInit) {
 async function apiFailure(response: Response): Promise<never> {
   const body = (await response.json().catch(() => ({}))) as ErrorResponse;
   throw new ApiError(
-    body.error?.message ?? "Tilecast could not complete the request.",
+    body.error?.message ?? "LSR signage could not complete the request.",
     response.status,
     body.error?.code ?? "unknown_error",
   );
@@ -1445,7 +1445,7 @@ export const api = {
     request<PresentationOverride>(`/presentation-overrides/${id}/stop`, {
       method: "POST",
       headers: { "X-CSRF-Token": csrfToken },
-      body: JSON.stringify({ reason: "Stopped from Tilecast Studio" }),
+      body: JSON.stringify({ reason: "Stopped from LSR signage" }),
     }),
   fleetUptime: (window: UptimeWindow) =>
     request<UptimeReport>(`/activity/uptime?window=${window}`),

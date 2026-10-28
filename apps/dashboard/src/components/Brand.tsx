@@ -3,18 +3,18 @@ export function Brand({ compact = false }: { compact?: boolean }) {
     return (
       <img
         className="brand__studio-logo"
-        src="/tilecast-studio-logo.svg"
-        alt="Tilecast Studio"
+        src="/lsr-signage-logo.svg"
+        alt="LSR signage"
       />
     );
   return (
-    <div className="brand" aria-label="Tilecast">
+    <div className="brand" aria-label="LSR signage">
       <span className="brand__mark" aria-hidden="true">
         <span />
         <span />
         <span />
       </span>
-      <span className="brand__name">Tilecast</span>
+      <span className="brand__name">LSR signage</span>
     </div>
   );
 }

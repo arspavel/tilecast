@@ -431,9 +431,9 @@ func composeEmail(policy Settings, items []pendingDelivery, publicURL string) (s
 	for _, item := range items {
 		counts[item.severity]++
 	}
-	subject := fmt.Sprintf("Tilecast: %d conditions need attention", len(items))
+	subject := fmt.Sprintf("LSR signage: %d conditions need attention", len(items))
 	if counts["critical"] > 0 {
-		subject = fmt.Sprintf("Tilecast: %d conditions need attention, %d critical", len(items), counts["critical"])
+		subject = fmt.Sprintf("LSR signage: %d conditions need attention, %d critical", len(items), counts["critical"])
 	}
 
 	var body strings.Builder
@@ -470,7 +470,7 @@ func studioLink(publicURL string, payload []byte) string {
 
 func emailFooter(policy Settings) string {
 	_ = policy
-	return "You are receiving this because your Tilecast account is subscribed to notifications.\n" +
+	return "You are receiving this because your LSR signage account is subscribed to notifications.\n" +
 		"Change what you receive in Studio under Settings, My preferences, Notifications."
 }
 
@@ -491,8 +491,8 @@ func (s *Service) SendTest(ctx context.Context, address string) error {
 	return s.email.Send(ctx, Message{
 		From:    mail.Address{Name: policy.FromName, Address: policy.FromAddress},
 		To:      address,
-		Subject: "Tilecast test notification",
-		Body: "This is a test from Tilecast.\n\nIf you received it, notification email is working.\n" +
+		Subject: "LSR signage test notification",
+		Body: "This is a test from LSR signage.\n\nIf you received it, notification email is working.\n" +
 			"It does not confirm that anyone is subscribed: each account chooses that under Settings, My preferences, Notifications.\n",
 		Category: CategoryIncident,
 	})
@@ -650,7 +650,7 @@ func (s *Service) TestWebhook(ctx context.Context, id uuid.UUID) error {
 	}
 	payload, err := EncodePayload(Event{
 		Key: "test:" + uuid.NewString(), Category: CategoryIncident, Severity: "info",
-		Subject: "Tilecast test event", Body: "This is a test from Tilecast.",
+		Subject: "LSR signage test event", Body: "This is a test from LSR signage.",
 		OccurredAt: time.Now(), Payload: map[string]any{"test": true},
 	})
 	if err != nil {

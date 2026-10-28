@@ -172,7 +172,7 @@ describe("the guided first sign-in", () => {
     expect(screen.getByText("2 recovery codes issued")).toBeTruthy();
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Enter Tilecast Studio" }),
+      screen.getByRole("button", { name: "Enter LSR signage" }),
     );
     await waitFor(() => expect(onFinish).toHaveBeenCalled());
   });

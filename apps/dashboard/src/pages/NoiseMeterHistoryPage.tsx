@@ -416,9 +416,9 @@ export function NoiseMeterHistoryPage() {
       <NoiseHistoryTabs id={id} />
       <Notice>
         Noise history stores relative noise-level measurements for graphs and
-        reports. Tilecast never records or stores microphone audio. Levels are
-        relative to each player&rsquo;s own microphone and are not calibrated
-        decibel measurements.
+        reports. LSR signage never records or stores microphone audio. Levels
+        are relative to each player&rsquo;s own microphone and are not
+        calibrated decibel measurements.
       </Notice>
 
       <div className="noise-controls">

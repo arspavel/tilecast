@@ -45,7 +45,7 @@ type WebAuthnConfig struct {
 func ResolveWebAuthnConfig(displayName, publicURL, overrideRPID, overrideOrigins string) (WebAuthnConfig, string) {
 	config := WebAuthnConfig{RPDisplayName: strings.TrimSpace(displayName)}
 	if config.RPDisplayName == "" {
-		config.RPDisplayName = "Tilecast"
+		config.RPDisplayName = "LSR signage"
 	}
 
 	for _, origin := range strings.Split(overrideOrigins, ",") {
@@ -65,7 +65,7 @@ func ResolveWebAuthnConfig(displayName, publicURL, overrideRPID, overrideOrigins
 	host := parsed.Hostname()
 	secure := parsed.Scheme == "https" || host == "localhost" || host == "127.0.0.1" || host == "::1"
 	if !secure {
-		return WebAuthnConfig{}, "Passkeys require HTTPS. Serve Tilecast over HTTPS and set TILECAST_PUBLIC_URL to the HTTPS address."
+		return WebAuthnConfig{}, "Passkeys require HTTPS. Serve LSR signage over HTTPS and set TILECAST_PUBLIC_URL to the HTTPS address."
 	}
 	if isIPHost(host) && host != "127.0.0.1" && host != "::1" {
 		return WebAuthnConfig{}, "Passkeys require a hostname. Browsers reject an IP address as a relying party identifier."

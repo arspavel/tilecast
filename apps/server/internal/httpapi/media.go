@@ -789,7 +789,7 @@ func (s *server) writeMediaError(w http.ResponseWriter, r *http.Request, err err
 	case errors.Is(err, media.ErrUnsupportedType):
 		writeError(w, http.StatusUnsupportedMediaType, "unsupported_media_type", "The uploaded file is not a supported image or video.")
 	case errors.Is(err, media.ErrInspectionFailed):
-		writeError(w, http.StatusUnprocessableEntity, "media_inspection_failed", "Tilecast could not inspect this media file.")
+		writeError(w, http.StatusUnprocessableEntity, "media_inspection_failed", "LSR signage could not inspect this media file.")
 	case errors.Is(err, media.ErrVariantUnavailable):
 		writeError(w, http.StatusNotFound, "media_variant_unavailable", "The requested media variant is unavailable.")
 	case errors.Is(err, media.ErrNotReady):

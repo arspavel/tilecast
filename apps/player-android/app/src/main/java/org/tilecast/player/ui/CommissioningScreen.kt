@@ -89,7 +89,7 @@ private fun CommissioningStepBody(
         CommissioningStep.ADMIN_PIN -> {
             var pin by remember { mutableStateOf("") }
             Text("Задайте PIN администратора", color = SignalText, fontSize = 30.sp)
-            Text("PIN открывает только меню обслуживания Tilecast и хранится в виде защищённого хеша.", color = SignalMuted, fontSize = 18.sp)
+            Text("PIN открывает только меню обслуживания LSR signage и хранится в виде защищённого хеша.", color = SignalMuted, fontSize = 18.sp)
             Spacer(Modifier.height(18.dp))
             OutlinedTextField(
                 value = pin,
@@ -113,7 +113,7 @@ private fun CommissioningStepBody(
             if (!state.accessibilitySupported) {
                 Text("На Fire TV служба специальных возможностей необязательна", color = SignalText, fontSize = 30.sp)
                 Text(
-                    "В Fire OS нет стандартного экрана Android для включения службы специальных возможностей Tilecast. Можно продолжить без неё или включить её вручную через ADB командой, которая показана в Tilecast Studio в карточке этого экрана.",
+                    "В Fire OS нет стандартного экрана Android для включения службы специальных возможностей LSR signage. Можно продолжить без неё или включить её вручную через ADB командой, которая показана в LSR signage в карточке этого экрана.",
                     color = SignalMuted,
                     fontSize = 18.sp,
                 )
@@ -126,7 +126,7 @@ private fun CommissioningStepBody(
             } else {
                 CapabilityStep(
                     "Включите службу специальных возможностей",
-                    "Tilecast использует службу специальных возможностей только чтобы заметить постороннее приложение на экране, вернуться к показу и попросить Android заблокировать экран. Служба не может подтверждать диалоги или нажимать кнопки в настройках.",
+                    "LSR signage использует службу специальных возможностей только чтобы заметить постороннее приложение на экране, вернуться к показу и попросить Android заблокировать экран. Служба не может подтверждать диалоги или нажимать кнопки в настройках.",
                     state.accessibilityEnabled,
                     "Открыть специальные возможности",
                     openAccessibility,
@@ -136,7 +136,7 @@ private fun CommissioningStepBody(
         }
         CommissioningStep.INSTALL_PERMISSION -> CapabilityStep(
             "Разрешите обновления плеера",
-            "Выдайте это разрешение Android один раз, чтобы Tilecast мог устанавливать свои проверенные обновления. На Android 12 и новее обновление проходит без участия человека; на старых версиях установку может понадобиться подтвердить на устройстве.",
+            "Выдайте это разрешение Android один раз, чтобы LSR signage мог устанавливать свои проверенные обновления. На Android 12 и новее обновление проходит без участия человека; на старых версиях установку может понадобиться подтвердить на устройстве.",
             state.installPermissionGranted,
             "Открыть разрешение на установку",
             openInstallPermission,
@@ -144,7 +144,7 @@ private fun CommissioningStepBody(
         )
         CommissioningStep.BOOT_RECOVERY -> CapabilityStep(
             "Проверьте запуск после включения",
-            "Перезагрузите устройство один раз. Tilecast зафиксирует сигнал загрузки, попытки запуска и успешный выход на экран. Если прошивка блокирует автозапуск, шаг останется непроверенным.",
+            "Перезагрузите устройство один раз. LSR signage зафиксирует сигнал загрузки, попытки запуска и успешный выход на экран. Если прошивка блокирует автозапуск, шаг останется непроверенным.",
             state.bootLaunchVerified,
             "Проверить результат",
             refresh,

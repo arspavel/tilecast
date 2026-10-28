@@ -15,7 +15,7 @@ object ServerUrlPolicy {
         require(uri.path.isNullOrEmpty() || uri.path == "/") { "Адрес сервера не должен содержать путь" }
         val host = uri.host.lowercase()
         val localHttp = scheme == "http" && isLocalHost(host)
-        require(scheme == "https" || localHttp) { "Для серверов Tilecast в интернете нужен HTTPS" }
+        require(scheme == "https" || localHttp) { "Для серверов LSR signage в интернете нужен HTTPS" }
         val displayHost = if (host.contains(":")) "[$host]" else host
         val port = if (uri.port > 0) ":${uri.port}" else ""
         NormalizedServerUrl("$scheme://$displayHost$port", localHttp)

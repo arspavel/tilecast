@@ -65,8 +65,8 @@ const russian: Record<string, string> = {
   "Create layout": "Создать макет",
   "Create schedule": "Создать расписание",
   Search: "Поиск",
-  "Search Tilecast": "Поиск в Tilecast",
-  "Search Tilecast…": "Поиск в Tilecast…",
+  "Search LSR signage": "Поиск в LSR signage",
+  "Search LSR signage…": "Поиск в LSR signage…",
   Save: "Сохранить",
   Cancel: "Отмена",
   Close: "Закрыть",
@@ -233,9 +233,9 @@ function translateEnglish(english: string): string {
   match = english.match(/^Open (.+)$/);
   if (match) return `Открыть ${match[1]}`;
 
-  match = english.match(/^Configure (.+) for Tilecast\.$/);
+  match = english.match(/^Configure (.+) for LSR signage\.$/);
   if (match)
-    return `Настройте параметр «${translateEnglish(match[1]!)}» для Tilecast.`;
+    return `Настройте параметр «${translateEnglish(match[1]!)}» для LSR signage.`;
 
   match = english.match(/^(\d+) of (\d+) selected$/);
   if (match) return `Выбрано ${match[1]} из ${match[2]}`;

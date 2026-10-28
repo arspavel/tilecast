@@ -276,7 +276,7 @@ export function PlaylistPreviewPage() {
   useEffect(() => {
     if (!query.data) return;
     const previous = document.title;
-    document.title = `${query.data.name} preview · Tilecast`;
+    document.title = `${query.data.name} preview · LSR signage`;
     return () => {
       document.title = previous;
     };

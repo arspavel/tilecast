@@ -38,18 +38,18 @@ export const enumLabels: Record<string, string> = {
   sunday: "Sunday",
   monday: "Monday",
   locale: "Use locale",
-  placeholder: "Tilecast placeholder",
+  placeholder: "LSR signage placeholder",
   skip: "Skip item",
   interval: "Reload on an interval",
-  bouncing_logo: "Bouncing Tilecast logo",
+  bouncing_logo: "Bouncing LSR signage logo",
   custom_text: "Custom text",
   black: "Black screen",
 };
 export const descriptions: Record<string, string> = {
   "player.cache.max_bytes":
-    "Maximum storage Tilecast may use for downloaded content.",
+    "Maximum storage LSR signage may use for downloaded content.",
   "player.cache.minimum_free_bytes":
-    "Storage Tilecast keeps free for Android and other applications.",
+    "Storage LSR signage keeps free for Android and other applications.",
   "player.download.automatic_threshold_bytes":
     "Largest item Automatic delivery will download instead of stream.",
   "power.active_hours_days": "Days when this player should operate normally.",
@@ -310,7 +310,7 @@ export const subsectionOrder: Record<
     {
       title: "Notifications",
       description:
-        "What Tilecast tells you about when you are not looking at Studio.",
+        "What LSR signage tells you about when you are not looking at Studio.",
       prefix: ["preference.notifications."],
     },
     {
@@ -400,7 +400,7 @@ export function descriptionFor(definition: SettingDefinition) {
   return (
     definition.description ||
     descriptions[definition.key] ||
-    `Configure ${definition.title.toLowerCase()} for Tilecast.`
+    `Configure ${definition.title.toLowerCase()} for LSR signage.`
   );
 }
 export function enumLabel(value: string) {

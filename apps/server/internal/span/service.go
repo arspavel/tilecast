@@ -402,7 +402,7 @@ func (s *Service) ProcessJob(ctx context.Context, _ string, _ *uuid.UUID, payloa
 	}
 	defer func() {
 		if err != nil {
-			_, _ = s.db.Exec(ctx, `UPDATE span_video_panels SET status='failed',error_code='span_panel_failed',error_message='Tilecast could not prepare this wall panel.',updated_at=now() WHERE id=$1`, request.PanelID)
+			_, _ = s.db.Exec(ctx, `UPDATE span_video_panels SET status='failed',error_code='span_panel_failed',error_message='LSR signage could not prepare this wall panel.',updated_at=now() WHERE id=$1`, request.PanelID)
 		}
 	}()
 	var groupID, screenID uuid.UUID

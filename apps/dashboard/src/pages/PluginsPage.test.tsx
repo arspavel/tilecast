@@ -641,7 +641,7 @@ describe("Noise Meter", () => {
       await screen.findByText(/Linux Player only/, { exact: false }),
     ).toBeVisible();
     expect(
-      screen.getByText(/never sent to Tilecast/, { exact: false }),
+      screen.getByText(/never sent to LSR signage/, { exact: false }),
     ).toBeVisible();
     expect(await screen.findByText(/Shows above 78/)).toBeVisible();
   });

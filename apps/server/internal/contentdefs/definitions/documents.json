@@ -55,7 +55,7 @@
           "Publish the Canva design for public viewing.",
           "Copy its public design link and paste it here."
         ],
-        "tip": "Canva controls presentation timing inside its embed. Tilecast does not bypass private-design access."
+        "tip": "Canva controls presentation timing inside its embed. LSR signage does not bypass private-design access."
       },
       "deprecation": {}
     },

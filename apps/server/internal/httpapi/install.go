@@ -79,7 +79,7 @@ func (s *server) requireInstallBaseURL(w http.ResponseWriter, r *http.Request) (
 	if base != "" {
 		return base, true
 	}
-	writeError(w, http.StatusInternalServerError, "install_server_url_invalid", "Tilecast could not construct a safe server URL for the installer.")
+	writeError(w, http.StatusInternalServerError, "install_server_url_invalid", "LSR signage could not construct a safe server URL for the installer.")
 	return "", false
 }
 

@@ -480,13 +480,13 @@ function CommandPalette({
   return (
     <Dialog
       open={open}
-      title="Search Tilecast"
+      title="Search LSR signage"
       className="command-palette-dialog"
       onClose={onClose}
     >
       <Command
         className="command-palette"
-        label="Search Tilecast"
+        label="Search LSR signage"
         loop
         shouldFilter={false}
       >
@@ -497,7 +497,7 @@ function CommandPalette({
             value={query}
             onValueChange={setQuery}
             placeholder="Search screens, media, playlists…"
-            aria-label="Search Tilecast"
+            aria-label="Search LSR signage"
           />
           <kbd>{platformShortcut()}</kbd>
         </label>
@@ -597,7 +597,7 @@ export function StudioTopbar({
       <button
         className="topbar__search"
         type="button"
-        aria-label={t("Search Tilecast")}
+        aria-label={t("Search LSR signage")}
         aria-haspopup="dialog"
         onClick={() => setPaletteOpen(true)}
       >
@@ -605,7 +605,7 @@ export function StudioTopbar({
         {/* Deliberately not "Search screens…": pages carry their own list filter,
             and two controls promising to search screens read as competitors. */}
         <span className="topbar__search-placeholder">
-          {t("Search Tilecast…")}
+          {t("Search LSR signage…")}
         </span>
         <kbd>{platformShortcut()}</kbd>
       </button>

@@ -66,8 +66,8 @@ var (
 // API return when no key is configured. It names the variable and the
 // consequence, and it is safe to show to anyone who can already manage settings.
 const KeyUnavailableMessage = "Presentation Network credentials are unavailable because " +
-	KeyEnvironmentVariable + " is not set on the Tilecast server. Set it to a 32-byte " +
-	"base64 or hex value, back it up outside Tilecast, and restart the server."
+	KeyEnvironmentVariable + " is not set on the LSR signage server. Set it to a 32-byte " +
+	"base64 or hex value, back it up outside LSR signage, and restart the server."
 
 // Cipher seals and opens Presentation Network credentials. A nil *Cipher is the
 // legitimate "no key configured" state, and every method on it returns

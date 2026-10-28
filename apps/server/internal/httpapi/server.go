@@ -238,7 +238,7 @@ func (s *server) health(w http.ResponseWriter, _ *http.Request) {
 
 func (s *server) ready(w http.ResponseWriter, r *http.Request) {
 	if s.backups != nil && s.backups.Guard().RestoreActive() {
-		writeError(w, http.StatusServiceUnavailable, "restore_in_progress", "A restore is in progress. Tilecast will be back shortly.")
+		writeError(w, http.StatusServiceUnavailable, "restore_in_progress", "A restore is in progress. LSR signage will be back shortly.")
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
@@ -478,7 +478,7 @@ func decodeJSONReader(r *http.Request, body io.Reader, target any) error {
 
 func (s *server) internalError(w http.ResponseWriter, r *http.Request, err error) {
 	s.logger.Error("request failed", "error", err, "request_id", middleware.GetReqID(r.Context()), "path", r.URL.Path)
-	writeError(w, http.StatusInternalServerError, "internal_error", "Tilecast could not complete the request.")
+	writeError(w, http.StatusInternalServerError, "internal_error", "LSR signage could not complete the request.")
 }
 
 func isInputError(err error) bool {

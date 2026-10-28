@@ -80,7 +80,7 @@ export function ScreenDisplayControls({ screen }: { screen: Screen }) {
       return api.createUpdateDeployment(
         {
           releaseId: latest.id,
-          name: `Tilecast Player ${latest.versionName} · ${screen.name}`,
+          name: `LSR signage Player ${latest.versionName} · ${screen.name}`,
           mode: "install_now",
           screenIds: [screen.id],
           groupIds: [],
@@ -109,7 +109,7 @@ export function ScreenDisplayControls({ screen }: { screen: Screen }) {
   const restart = () => {
     if (
       window.confirm(
-        `Перезапустить Tilecast Player на экране «${screen.name}»? Воспроизведение прервётся на несколько секунд.`,
+        `Перезапустить LSR signage Player на экране «${screen.name}»? Воспроизведение прервётся на несколько секунд.`,
       )
     )
       command.mutate({ type: "restart_player_process" });

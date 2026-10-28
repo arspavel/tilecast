@@ -92,7 +92,7 @@ func (s *server) putLoginBackground(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if tag.RowsAffected() == 0 {
-		writeError(w, http.StatusConflict, "setup_required", "Complete Tilecast setup before changing the login background.")
+		writeError(w, http.StatusConflict, "setup_required", "Complete LSR signage setup before changing the login background.")
 		return
 	}
 	_, _ = s.db.Exec(r.Context(), `INSERT INTO audit_logs(id,user_id,action,resource_type,resource_id,metadata) VALUES($1,$2,'branding.login_background_changed','organization',$3,jsonb_build_object('assetId',$4::text))`, uuid.New(), session.User.ID, "login-background", assetID)

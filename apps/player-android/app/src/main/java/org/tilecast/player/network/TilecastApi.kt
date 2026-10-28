@@ -142,7 +142,7 @@ class TilecastApi(
 
     fun decodeManifest(envelope: String): PlayerManifest = json.decodeFromString(DataEnvelope.serializer(PlayerManifest.serializer()), envelope).data
     fun decodePlayerConfig(envelope:String):PlayerConfig=json.decodeFromString(DataEnvelope.serializer(PlayerConfig.serializer()),envelope).data
-    private fun apiException(status: Int, body: String): ApiException { val error=runCatching{json.decodeFromString(ErrorEnvelope.serializer(),body).error}.getOrNull();return ApiException(status,error?.code?:"http_$status",error?.message?:"Сервер Tilecast ответил HTTP $status") }
+    private fun apiException(status: Int, body: String): ApiException { val error=runCatching{json.decodeFromString(ErrorEnvelope.serializer(),body).error}.getOrNull();return ApiException(status,error?.code?:"http_$status",error?.message?:"Сервер LSR signage ответил HTTP $status") }
 
     private suspend inline fun <reified T> get(serverUrl: String, path: String, authorization: String? = null): T = execute(
         Request.Builder().url(serverUrl + path).apply { if (authorization != null) header("Authorization", authorization) }.get().build(),
@@ -165,7 +165,7 @@ class TilecastApi(
             val body = response.body?.string().orEmpty()
             if (!response.isSuccessful) {
                 val error = runCatching { json.decodeFromString(ErrorEnvelope.serializer(), body).error }.getOrNull()
-                throw ApiException(response.code, error?.code ?: "http_${response.code}", error?.message ?: "Сервер Tilecast ответил HTTP ${response.code}")
+                throw ApiException(response.code, error?.code ?: "http_${response.code}", error?.message ?: "Сервер LSR signage ответил HTTP ${response.code}")
             }
             json.decodeFromString(DataEnvelope.serializer(kotlinx.serialization.serializer<T>()), body).data
         }

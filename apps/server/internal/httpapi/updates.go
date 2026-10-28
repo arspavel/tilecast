@@ -133,7 +133,7 @@ func (s *server) uploadPlayerRelease(w http.ResponseWriter, r *http.Request) {
 		limit, accepted := releaseUploadPartLimit(name, part.Header.Get("Content-Type"), s.updates.MaximumAPKBytes())
 		if !accepted || name != part.FileName() || files[name] != "" {
 			part.Close()
-			writeError(w, http.StatusUnprocessableEntity, "player_release_file_invalid", "Only one copy of each required Tilecast Player release file is accepted.")
+			writeError(w, http.StatusUnprocessableEntity, "player_release_file_invalid", "Only one copy of each required LSR signage Player release file is accepted.")
 			return
 		}
 		path := filepath.Join(temporary, name)
@@ -207,7 +207,7 @@ func releaseUploadPartLimit(name, contentType string, maximum int64) (int64, boo
 
 func (s *server) checkPlayerReleases(w http.ResponseWriter, r *http.Request) {
 	if !s.updates.ManifestKeyConfigured() {
-		writeError(w, http.StatusServiceUnavailable, "update_manifest_key_missing", "Tilecast Player update trust is not configured. Rebuild the server with the official trust key or set TILECAST_UPDATE_MANIFEST_PUBLIC_KEY.")
+		writeError(w, http.StatusServiceUnavailable, "update_manifest_key_missing", "LSR signage Player update trust is not configured. Rebuild the server with the official trust key or set TILECAST_UPDATE_MANIFEST_PUBLIC_KEY.")
 		return
 	}
 	if err := s.updates.Check(r.Context()); err != nil {

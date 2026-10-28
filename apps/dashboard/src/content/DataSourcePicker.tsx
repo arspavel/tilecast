@@ -64,7 +64,7 @@ function inferredFormatGuide(
     return {
       shape: "Weather data",
       summary:
-        "Use a Weather Data Source; Tilecast supplies its typed forecast fields.",
+        "Use a Weather Data Source; LSR signage supplies its typed forecast fields.",
       fields: [
         {
           key: "temperature",

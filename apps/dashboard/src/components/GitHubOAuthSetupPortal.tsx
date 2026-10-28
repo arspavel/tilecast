@@ -28,7 +28,7 @@ async function configureGitHubClientID(clientId: string, csrfToken: string) {
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as ErrorResponse;
     throw new Error(
-      body.error?.message ?? "Tilecast could not save the GitHub Client ID.",
+      body.error?.message ?? "LSR signage could not save the GitHub Client ID.",
     );
   }
 }
@@ -98,7 +98,7 @@ export function GitHubOAuthSetupPortal() {
   const setupValues = useMemo(() => {
     const origin = window.location.origin;
     return {
-      applicationName: `Tilecast at ${window.location.host}`.slice(0, 100),
+      applicationName: `LSR signage at ${window.location.host}`.slice(0, 100),
       homepageUrl: origin,
       callbackUrl: `${origin}/settings/player/updates`,
     };
@@ -204,9 +204,9 @@ export function GitHubOAuthSetupPortal() {
       >
         <div className="github-oauth-setup">
           <p className="github-oauth-setup__intro">
-            Create one GitHub OAuth App for this Tilecast installation. Tilecast
-            only needs the public Client ID; do not create or paste a client
-            secret.
+            Create one GitHub OAuth App for this LSR signage installation. LSR
+            signage only needs the public Client ID; do not create or paste a
+            client secret.
           </p>
 
           <section className="github-oauth-setup__step">
@@ -233,7 +233,7 @@ export function GitHubOAuthSetupPortal() {
             <div>
               <h3>Enter these exact values</h3>
               <p>
-                GitHub requires a callback URL even though Tilecast signs in
+                GitHub requires a callback URL even though LSR signage signs in
                 through Device Flow.
               </p>
               <CopyValue
@@ -270,8 +270,8 @@ export function GitHubOAuthSetupPortal() {
               <h3>Paste the Client ID</h3>
               <p>
                 After GitHub registers the app, copy its Client ID and paste it
-                below. Tilecast saves it in persistent application data and then
-                starts sign-in immediately.
+                below. LSR signage saves it in persistent application data and
+                then starts sign-in immediately.
               </p>
               <label className="field">
                 <span className="field__label">GitHub Client ID</span>
@@ -315,13 +315,13 @@ export function GitHubOAuthSetupPortal() {
 
       <Dialog
         open={Boolean(flow)}
-        title="Authorize Tilecast on GitHub"
+        title="Authorize LSR signage on GitHub"
         onClose={() => setFlow(null)}
       >
         {flow && (
           <div className="github-oauth-device">
             <p>
-              Open GitHub, enter this one-time code, and approve the Tilecast
+              Open GitHub, enter this one-time code, and approve the LSR signage
               OAuth App. This window will update automatically.
             </p>
             <strong className="github-oauth-device__code">

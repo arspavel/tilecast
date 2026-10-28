@@ -142,7 +142,7 @@
       if (state.mode !== "disabled") {
         state.currentPlaylist = null;
         state.playbackState = "disabled";
-        showMessage("Экран отключён", "Экран отключён в Tilecast Studio. Показ продолжится после включения.");
+        showMessage("Экран отключён", "Экран отключён в LSR signage. Показ продолжится после включения.");
         state.mode = "disabled";
       }
       return true;
@@ -154,8 +154,8 @@
     clearPlayback();
     state.mode = "setup";
     stage.innerHTML = '<div class="center"><section class="panel">' +
-      '<div class="brand">Tilecast webOS</div><h1>Подключение к серверу</h1>' +
-      '<p>Введите публичный адрес Tilecast, доступный с телевизора.</p>' +
+      '<div class="brand">LSR signage webOS</div><h1>Подключение к серверу</h1>' +
+      '<p>Введите публичный адрес LSR signage, доступный с телевизора.</p>' +
       '<form class="server-form" id="server-form"><input id="server-url" type="url" inputmode="url" placeholder="https://tilecast.example.com" value="' + escapeHtml(state.serverUrl) + '"><button type="submit">Подключить</button></form>' +
       (message ? '<p class="error">' + escapeHtml(message) + '</p>' : '') +
       '</section></div>';
@@ -176,7 +176,7 @@
     clearPlayback();
     state.mode = "pairing";
     stage.innerHTML = '<div class="center"><section class="panel">' +
-      '<div class="brand">Tilecast webOS</div><h1>Привязка экрана</h1>' +
+      '<div class="brand">LSR signage webOS</div><h1>Привязка экрана</h1>' +
       '<p>Откройте адрес в браузере и подтвердите телевизор:</p>' +
       '<p class="url">' + escapeHtml(session.approvalUrl) + '</p>' +
       '<div class="code">' + escapeHtml(session.code) + '</div>' +
@@ -188,7 +188,7 @@
     clearPlayback();
     state.messageTitle = title;
     state.messageText = message;
-    stage.innerHTML = '<div class="center"><section class="panel"><div class="brand">Tilecast webOS</div><h1>' +
+    stage.innerHTML = '<div class="center"><section class="panel"><div class="brand">LSR signage webOS</div><h1>' +
       escapeHtml(title) + '</h1><p>' + escapeHtml(message) + '</p></section></div>';
   }
 
@@ -890,7 +890,7 @@
       drawn = true;
     }
     if (!drawn) {
-      drawCard(context, width, height, state.messageTitle || "Tilecast Player", (state.messageText ? [state.messageText] : []).concat(statusLines()));
+      drawCard(context, width, height, state.messageTitle || "LSR signage Player", (state.messageText ? [state.messageText] : []).concat(statusLines()));
     }
     return { canvas: canvas, width: width, height: height };
   }
@@ -1155,7 +1155,7 @@
     var lines = [];
     var credential = state.credential || {};
     var host = (/^https?:\/\/([^\/:]+)/i.exec(state.serverUrl || "") || [])[1] || "—";
-    lines.push("Экран: " + (credential.screenName || "не привязан") + " · Tilecast webOS " + VERSION);
+    lines.push("Экран: " + (credential.screenName || "не привязан") + " · LSR signage webOS " + VERSION);
     var contactAge = state.lastServerContactAt ? Date.now() - state.lastServerContactAt : Infinity;
     lines.push("Сервер: " + host + " · " + (contactAge < 45000 ? "на связи" : "нет связи" + (isFinite(contactAge) ? " " + formatDuration(contactAge) : "")));
     var download = activeDownload();

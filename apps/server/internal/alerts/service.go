@@ -137,7 +137,7 @@ type Service struct {
 func NewService(db *pgxpool.Pool, deviceService *devices.Service, playlistService *playlists.Service, logger *slog.Logger, publicURL string, maxDuration time.Duration) *Service {
 	contact := strings.TrimSpace(publicURL)
 	if contact == "" {
-		contact = "self-hosted Tilecast installation"
+		contact = "self-hosted LSR signage installation"
 	}
 	return &Service{
 		db: db, devices: deviceService, playlists: playlistService, logger: logger,
@@ -621,7 +621,7 @@ func (s *Service) ensureBuiltinPresentation(
 		return nil, nil, nil, err
 	}
 	if _, err = tx.Exec(ctx, `INSERT INTO assets(id,organization_id,name,description,type,original_filename,detected_mime_type,sha256,original_size,processing_status,created_by,system_managed)
-		VALUES($1,$2,$3,'Tilecast built-in fullscreen NWS alert','widget','','application/vnd.tilecast.widget+json',''::bytea,0,'ready',$4,TRUE)`,
+		VALUES($1,$2,$3,'LSR signage built-in fullscreen NWS alert','widget','','application/vnd.tilecast.widget+json',''::bytea,0,'ready',$4,TRUE)`,
 		widget, organizationID, name, userID); err != nil {
 		return nil, nil, nil, err
 	}

@@ -32,8 +32,8 @@ export function SnapshotHistoryPanel({ screenId }: { screenId: string }) {
         <div className="empty-card">
           <strong>Snapshot history is off.</strong>
           <p>
-            Tilecast is not keeping images of what this screen showed. An Owner
-            or Administrator can turn it on under{" "}
+            LSR signage is not keeping images of what this screen showed. An
+            Owner or Administrator can turn it on under{" "}
             <Link to="/settings/snapshots">Settings, Snapshot history</Link>.
           </p>
         </div>
@@ -44,8 +44,8 @@ export function SnapshotHistoryPanel({ screenId }: { screenId: string }) {
     return (
       <div className="snapshot-history">
         <div className="empty-card">
-          No snapshots yet. Tilecast captures a frame on a schedule from screens
-          that are reporting.
+          No snapshots yet. LSR signage captures a frame on a schedule from
+          screens that are reporting.
         </div>
       </div>
     );

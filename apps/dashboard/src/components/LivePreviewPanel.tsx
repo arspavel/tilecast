@@ -130,7 +130,7 @@ export function LivePreviewPanel({ screenId }: { screenId: string }) {
         {(state === "live" || state === "stale") && imageUrl ? (
           <img
             src={imageUrl}
-            alt={`Current Tilecast output for ${screen.data?.name ?? "screen"}`}
+            alt={`Current LSR signage output for ${screen.data?.name ?? "screen"}`}
           />
         ) : (
           <PreviewState

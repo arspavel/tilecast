@@ -46,7 +46,7 @@ func TOTPSecretKey(secret []byte) string {
 func TOTPProvisioningURI(secret []byte, issuer, account string) string {
 	issuer = strings.TrimSpace(issuer)
 	if issuer == "" {
-		issuer = "Tilecast"
+		issuer = "LSR signage"
 	}
 	label := url.PathEscape(issuer + ":" + account)
 	query := url.Values{}

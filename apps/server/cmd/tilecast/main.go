@@ -92,7 +92,7 @@ func serve() {
 	}
 
 	authService := auth.NewService(db, cfg.SessionTTL)
-	webAuthnConfig, passkeyUnavailable := auth.ResolveWebAuthnConfig("Tilecast", cfg.PublicURL, cfg.WebAuthn.RPID, cfg.WebAuthn.Origins)
+	webAuthnConfig, passkeyUnavailable := auth.ResolveWebAuthnConfig("LSR signage", cfg.PublicURL, cfg.WebAuthn.RPID, cfg.WebAuthn.Origins)
 	if err = authService.ConfigurePasskeys(webAuthnConfig, passkeyUnavailable); err != nil {
 		fail("passkey configuration failed", err)
 	}
@@ -201,7 +201,7 @@ func serve() {
 		fail("acquire server advisory lock", err)
 	}
 	if !lockAcquired {
-		logger.Warn("another Tilecast server appears to hold the database lock; backup CLI safety checks may misbehave")
+		logger.Warn("another LSR signage server appears to hold the database lock; backup CLI safety checks may misbehave")
 	}
 	_, _ = db.Exec(ctx, `INSERT INTO media_jobs(id,kind,status,run_after) VALUES(gen_random_uuid(),'clean_expired_uploads','queued',now())`)
 	mediaWorkers := media.NewWorkerPool(mediaService, logger)
@@ -285,7 +285,7 @@ func serve() {
 				logger.Warn("mDNS discovery is unavailable", "error", discoveryErr)
 			} else {
 				defer discoveryServer.Shutdown()
-				logger.Info("advertising Tilecast on the local network", "service", "_tilecast._tcp.local")
+				logger.Info("advertising LSR signage on the local network", "service", "_tilecast._tcp.local")
 			}
 		}
 	}
@@ -385,7 +385,7 @@ func serve() {
 	}()
 
 	go func() {
-		logger.Info("Tilecast server listening", "address", cfg.HTTPAddr, "environment", cfg.Environment)
+		logger.Info("LSR signage server listening", "address", cfg.HTTPAddr, "environment", cfg.Environment)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			fail("server stopped unexpectedly", err)
 		}

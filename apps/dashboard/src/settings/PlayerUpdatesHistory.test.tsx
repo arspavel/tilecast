@@ -19,7 +19,7 @@ vi.mock("../auth/AuthProvider", () => ({
 
 const deployment: UpdateDeployment = {
   id: "d1",
-  name: "Tilecast Player 1.4.0",
+  name: "LSR signage Player 1.4.0",
   mode: "install_now",
   status: "active",
   createdAt: "2026-07-30T11:00:00Z",
@@ -188,7 +188,7 @@ describe("Player update deployment history", () => {
       await screen.findByRole("button", { name: /6 screens/ }),
     );
     expect(
-      await screen.findByRole("dialog", { name: /Tilecast Player 1.4.0/ }),
+      await screen.findByRole("dialog", { name: /LSR signage Player 1.4.0/ }),
     ).toBeTruthy();
     expect(screen.getByText("Needs approval on the TV")).toBeTruthy();
   });

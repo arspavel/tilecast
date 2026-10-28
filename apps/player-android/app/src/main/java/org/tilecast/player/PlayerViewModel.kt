@@ -235,7 +235,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 emit(PlayerEvent.IdentityConfirmed(selectedUrl!!, identity))
             }
         } catch (error: CancellationException) { throw error
-        } catch (error: Exception) { emit(PlayerEvent.Failed(error.message ?: "Не удалось связаться с сервером Tilecast")) }
+        } catch (error: Exception) { emit(PlayerEvent.Failed(error.message ?: "Не удалось связаться с сервером LSR signage")) }
     }
 
     fun discover() { viewModelScope.launch {
@@ -252,11 +252,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         emit(PlayerEvent.Validate(normalized.value))
         try {
             val identity = api.identity(normalized.value)
-            require(identity.product == "tilecast" && identity.apiVersion == "v1") { "По этому адресу нет совместимого сервера Tilecast" }
+            require(identity.product == "tilecast" && identity.apiVersion == "v1") { "По этому адресу нет совместимого сервера LSR signage" }
             selectedUrl = normalized; selectedIdentity = identity
             emit(PlayerEvent.IdentityConfirmed(normalized, identity))
         } catch (error: CancellationException) { throw error
-        } catch (error: Exception) { emit(PlayerEvent.Failed(error.message ?: "Не удалось подключиться к Tilecast")) }
+        } catch (error: Exception) { emit(PlayerEvent.Failed(error.message ?: "Не удалось подключиться к LSR signage")) }
     } }
 
     fun chooseServer(server: DiscoveredServer) = validateServer(server.baseUrl)
@@ -329,7 +329,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             api.heartbeat(url, credential, heartbeat())
         } catch (error: ApiException) {
             if (error.code == "device_credential_revoked" || error.code == "device_credential_invalid") { revokeLocally(screenName); return }
-            if (error.code == "screen_disabled") { emit(PlayerEvent.Disconnected(screenName, "Экран отключён в Tilecast Studio")); return }
+            if (error.code == "screen_disabled") { emit(PlayerEvent.Disconnected(screenName, "Экран отключён в LSR signage")); return }
             if (error.status in 400..499) { emit(PlayerEvent.Failed(error.message)); return }
         } catch (error: CancellationException) { throw error
         } catch (_: Exception) { }
@@ -668,7 +668,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		val outcome=when(command.type){
 			"sync_now"->{reconcileManifest(url,credential);CommandOutcome(true,"manifest_sync_started","Синхронизация контента запущена")}
 			"reload_playback"->{val active=mutableContent.value;mutableContent.value=null;delay(100);mutableContent.value=active;CommandOutcome(true,"playback_reloaded","Показ перезапущен")}
-			"identify_screen"->{val seconds=command.payload["durationSeconds"]?.jsonPrimitive?.content?.toIntOrNull()?:30;val location=mutablePlayerConfig.value?.playback?.takeIf{it.identifyShowsLocation}?.screenLocation.orEmpty();mutableIdentify.value="${current?.screenName ?: "Экран Tilecast"}${if(location.isNotEmpty())"\n$location" else ""}\n${current?.screenId?.takeLast(8).orEmpty()}";viewModelScope.launch{delay(seconds*1000L);mutableIdentify.value=null};CommandOutcome(true,"screen_identified","Показана надпись для опознания экрана")}
+			"identify_screen"->{val seconds=command.payload["durationSeconds"]?.jsonPrimitive?.content?.toIntOrNull()?:30;val location=mutablePlayerConfig.value?.playback?.takeIf{it.identifyShowsLocation}?.screenLocation.orEmpty();mutableIdentify.value="${current?.screenName ?: "Экран LSR signage"}${if(location.isNotEmpty())"\n$location" else ""}\n${current?.screenId?.takeLast(8).orEmpty()}";viewModelScope.launch{delay(seconds*1000L);mutableIdentify.value=null};CommandOutcome(true,"screen_identified","Показана надпись для опознания экрана")}
 			"clear_media_cache"->{val success=synchronizer.clearUnprotectedCache();reconcileManifest(url,credential);CommandOutcome(success,if(success)"cache_cleared" else "cache_cleanup_partial",if(success)"Кэш медиафайлов очищен" else "Часть защищённого контента сохранена")}
 			"clear_website_data"->{var success=false;WebsiteDataManager.clear(getApplication()){success=it};delay(250);CommandOutcome(success,if(success)"website_data_cleared" else "website_data_clear_failed",if(success)"Данные сайтов очищены" else "Не удалось очистить данные сайтов")}
 			"disable_playback"->{commandCoordinator.setPlaybackDisabled(true);mutablePlaybackDisabled.value=true;scheduleContent?.let{activateScheduleSelection(it,url,credential)};CommandOutcome(true,"playback_disabled","Показ отключён")}

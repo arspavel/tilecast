@@ -17,7 +17,7 @@ describe("WebAuthn option decoding", () => {
     // "hello" and "handle!" in unpadded base64url.
     const options = toCreationOptions({
       challenge: "aGVsbG8",
-      rp: { id: "signage.example.org", name: "Tilecast" },
+      rp: { id: "signage.example.org", name: "LSR signage" },
       user: { id: "aGFuZGxlIQ", name: "owner", displayName: "Owner" },
       pubKeyCredParams: [],
       excludeCredentials: [{ id: "aGVsbG8", type: "public-key" }],

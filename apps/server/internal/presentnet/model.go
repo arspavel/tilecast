@@ -194,7 +194,7 @@ func ValidateInput(input Input, credentialAlreadyStored bool) (Input, error) {
 	case len(input.SSID) > maxSSIDBytes:
 		return Input{}, invalid("An SSID is at most %d bytes.", maxSSIDBytes)
 	case !printableASCII(input.SSID):
-		return Input{}, invalid("Tilecast supports printable ASCII SSIDs. This SSID contains characters Tilecast has not validated on a Linux player.")
+		return Input{}, invalid("LSR signage supports printable ASCII SSIDs. This SSID contains characters LSR signage has not validated on a Linux player.")
 	}
 
 	if !input.Security.valid() {

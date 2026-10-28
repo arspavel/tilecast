@@ -231,13 +231,13 @@ export const sectionDetails: Record<
   "player-updates": {
     icon: DownloadCloud,
     title: "Player updates",
-    description: "Verified Tilecast Player releases and update deployments.",
+    description: "Verified LSR signage Player releases and update deployments.",
   },
   "presentation-networks": {
     icon: Wifi,
     title: "Presentation Networks",
     description:
-      "Temporarily connect supported Linux players to Wi-Fi for AirPlay and other local presentation features while keeping Ethernet as their primary Tilecast connection.",
+      "Temporarily connect supported Linux players to Wi-Fi for AirPlay and other local presentation features while keeping Ethernet as their primary LSR signage connection.",
   },
   takeover: {
     icon: Siren,
@@ -285,7 +285,7 @@ export const sectionDetails: Record<
   "import-export": {
     icon: ArrowLeftRight,
     title: "Import and export",
-    description: "Portable, non-secret Tilecast configuration.",
+    description: "Portable, non-secret LSR signage configuration.",
   },
   preferences: {
     icon: SlidersHorizontal,

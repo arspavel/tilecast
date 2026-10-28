@@ -28,16 +28,16 @@ func (s *server) mfaPolicy(r *http.Request) auth.MFAPolicy {
 
 func (s *server) organizationDisplayName(r *http.Request) string {
 	if s.settings == nil {
-		return "Tilecast"
+		return "LSR signage"
 	}
 	document, err := s.settings.Organization(r.Context())
 	if err != nil {
-		return "Tilecast"
+		return "LSR signage"
 	}
 	if name, ok := document.Values["organization.name"].(string); ok && strings.TrimSpace(name) != "" {
 		return name
 	}
-	return "Tilecast"
+	return "LSR signage"
 }
 
 // writeMFAError maps the domain errors onto the public contract. Verification

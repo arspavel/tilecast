@@ -191,7 +191,7 @@ export function AirPlayPresentDialog({
     // reported yet. Reporting both as "waiting" leaves the dialog stuck with
     // no way to tell a broken request from a player that never probed.
     if (capabilityError)
-      return `Tilecast could not read display capabilities: ${capabilityError}`;
+      return `LSR signage could not read display capabilities: ${capabilityError}`;
     if (!capabilitiesComplete) {
       if (capabilityLoading) return "Reading display capabilities…";
       const remaining = Math.max(1, displayCount - allCapabilities.length);
@@ -223,7 +223,7 @@ export function AirPlayPresentDialog({
       // probe rather than at a version number. Every player release since
       // AirPlay shipped has carried fixes that changed what "new enough" means,
       // and naming one version sends operators to check the wrong thing.
-      return "This display has not reported AirPlay capabilities yet. Run Test AirPlay support from Health & recovery; if the probe never reports, update Tilecast Player.";
+      return "This display has not reported AirPlay capabilities yet. Run Test AirPlay support from Health & recovery; if the probe never reports, update LSR signage Player.";
     const hardware1080 = allCapabilities.every(
       (item) =>
         item.airplayHardwareDecode && item.airplayMaxProfile === "1080p30",
@@ -279,7 +279,7 @@ export function AirPlayPresentDialog({
             <Radio size={17} aria-hidden="true" />
             <span>
               {current.error
-                ? "Tilecast could not load the active AirPlay session. Refresh and try again."
+                ? "LSR signage could not load the active AirPlay session. Refresh and try again."
                 : "Loading the active AirPlay session…"}
             </span>
           </div>

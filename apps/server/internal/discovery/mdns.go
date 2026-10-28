@@ -27,7 +27,7 @@ func Advertise(identity devices.Identity, publicURL string) (*Server, error) {
 			return nil, fmt.Errorf("parse public URL port: %w", err)
 		}
 	}
-	instance := strings.TrimSpace("Tilecast - " + identity.OrganizationName)
+	instance := strings.TrimSpace("LSR signage - " + identity.OrganizationName)
 	server, err := zeroconf.Register(instance, "_tilecast._tcp", "local.", port, []string{
 		"path=/api/v1/system/identity",
 		"base-url=" + strings.TrimRight(publicURL, "/"),
@@ -35,7 +35,7 @@ func Advertise(identity devices.Identity, publicURL string) (*Server, error) {
 		"api-version=v1",
 	}, nil)
 	if err != nil {
-		return nil, fmt.Errorf("advertise Tilecast with mDNS: %w", err)
+		return nil, fmt.Errorf("advertise LSR signage with mDNS: %w", err)
 	}
 	return &Server{server: server}, nil
 }

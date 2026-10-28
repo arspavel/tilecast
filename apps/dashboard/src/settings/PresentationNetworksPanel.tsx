@@ -184,7 +184,7 @@ export function PresentationNetworksPanel({
           <p>
             Presentation Networks let supported Linux players join Wi-Fi only
             while an AirPlay session needs it. Ethernet remains the normal path
-            for Tilecast traffic, downloads, and group video fan-out.
+            for LSR signage traffic, downloads, and group video fan-out.
           </p>
         </header>
         {unavailable && (

@@ -567,7 +567,7 @@ func (s *server) playerCommands(w http.ResponseWriter, r *http.Request) {
 			"path", r.URL.Path,
 			"screen_id", principal.ScreenID,
 		)
-		writeError(w, http.StatusInternalServerError, "internal_error", "Tilecast could not complete the request.")
+		writeError(w, http.StatusInternalServerError, "internal_error", "LSR signage could not complete the request.")
 		return
 	}
 	defer rows.Close()

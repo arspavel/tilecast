@@ -153,7 +153,7 @@ func (s *server) updateUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if owners <= 1 {
-			writeError(w, http.StatusConflict, "last_owner_required", "Tilecast must keep at least one active Owner account.")
+			writeError(w, http.StatusConflict, "last_owner_required", "LSR signage must keep at least one active Owner account.")
 			return
 		}
 	}
@@ -246,7 +246,7 @@ func (s *server) deleteUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if owners <= 1 {
-			writeError(w, http.StatusConflict, "last_owner_required", "Tilecast must keep at least one active Owner account.")
+			writeError(w, http.StatusConflict, "last_owner_required", "LSR signage must keep at least one active Owner account.")
 			return
 		}
 	}

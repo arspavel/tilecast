@@ -41,7 +41,7 @@ async function userRequest<T>(
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as ErrorResponse;
     throw new Error(
-      body.error?.message ?? "Tilecast could not update this account.",
+      body.error?.message ?? "LSR signage could not update this account.",
     );
   }
   if (response.status === 204) return undefined as T;

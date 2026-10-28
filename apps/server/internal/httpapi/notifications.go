@@ -125,7 +125,7 @@ func (s *server) createNotificationWebhook(w http.ResponseWriter, r *http.Reques
 		"webhook": webhook,
 		// Returned exactly once. There is no endpoint that reads it back.
 		"signingSecret": secret,
-		"secretNotice":  "Copy this signing secret now. Tilecast does not show it again.",
+		"secretNotice":  "Copy this signing secret now. LSR signage does not show it again.",
 	}})
 }
 

@@ -57,7 +57,7 @@ function contrast(foreground: string, background: string) {
   return ((values[0] ?? 0) + 0.05) / ((values[1] ?? 0) + 0.05);
 }
 
-describe("Tilecast Signal contrast", () => {
+describe("LSR signage Signal contrast", () => {
   it.each([
     ["FFFFFF", "3E6FE0", "primary button"],
     ["17212B", "F6F8FA", "light canvas text"],

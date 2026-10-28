@@ -47,14 +47,14 @@ export function BrandingAssets({
       <header>
         <h3>Organization images</h3>
         <p>
-          Upload images from this device. Tilecast stores the selected asset
+          Upload images from this device. LSR signage stores the selected asset
           internally.
         </p>
       </header>
       <div className="branding-asset-grid">
         <BrandingAssetUpload
           title="Logo"
-          description="A wide organization logo for Tilecast Studio and supported player screens."
+          description="A wide organization logo for LSR signage and supported player screens."
           value={stringValue(values["branding.logo_asset_id"])}
           editable={editable}
           onSelect={(assetId) => onChange("branding.logo_asset_id", assetId)}
@@ -70,7 +70,7 @@ export function BrandingAssets({
         />
         <BrandingAssetUpload
           title="Login background"
-          description="The full-screen image behind the Tilecast Studio sign-in panel."
+          description="The full-screen image behind the LSR signage sign-in panel."
           value={background.data?.assetId ?? ""}
           editable={editable && !background.isLoading}
           fallbackImageUrl={

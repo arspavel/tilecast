@@ -90,7 +90,7 @@ function stubApi() {
     enabled: true,
     retentionDays: 7,
     maxPerScreen: 48,
-    proofNote: "Captured from Tilecast Player.",
+    proofNote: "Captured from LSR signage Player.",
   });
   vi.spyOn(api, "playlistAssignment").mockResolvedValue(empty);
   vi.spyOn(api, "presentationOverrides").mockResolvedValue({

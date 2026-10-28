@@ -32,7 +32,7 @@ export function BackupPanel({ owner }: { owner: boolean }) {
         : "";
       if (
         !confirm(
-          `Restore ${archive.fileName}?\n\nTilecast will become temporarily unavailable and current database and media state will be replaced. A pre-restore backup will be created first.${identityWarning}`,
+          `Restore ${archive.fileName}?\n\nLSR signage will become temporarily unavailable and current database and media state will be replaced. A pre-restore backup will be created first.${identityWarning}`,
         )
       )
         throw new CancelledAction();
@@ -137,7 +137,7 @@ export function BackupPanel({ owner }: { owner: boolean }) {
                         ? "Verified"
                         : archive.verification}
                     </span>
-                    {" · "}Tilecast {archive.tilecastVersion} · schema{" "}
+                    {" · "}LSR signage {archive.tilecastVersion} · schema{" "}
                     {archive.schemaVersion}
                   </span>
                 </div>

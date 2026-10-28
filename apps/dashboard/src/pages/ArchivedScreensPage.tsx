@@ -24,7 +24,7 @@ export function ArchivedScreensPage() {
     <div className="screens-page">
       <PageHeader
         title="Screen archive"
-        description="Players with revoked pairings are retained for history but are detached from all live Tilecast configuration."
+        description="Players with revoked pairings are retained for history but are detached from all live LSR signage configuration."
       />
       <nav className="screen-primary-tabs" aria-label="Screen management">
         <Link to="/screens">Screens</Link>

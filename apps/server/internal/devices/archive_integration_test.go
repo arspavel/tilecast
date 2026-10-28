@@ -68,7 +68,7 @@ func TestRevokedScreenArchiveDoesNotAffectLiveConfiguration(t *testing.T) {
 	metadata := DeviceMetadata{
 		PlayerInstallationID: uuid.NewString(),
 		Platform:             "linux",
-		Manufacturer:         "Tilecast",
+		Manufacturer:         "LSR signage",
 		Model:                "Test player",
 		AndroidVersion:       "n/a",
 		PlayerVersion:        "1.0.0",

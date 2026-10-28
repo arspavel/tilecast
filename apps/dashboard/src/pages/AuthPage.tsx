@@ -75,7 +75,7 @@ function SetupFormView() {
   return (
     <div className="auth-form auth-form--setup" aria-labelledby="setup-title">
       <header>
-        <h1 id="setup-title">Set up Tilecast</h1>
+        <h1 id="setup-title">Set up LSR signage</h1>
         <p>Create the first owner account for this installation.</p>
       </header>
       {error && (
@@ -172,7 +172,7 @@ function LoginFormView() {
     <div className="auth-form" aria-labelledby="login-title">
       <header>
         <h1 id="login-title">Sign in</h1>
-        <p>Manage your Tilecast displays.</p>
+        <p>Manage your LSR signage displays.</p>
       </header>
       {error && (
         <div className="notice notice--error" role="alert">

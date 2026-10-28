@@ -14,7 +14,7 @@ vi.mock("../auth/AuthProvider", () => ({
 
 const detail: UpdateDeploymentDetail = {
   id: "d1",
-  name: "Tilecast Player 1.4.0",
+  name: "LSR signage Player 1.4.0",
   mode: "install_now",
   status: "active",
   createdAt: "2026-07-30T11:00:00Z",

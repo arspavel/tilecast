@@ -226,7 +226,7 @@ describe("settings presentation", () => {
   });
 
   it("centralizes dependencies and meaningful subsections", () => {
-    expect(enumLabel("bouncing_logo")).toBe("Bouncing Tilecast logo");
+    expect(enumLabel("bouncing_logo")).toBe("Bouncing LSR signage logo");
     expect(enumLabel("black")).toBe("Black screen");
     expect(
       dependencyState("power.active_hours_days", {

@@ -3767,8 +3767,8 @@ export function YouTubeSourceEditor({
             onChange={(event) => set("url", event.target.value)}
           />
           <small>
-            Tilecast detects whether this is a video or playlist. No YouTube API
-            key is required.
+            LSR signage detects whether this is a video or playlist. No YouTube
+            API key is required.
           </small>
         </label>
         <div className="source-editor__columns">
@@ -3886,7 +3886,7 @@ export function YouTubeSourceEditor({
               )
             }
           >
-            <option value="placeholder">Show Tilecast placeholder</option>
+            <option value="placeholder">Show LSR signage placeholder</option>
             <option value="fallback_image">Show fallback image</option>
             <option value="skip">Skip playlist item</option>
           </Select>

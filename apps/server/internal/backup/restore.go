@@ -44,7 +44,7 @@ func Plan(ctx context.Context, db *pgxpool.Pool, archivePath string, limits Limi
 		return RestorePlan{}, err
 	}
 	if manifest.SchemaVersion > binaryVersion {
-		return RestorePlan{}, fmt.Errorf("archive schema version %d is newer than this server supports (%d); upgrade Tilecast before restoring", manifest.SchemaVersion, binaryVersion)
+		return RestorePlan{}, fmt.Errorf("archive schema version %d is newer than this server supports (%d); upgrade LSR signage before restoring", manifest.SchemaVersion, binaryVersion)
 	}
 	plan := RestorePlan{
 		ArchivePath:         archivePath,

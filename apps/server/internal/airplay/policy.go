@@ -254,7 +254,7 @@ func GatewayLimitation(rejected []GatewayIneligibility, requirement GatewayRequi
 				subject + " has none. Only the gateway needs Wi-Fi; the other displays stay on Ethernet."
 		case GatewayReasonPresentationUnsupported:
 			return "No display in this room can act as the AirPlay gateway: " + subject +
-				" cannot manage a temporary Wi-Fi connection. NetworkManager and the Tilecast presentation-network helper are both required."
+				" cannot manage a temporary Wi-Fi connection. NetworkManager and the LSR signage presentation-network helper are both required."
 		case GatewayReasonNoWiredAddress:
 			return "No display in this room can act as the AirPlay gateway: " + subject +
 				" has not reported a usable Ethernet IPv4 address for group video fan-out."

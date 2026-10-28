@@ -393,7 +393,7 @@ export function PluginsPage() {
     <main className="page plugins-page">
       <PageHeader
         title="Plugins"
-        description="Built-in Tilecast features that can affect Player behavior outside playlists and Layout zones."
+        description="Built-in LSR signage features that can affect Player behavior outside playlists and Layout zones."
       />
       {plugins.isError && (
         <Notice variant="danger">Plugins could not be loaded.</Notice>
@@ -1730,7 +1730,7 @@ function NoiseMeterPlatformNotice() {
   return (
     <Notice>
       Noise Meter runs on Linux Player only, using that player's default
-      microphone. Audio is measured on the device and never sent to Tilecast,
+      microphone. Audio is measured on the device and never sent to LSR signage,
       and nothing is recorded. Android Players ignore it.
     </Notice>
   );

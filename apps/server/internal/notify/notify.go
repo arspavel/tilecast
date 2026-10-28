@@ -131,7 +131,7 @@ func ParseSettings(values map[string]any) (Settings, error) {
 	s := Settings{
 		Enabled:           boolSetting(values, "notifications.enabled", false),
 		FromAddress:       strings.TrimSpace(stringSetting(values, "notifications.from_address", "")),
-		FromName:          stringSetting(values, "notifications.from_name", "Tilecast"),
+		FromName:          stringSetting(values, "notifications.from_name", "LSR signage"),
 		MinimumSeverity:   stringSetting(values, "notifications.minimum_severity", "warning"),
 		QuietHoursEnabled: boolSetting(values, "notifications.quiet_hours_enabled", false),
 		RetentionDays:     intSetting(values, "notifications.retention_days", 90),

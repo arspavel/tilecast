@@ -306,7 +306,7 @@ function PasskeyPanel({ status }: { status: SecurityStatus }) {
           <FormField
             id="passkey-name"
             label={`Rename “${renaming.name}”`}
-            hint="Tilecast named this from the authenticator that created it."
+            hint="LSR signage named this from the authenticator that created it."
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
@@ -395,7 +395,7 @@ function RecoveryCodePanel({ status }: { status: SecurityStatus }) {
           <div className="notice notice--warning">
             <strong>These codes are shown once.</strong>
             <p>
-              Save them somewhere safe now. Tilecast stores only their hashes
+              Save them somewhere safe now. LSR signage stores only their hashes
               and cannot show them again.
             </p>
           </div>
@@ -471,7 +471,7 @@ function errorNotice(error: Error | null | undefined) {
   const message =
     error instanceof ApiError
       ? error.message
-      : "Tilecast could not complete the request.";
+      : "LSR signage could not complete the request.";
   return (
     <div className="notice notice--error" role="alert">
       {message}

@@ -1,10 +1,10 @@
 {
   "id": "org.tilecast.player.webos",
   "version": "0.3.1",
-  "vendor": "Tilecast",
+  "vendor": "LSR signage",
   "type": "web",
   "main": "index.html",
-  "title": "Tilecast Player",
+  "title": "LSR signage Player",
   "icon": "icon.png",
   "largeIcon": "icon.png",
   "backgroundColor": "#0e141b",

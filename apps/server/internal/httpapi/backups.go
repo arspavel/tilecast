@@ -19,7 +19,7 @@ func (s *server) restoreGate(next http.Handler) http.Handler {
 		if s.backups != nil && s.backups.Guard().RestoreActive() {
 			path := r.URL.Path
 			if path != "/healthz" && path != "/readyz" && strings.HasPrefix(path, "/api/") {
-				writeError(w, http.StatusServiceUnavailable, "restore_in_progress", "A restore is in progress. Tilecast will be back shortly.")
+				writeError(w, http.StatusServiceUnavailable, "restore_in_progress", "A restore is in progress. LSR signage will be back shortly.")
 				return
 			}
 		}

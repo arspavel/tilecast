@@ -216,7 +216,7 @@ func ParseAndVerifyManifest(raw, signature []byte, key ed25519.PublicKey) (Manif
 			return Manifest{}, errors.New("linux update manifest must not carry android fields")
 		}
 		if manifest.ArtifactAssetName != LinuxArtifactName || manifest.ArtifactSizeBytes <= 0 || !digestPattern.MatchString(strings.ToLower(manifest.ArtifactSHA256)) || manifest.VersionCode <= LinuxBaselineVersionCode {
-			return Manifest{}, errors.New("update manifest metadata is invalid or not newer than this Tilecast Player baseline")
+			return Manifest{}, errors.New("update manifest metadata is invalid or not newer than this LSR signage Player baseline")
 		}
 	default:
 		// Android manifests carry no Linux artifact fields.
@@ -224,7 +224,7 @@ func ParseAndVerifyManifest(raw, signature []byte, key ed25519.PublicKey) (Manif
 			return Manifest{}, errors.New("android update manifest must not carry linux fields")
 		}
 		if manifest.ApplicationID != ApplicationID || manifest.VersionCode <= CurrentVersionCode || manifest.APKAssetName != AndroidArtifactName || manifest.APKSizeBytes <= 0 || !digestPattern.MatchString(strings.ToLower(manifest.APKSHA256)) || !digestPattern.MatchString(strings.ToLower(manifest.SigningCertificateSHA256)) {
-			return Manifest{}, errors.New("update manifest metadata is invalid or not newer than this Tilecast Player baseline")
+			return Manifest{}, errors.New("update manifest metadata is invalid or not newer than this LSR signage Player baseline")
 		}
 		if manifest.MinimumSDK < SupportedMinSDK || manifest.MinimumSDK > 35 {
 			return Manifest{}, errors.New("update minimum SDK is unsupported")
@@ -375,7 +375,7 @@ func (s *Service) importRelease(ctx context.Context, release ProviderRelease) er
 	signatureAsset, signatureOK := assets[signatureName]
 	artifactAsset, artifactOK := assets[artifactName]
 	if !manifestOK || !signatureOK || !artifactOK {
-		return errors.New("release is missing required Tilecast Player assets")
+		return errors.New("release is missing required LSR signage Player assets")
 	}
 	// A published release's signed manifest does not change, and each asset
 	// download is a GitHub API request. Fetching both again for every known

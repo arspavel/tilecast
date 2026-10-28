@@ -13,7 +13,7 @@ class PlayerDiagnosticsTest {
     @Test fun progressOnlyWhileDownloading(){assertNull(PlayerDiagnostics(syncRequiredBytes=100,syncDownloadedBytes=100).syncFraction);assertEquals(0.25f,PlayerDiagnostics(syncRequiredBytes=400,syncDownloadedBytes=100,syncQueueCount=3).syncFraction!!,0.001f)}
     @Test fun overlayLinesNameTheContentAndProgress(){val lines=infoLines(PlayerDiagnostics(screenName="Холл 1",serverHost="arspavel.ru",connected=true,connectedForMillis=65_000,latencyMillis=42,downloadBytesPerSecond=2_000_000,downloading=true,contentName="Утро",selectionSource="schedule",itemPosition=2,itemCount=5,syncQueueCount=2,syncDownloadedBytes=50,syncRequiredBytes=200,playerVersion="0.34.0"),Instant.now());assertTrue(lines.any{it=="Плейлист: Утро (элемент 2 из 5 · по расписанию)"});assertTrue(lines.any{it.startsWith("Соединение: задержка 42 мс · загрузка 16.0 Мбит/с")});assertTrue(lines.any{it.startsWith("Загрузка контента: 25%")});assertTrue(lines.any{it.contains("на связи 1 мин 5 с")})}
     @Test fun firstLineShowsTheInventoryNumberWhenSet(){
-        assertEquals("Экран: LP1 · инв. № ИНВ-0042 · Tilecast 0.36.0",infoLines(PlayerDiagnostics(screenName="LP1",inventoryNumber="ИНВ-0042",playerVersion="0.36.0"),Instant.now()).first())
-        assertEquals("Экран: LP1 · Tilecast 0.36.0",infoLines(PlayerDiagnostics(screenName="LP1",inventoryNumber=" ",playerVersion="0.36.0"),Instant.now()).first())
+        assertEquals("Экран: LP1 · инв. № ИНВ-0042 · LSR signage 0.36.0",infoLines(PlayerDiagnostics(screenName="LP1",inventoryNumber="ИНВ-0042",playerVersion="0.36.0"),Instant.now()).first())
+        assertEquals("Экран: LP1 · LSR signage 0.36.0",infoLines(PlayerDiagnostics(screenName="LP1",inventoryNumber=" ",playerVersion="0.36.0"),Instant.now()).first())
     }
 }

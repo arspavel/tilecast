@@ -463,19 +463,19 @@ func presentationNetworkStatus(facts presentationNetworkFacts) (string, string) 
 	}
 	if facts.managerAvailable != nil && !*facts.managerAvailable {
 		return "network_manager_unavailable",
-			"NetworkManager is not available or not running on this player, so Tilecast cannot manage a temporary Wi-Fi connection."
+			"NetworkManager is not available or not running on this player, so LSR signage cannot manage a temporary Wi-Fi connection."
 	}
 	if facts.helperState != nil && *facts.helperState != "ok" {
 		switch *facts.helperState {
 		case "missing":
 			return "helper_missing",
-				"The Tilecast presentation-network helper is not installed. Re-run the player installer to add it."
+				"The LSR signage presentation-network helper is not installed. Re-run the player installer to add it."
 		case "unsupported":
 			return "unsupported", stringOr(facts.limitation,
 				"This player does not support Presentation Networks.")
 		default:
 			return "helper_unhealthy", stringOr(facts.limitation,
-				"The Tilecast presentation-network helper is installed but not responding.")
+				"The LSR signage presentation-network helper is installed but not responding.")
 		}
 	}
 	if facts.wifiAdapter != nil && !*facts.wifiAdapter {
@@ -531,9 +531,9 @@ func presentationNetworkFailureDetail(facts presentationNetworkFacts) string {
 	case "credential_unavailable":
 		return "The Presentation Network credential could not be provisioned. Re-enter it in Settings."
 	case "helper_unavailable":
-		return "The Tilecast presentation-network helper stopped responding during the last attempt."
+		return "The LSR signage presentation-network helper stopped responding during the last attempt."
 	case "ethernet_default_route_lost":
-		return "Ethernet stopped being the default route, so Tilecast disconnected the temporary Wi-Fi connection."
+		return "Ethernet stopped being the default route, so LSR signage disconnected the temporary Wi-Fi connection."
 	case "":
 		return fmt.Sprintf("The last attempt to join %s failed.", facts.networkName)
 	default:

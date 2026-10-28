@@ -257,8 +257,8 @@ export function ScreenPresentationNetworkPanel({
       )}
       {(data?.status === "ready" || data?.status === "connected") && (
         <p className="field__hint">
-          <Wifi size={14} aria-hidden="true" /> Ethernet remains the default
-          Tilecast route.
+          <Wifi size={14} aria-hidden="true" /> Ethernet remains the default LSR
+          signage route.
         </p>
       )}
     </section>

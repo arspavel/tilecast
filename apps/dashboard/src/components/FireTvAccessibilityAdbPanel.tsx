@@ -73,9 +73,9 @@ export function FireTvAccessibilityAdbPanel({
         Optional Fire TV Accessibility Control
       </h3>
       <p>
-        Fire OS does not expose Tilecast in its normal Accessibility menu.
+        Fire OS does not expose LSR signage in its normal Accessibility menu.
         Commissioning can continue without this feature, or an administrator can
-        enable Tilecast’s accessibility service manually through ADB.
+        enable LSR signage’s accessibility service manually through ADB.
       </p>
       <button
         type="button"
@@ -113,8 +113,8 @@ export function FireTvAccessibilityAdbPanel({
                 : ""}
           </span>
           <p>
-            Run both commands, reopen Tilecast Player, and choose Verify again.
-            The enable command preserves other accessibility services.
+            Run both commands, reopen LSR signage Player, and choose Verify
+            again. The enable command preserves other accessibility services.
           </p>
         </div>
       )}

@@ -174,7 +174,7 @@ const createCopy: Record<string, SetupCopy> = {
   csv: {
     eyebrow: "Spreadsheet data",
     description:
-      "Upload a CSV or connect a hosted CSV, map its columns, and preview the rows Tilecast will cache.",
+      "Upload a CSV or connect a hosted CSV, map its columns, and preview the rows LSR signage will cache.",
     tip: "Column names must match the first row of the CSV. Start with the title column; the others are optional.",
     steps: [
       "Upload a CSV file or paste a direct CSV URL.",

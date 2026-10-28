@@ -78,7 +78,9 @@ export function FleetUptimePanel({
         <div className="uptime-empty" role="alert">
           <CircleAlert size={20} aria-hidden="true" />
           <strong>Uptime could not be loaded</strong>
-          <span>Refresh the page or check the Tilecast server connection.</span>
+          <span>
+            Refresh the page or check the LSR signage server connection.
+          </span>
         </div>
       ) : !report || report.screensTracked === 0 ? (
         <div className="uptime-empty">
