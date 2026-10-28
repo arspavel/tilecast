@@ -28,6 +28,7 @@ import {
   type Incident,
 } from "./ActivityIncidentShared";
 import { activityRequest } from "./ActivityShared";
+import { isAroundTheClock } from "../schedules/scheduleBuilderModel";
 import {
   errorText,
   hasError,
@@ -442,8 +443,12 @@ export function OperationsDashboard() {
             ) : upcoming.length ? (
               <ol className="ops-timeline">
                 {upcoming.map(({ schedule, at }) => (
-                  <li key={`${schedule.id}-${at.getTime()}`}>
-                    <time>{formatScheduleTime(at)}</time>
+                  <li key={`${schedule.id}-${at?.getTime() ?? "always"}`}>
+                    {at ? (
+                      <time>{formatScheduleTime(at)}</time>
+                    ) : (
+                      <time title="Круглосуточно, без смен">24/7</time>
+                    )}
                     <Link to={`/schedules/${schedule.id}`}>
                       <strong>{schedule.name}</strong>
                       <small>
@@ -888,10 +893,19 @@ function buildAttention({
   return items.sort((a, b) => order[a.severity] - order[b.severity]);
 }
 
+/**
+ * Upcoming starts, with around-the-clock schedules first and no time: their
+ * midnight boundary joins one day to the next and changes nothing on screen,
+ * so listing it as "tomorrow 00:00" would announce a change that never comes.
+ */
 function upcomingScheduleChanges(schedules: Schedule[], limit: number) {
   const now = new Date();
-  const candidates: { schedule: Schedule; at: Date }[] = [];
+  const candidates: { schedule: Schedule; at: Date | null }[] = [];
   for (const schedule of schedules) {
+    if (isAroundTheClock(schedule)) {
+      candidates.push({ schedule, at: null });
+      continue;
+    }
     if (schedule.type === "one_time" && schedule.oneTimeStart) {
       const at = new Date(schedule.oneTimeStart);
       if (at > now) candidates.push({ schedule, at });
@@ -910,7 +924,7 @@ function upcomingScheduleChanges(schedules: Schedule[], limit: number) {
     }
   }
   return candidates
-    .sort((a, b) => a.at.getTime() - b.at.getTime())
+    .sort((a, b) => (a.at?.getTime() ?? 0) - (b.at?.getTime() ?? 0))
     .slice(0, limit);
 }
 
