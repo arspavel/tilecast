@@ -50,7 +50,7 @@ func (s *server) securityHeaders(next http.Handler) http.Handler {
 		header.Set("X-XSS-Protection", "0")
 		// Secure cookies mean the installation is served over HTTPS.
 		if s.secureCookies {
-			header.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+			header.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 		}
 		next.ServeHTTP(w, r)
 	})

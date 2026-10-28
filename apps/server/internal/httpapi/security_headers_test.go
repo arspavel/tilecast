@@ -34,7 +34,7 @@ func TestSecurityHeaders(t *testing.T) {
 		t.Fatalf("webOS CSP = %q", webos)
 	}
 
-	if headersFor(&server{secureCookies: true}, "/").Get("Strict-Transport-Security") != "max-age=31536000; includeSubDomains" {
+	if headersFor(&server{secureCookies: true}, "/").Get("Strict-Transport-Security") != "max-age=31536000; includeSubDomains; preload" {
 		t.Error("HTTPS installation is missing HSTS")
 	}
 }
