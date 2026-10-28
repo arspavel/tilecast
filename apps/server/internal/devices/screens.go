@@ -23,8 +23,8 @@ SELECT s.id,s.name,s.description,COALESCE(l.name,''),s.location_id,s.room_name,s
        s.last_connected_at,s.last_disconnected_at,s.last_heartbeat_at,host(s.last_known_ip),s.created_at,s.updated_at,
        EXISTS(SELECT 1 FROM device_credentials c WHERE c.screen_id=s.id AND c.revoked_at IS NULL),
        s.archived_at,s.archived_reason,
-       sg.id,sg.name,COALESCE(cp.name,p.name,ly.name),
-       CASE WHEN cp.id IS NOT NULL OR p.id IS NOT NULL THEN 'playlist' WHEN ly.id IS NOT NULL THEN 'presentation' END,
+       sg.id,sg.name,COALESCE(qp.content_name,cp.name,p.name,ly.name),
+       CASE WHEN qp.content_type='layout' THEN 'presentation' WHEN qp.content_name IS NOT NULL OR cp.id IS NOT NULL OR p.id IS NOT NULL THEN 'playlist' WHEN ly.id IS NOT NULL THEN 'presentation' END,
        ps.player_version_code,ps.android_sdk,ps.installer_source,ps.install_permission_status,
        ps.current_update_deployment_id,ps.update_state,ps.update_downloaded_bytes,ps.update_expected_bytes,ps.update_error,
        ps.current_item_id,ps.current_asset_id,ps.playback_state,ps.last_sync_error,ps.last_playback_error,
@@ -43,7 +43,20 @@ LEFT JOIN screen_player_status ps ON ps.screen_id=s.id
 -- What the player reports it is playing wins over the direct assignment: a
 -- schedule or a takeover is content too, and the assignment alone made a
 -- screen playing a scheduled playlist read "nothing assigned".
-LEFT JOIN playlists cp ON cp.id=ps.current_playlist_id AND ps.playback_state='playing'`
+LEFT JOIN playlists cp ON cp.id=ps.current_playlist_id AND ps.playback_state='playing'
+-- Show now outranks a schedule on the player, and may be a single asset that
+-- no playlist name describes, so it is named from the override itself.
+LEFT JOIN LATERAL (
+    SELECT o.content_type,
+           COALESCE((SELECT name FROM playlists WHERE id=o.content_id),
+                    (SELECT name FROM layouts WHERE id=o.content_id),
+                    (SELECT name FROM assets WHERE id=o.content_id)) AS content_name
+    FROM presentation_overrides o
+    WHERE o.stopped_at IS NULL AND (o.expires_at IS NULL OR o.expires_at>now())
+      AND ((o.target_type='screen' AND o.target_id=s.id)
+           OR (o.target_type='group' AND o.target_id IN (SELECT screen_group_id FROM screen_group_memberships WHERE screen_id=s.id)))
+    ORDER BY o.started_at DESC LIMIT 1
+) qp ON TRUE`
 
 func (s *Service) ListScreens(ctx context.Context) ([]Screen, error) {
 	rows, err := s.db.Query(ctx, screenSelect+` WHERE s.archived_at IS NULL AND EXISTS (SELECT 1 FROM device_credentials c WHERE c.screen_id=s.id AND c.revoked_at IS NULL) ORDER BY s.name ASC LIMIT 500`)

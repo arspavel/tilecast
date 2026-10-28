@@ -2666,7 +2666,7 @@ func manifestETagForSchedules(base string, schedules []ManifestSchedule) string 
 
 var (
 	statusWidgetProviders  = map[string]bool{"": true, "website": true, "youtube": true, "clock": true, "date": true, "qrcode": true, "ticker": true, "menu": true, "list": true, "table": true, "agenda": true}
-	statusSelectionSources = map[string]bool{"": true, "takeover": true, "schedule": true, "direct_fallback": true, "none": true}
+	statusSelectionSources = map[string]bool{"": true, "takeover": true, "quick_present": true, "schedule": true, "direct_fallback": true, "none": true}
 	statusWebsiteStates    = map[string]bool{"": true, "idle": true, "loading": true, "loaded": true, "refreshing": true, "failed": true, "timed_out": true, "blocked": true, "showing_fallback": true}
 	statusWebsiteErrors    = map[string]bool{"": true, "dns_failure": true, "connection_failure": true, "tls_failure": true, "http_error": true, "load_timeout": true, "blocked_navigation": true, "renderer_crash": true, "offline": true, "invalid_configuration": true, "unsupported_scheme": true, "unknown_webview_error": true}
 	statusTakeoverStates   = map[string]bool{"": true, "pending": true, "notified": true, "preparing": true, "ready": true, "active": true, "failed": true, "offline": true, "restored": true, "expired": true, "cancelled": true}

@@ -12,7 +12,7 @@ func TestNormalizePlayerStatusKeepsTheRestOfTheStatus(t *testing.T) {
 	negative := int64(-1)
 	status := PlayerStatus{
 		PlaybackState:     "playing",
-		SelectionSource:   "quick_present",
+		SelectionSource:   "unknown_source",
 		WidgetProvider:    "weather",
 		LastPlaybackError: strings.Repeat("ошибка ", 100),
 		CacheUsedBytes:    &negative,
@@ -38,8 +38,10 @@ func TestNormalizePlayerStatusKeepsTheRestOfTheStatus(t *testing.T) {
 }
 
 func TestNormalizePlayerStatusLeavesAValidStatusAlone(t *testing.T) {
-	status := PlayerStatus{PlaybackState: "playing", SelectionSource: "schedule", WidgetProvider: "clock"}
-	if adjusted := NormalizePlayerStatus(&status); len(adjusted) != 0 {
-		t.Fatalf("adjusted = %v, want none", adjusted)
+	for _, source := range []string{"schedule", "quick_present", "takeover", "direct_fallback", "none"} {
+		status := PlayerStatus{PlaybackState: "playing", SelectionSource: source, WidgetProvider: "clock"}
+		if adjusted := NormalizePlayerStatus(&status); len(adjusted) != 0 {
+			t.Fatalf("%s: adjusted = %v, want none", source, adjusted)
+		}
 	}
 }
