@@ -13,6 +13,7 @@ import { Link } from "react-router";
 import { api } from "../api/client";
 import type { PresentationOverride, Screen, ScreenStatus } from "../api/types";
 import { useAuth } from "../auth/AuthProvider";
+import { errorText, hasError, isIdle, relativeTime } from "./screenHealth";
 import {
   Button,
   Notice,
@@ -32,34 +33,6 @@ const statusNames: Record<ScreenStatus, string> = {
   revoked: "Доступ отозван",
 };
 
-function hasError(screen: Screen) {
-  const activeWebsiteError =
-    ["failed", "timed_out", "showing_fallback"].includes(
-      screen.websiteState ?? "",
-    ) && Boolean(screen.websiteFailureCategory);
-
-  return Boolean(
-    screen.lastPlaybackError ||
-    screen.lastSynchronizationError ||
-    activeWebsiteError ||
-    screen.configurationError ||
-    screen.updateError,
-  );
-}
-
-function isIdle(screen: Screen, presenting = false) {
-  if (presenting) return false;
-  const playbackIdle =
-    !screen.playbackState ||
-    ["idle", "stopped", "no_content"].includes(screen.playbackState);
-  return (
-    screen.status === "online" &&
-    !screen.nowPlayingName &&
-    playbackIdle &&
-    !hasError(screen)
-  );
-}
-
 function statusTone(screen: Screen, presenting = false) {
   if (hasError(screen)) return "danger" as const;
   if (isIdle(screen, presenting)) return "warning" as const;
@@ -76,19 +49,6 @@ function statusRank(screen: Screen, presenting = false) {
   if (screen.status === "recent") return 2;
   if (screen.status === "online") return 3;
   return 4;
-}
-
-function relativeTime(value?: string) {
-  if (!value) return "Нет данных";
-  const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) return "Нет данных";
-  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
-  if (seconds < 60) return `${seconds} сек. назад`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} мин. назад`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} ч. назад`;
-  return new Date(timestamp).toLocaleString("ru-RU");
 }
 
 function platformName(value: string) {
@@ -111,25 +71,6 @@ function playbackName(value?: string) {
     starting: "Запуск",
   };
   return value ? (labels[value] ?? value.replaceAll("_", " ")) : "Нет данных";
-}
-
-function errorText(screen: Screen) {
-  const activeWebsiteError = [
-    "failed",
-    "timed_out",
-    "showing_fallback",
-  ].includes(screen.websiteState ?? "")
-    ? screen.websiteFailureCategory
-    : undefined;
-
-  return (
-    screen.lastPlaybackError ||
-    screen.lastSynchronizationError ||
-    activeWebsiteError ||
-    screen.configurationError ||
-    screen.updateError ||
-    ""
-  );
 }
 
 export function ScreenMonitoringPage() {

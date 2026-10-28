@@ -1925,11 +1925,9 @@ label > .signal-select,
   box-shadow: 0 0 0 1px var(--tc-border-default);
 }
 
-/* Segmented metric readout, following the pattern established by .ops-summary on
-   the Overview page: one panel divided into equal cells, value in tabular figures
-   above a supporting label. Cell dividers come from a hairline grid gap so the row
-   survives wrapping. (.ops-summary keeps its own hand-tuned nth-child breakpoints
-   for now; it is a candidate to fold into this class later.) */
+/* Segmented metric readout: one panel divided into equal cells, value in tabular
+   figures above a supporting label. Cell dividers come from a hairline grid gap so
+   the row survives wrapping. */
 .summary-bar {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
