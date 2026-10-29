@@ -10,6 +10,10 @@ import { russianCore } from "./russianCore";
 import { russianExtended } from "./russianExtended";
 import { russianFinal } from "./russianFinal";
 import { russianAuto } from "./russianAuto";
+import { russianSweep1 } from "./russianSweep1";
+import { russianSweep2 } from "./russianSweep2";
+import { russianSweep3 } from "./russianSweep3";
+import { russianSweep4 } from "./russianSweep4";
 
 export type AppLanguage = "en" | "ru";
 
@@ -187,9 +191,167 @@ const russian: Record<string, string> = {
   ...russianCore,
   ...russianExtended,
   ...russianFinal,
+  ...russianSweep1,
+  ...russianSweep2,
+  ...russianSweep3,
+  ...russianSweep4,
 };
 
-function translateEnglish(english: string): string {
+// "18h 56m", "3d 2h", "45s" → "18 ч 56 мин"
+function russianDuration(value: string) {
+  return value
+    .replace(/(\d+)\s*d\b/g, "$1 дн")
+    .replace(/(\d+)\s*h\b/g, "$1 ч")
+    .replace(/(\d+)\s*m\b/g, "$1 мин")
+    .replace(/(\d+)\s*s\b/g, "$1 с");
+}
+
+function screensWord(count: string) {
+  const n = Number(count);
+  const tens = n % 100;
+  const ones = n % 10;
+  if (tens >= 11 && tens <= 14) return "экранов";
+  if (ones === 1) return "экран";
+  if (ones >= 2 && ones <= 4) return "экрана";
+  return "экранов";
+}
+
+// Strings built from a template in code: one text node with the value inside.
+const templatePatterns: [RegExp, (match: RegExpMatchArray) => string][] = [
+  [/^(.+) unit$/, (m) => `Единица: ${translateEnglish(m[1]!).toLowerCase()}`],
+  [/^([\d\s.,]+) windows$/, (m) => `${m[1]} окон показа`],
+  [/^([\d\s.,]+) ended early$/, (m) => `${m[1]} закончились раньше`],
+  [/^([\d\s.,]+) while offline$/, (m) => `${m[1]} без связи`],
+  [/^([\d\s.,]+) closed by hand$/, (m) => `${m[1]} закрыто вручную`],
+  [/^([\d\s.,]+) min$/, (m) => `${m[1]} мин`],
+  [/^(\d+)–(\d+) days$/, (m) => `${m[1]}–${m[2]} дн.`],
+  [/^healthy · migration (\d+)$/, (m) => `исправно · миграция ${m[1]}`],
+  [
+    /^No (.+) screens are enrolled\.$/,
+    (m) => `Нет подключённых экранов ${m[1]}.`,
+  ],
+  [/^Ongoing for (.+)$/, (m) => `Длится ${russianDuration(m[1]!)}`],
+  [/^Lasted (.+)$/, (m) => `Длилось ${russianDuration(m[1]!)}`],
+  [/^During (.+)$/, (m) => `В течение ${russianDuration(m[1]!)}`],
+  [/^Median (.+)$/, (m) => `Медиана ${russianDuration(m[1]!)}`],
+  [/^· ended (.+)$/, (m) => `· закончилось ${m[1]}`],
+  [/^Published r(\d+)$/, (m) => `Опубликовано, в. ${m[1]}`],
+  [/^Published revision (.+)$/, (m) => `Опубликованная версия ${m[1]}`],
+  [
+    /^Updated (\d+) (minute|hour|day)s? ago$/,
+    (m) =>
+      `Обновлено ${m[1]} ${{ minute: "мин.", hour: "ч", day: "дн." }[m[2]!]} назад`,
+  ],
+  [/^Updated (.+)$/, (m) => `Обновлено ${m[1]}`],
+  [/^Last used (.+)$/, (m) => `Использовался ${m[1]}`],
+  [/^· Last used (.+)$/, (m) => `· использовался ${m[1]}`],
+  [/^· Last signed in (.+)$/, (m) => `· последний вход ${m[1]}`],
+  [/^· Last delivered (.+)$/, (m) => `· последняя доставка ${m[1]}`],
+  [/^· Next scheduled: (.+)$/, (m) => `· следующая по расписанию: ${m[1]}`],
+  [/^Last error: (.+)$/, (m) => `Последняя ошибка: ${m[1]}`],
+  [/^Captured (.+)$/, (m) => `Снято ${m[1]}`],
+  [/^Snapshot captured (.+)$/, (m) => `Снимок сделан ${m[1]}`],
+  [/^Latest preview from (.+)$/, (m) => `Последний предпросмотр: ${m[1]}`],
+  [/^Until (.+)$/, (m) => `До ${m[1]}`],
+  [/^Ready · (.+)$/, (m) => `Готово · ${m[1]}`],
+  [/^Version (.+)$/, (m) => `Версия ${m[1]}`],
+  [/^Room (.+)$/, (m) => `Помещение ${m[1]}`],
+  [/^Retired (.+)$/, (m) => `Выведен ${m[1]}`],
+  [/^Display Group: (.+)$/, (m) => `Группа экранов: ${m[1]}`],
+  [/^Plays (.+)$/, (m) => `Показывает ${m[1]}`],
+  [/^Shows Layout (.+)$/, (m) => `Показывает макет ${m[1]}`],
+  [/^On (\d+) screens?$/, (m) => `На ${m[1]} ${screensWord(m[1]!)}`],
+  [/^Set display volume to (.+)$/, (m) => `Громкость дисплея: ${m[1]}`],
+  [/^Set display brightness to (.+)$/, (m) => `Яркость дисплея: ${m[1]}`],
+  [/^Set display input to (.+)$/, (m) => `Вход дисплея: ${m[1]}`],
+  [/^\+(\d+) more$/, (m) => `ещё ${m[1]}`],
+  [
+    /^Page (\d+) of (\d+) · (\d+) pending$/,
+    (m) => `Страница ${m[1]} из ${m[2]} · ожидают: ${m[3]}`,
+  ],
+  [
+    /^Page (\d+) of (\d+) · (\d+) total$/,
+    (m) => `Страница ${m[1]} из ${m[2]} · всего ${m[3]}`,
+  ],
+  [/^Uploading… (\d+)%$/, (m) => `Загрузка… ${m[1]}%`],
+  [/^Uploading (\d+)%$/, (m) => `Загрузка ${m[1]}%`],
+  [/^Takeover active — (.+)$/, (m) => `Идёт захват — ${m[1]}`],
+  [/^Takeover active on (.+)$/, (m) => `Идёт захват на ${m[1]}`],
+  [/^Hello, (.+)\.$/, (m) => `Здравствуйте, ${m[1]}.`],
+  [/^You're set, (.+)\.$/, (m) => `Готово, ${m[1]}.`],
+  [
+    /^No results for “(.+)”\.$/,
+    (m) => `Ничего не найдено по запросу «${m[1]}».`,
+  ],
+  [
+    /^Delete (.+)\? This cannot be undone\.$/,
+    (m) => `Удалить ${m[1]}? Это нельзя отменить.`,
+  ],
+  [
+    /^Permanently delete (.+)\? This cannot be undone\.$/,
+    (m) => `Удалить ${m[1]} навсегда? Это нельзя отменить.`,
+  ],
+  [/^Move (.+) to the archive\?$/, (m) => `Отправить ${m[1]} в архив?`],
+  [
+    /^Delete the folder "(.+)"\? Its assets stay in the library and become unfiled\.$/,
+    (m) => `Удалить папку «${m[1]}»? Файлы останутся в медиатеке без папки.`,
+  ],
+  [
+    /^Delete the collection "(.+)"\? Its assets stay in the library\.$/,
+    (m) => `Удалить коллекцию «${m[1]}»? Файлы останутся в медиатеке.`,
+  ],
+  [
+    /^Delete the tag "(.+)"\? It is removed from all assets\.$/,
+    (m) => `Удалить метку «${m[1]}»? Она будет снята со всех файлов.`,
+  ],
+  [/^New name for (.+)$/, (m) => `Новое название для ${m[1]}`],
+  [
+    /^Delete (.+)\? Screens will not be deleted\.$/,
+    (m) => `Удалить ${m[1]}? Экраны не будут удалены.`,
+  ],
+  [/^Delete “(.+)”\?$/, (m) => `Удалить «${m[1]}»?`],
+  [/^Delete (.+)\?$/, (m) => `Удалить ${m[1]}?`],
+  [/^Deactivate (.+)\?$/, (m) => `Отключить ${m[1]}?`],
+  [/^Revoke pairing for (.+)\?$/, (m) => `Отозвать привязку ${m[1]}?`],
+  [/^Actions for (.+)$/, (m) => `Действия для ${m[1]}`],
+  [/^Rename “(.+)”$/, (m) => `Переименовать «${m[1]}»`],
+  [
+    /^(Rename|Edit|Duplicate|Archive|Clear|Search|Remove|Select|Delete|Cancel|Revoke|Replace|Choose|Copy|Add) (.{1,60})$/,
+    (m) =>
+      `${{ Rename: "Переименовать", Edit: "Изменить", Duplicate: "Дублировать", Archive: "В архив", Clear: "Очистить", Search: "Поиск", Remove: "Удалить", Select: "Выбрать", Delete: "Удалить", Cancel: "Отменить", Revoke: "Отозвать", Replace: "Заменить", Choose: "Выбрать", Copy: "Копировать", Add: "Добавить" }[m[1]!]} ${m[2]}`,
+  ],
+  [/^Move (.+) up$/, (m) => `Переместить ${m[1]} вверх`],
+  [/^Move (.+) down$/, (m) => `Переместить ${m[1]} вниз`],
+  [
+    /^Test message sent to (.+)\.$/,
+    (m) => `Тестовое сообщение отправлено на ${m[1]}.`,
+  ],
+  [
+    /^Releases could not be loaded\. (.+)$/,
+    (m) => `Не удалось загрузить выпуски. ${m[1]}`,
+  ],
+  [/^Show all (\d+) releases$/, (m) => `Показать все выпуски (${m[1]})`],
+  [
+    /^Restored revision (\d+) as revision (\d+)\.$/,
+    (m) => `Версия ${m[1]} восстановлена как версия ${m[2]}.`,
+  ],
+  [/^Live stream · (.+)$/, (m) => `Трансляция · ${m[1]}`],
+  [/^Impaired (.+)%$/, (m) => `Есть проблемы ${m[1]}%`],
+  [/^Down (.+)%$/, (m) => `Не работает ${m[1]}%`],
+  [/^No data (.+)%$/, (m) => `Нет данных ${m[1]}%`],
+  [/^Loading (.+)…$/, (m) => `Загрузка: ${translateEnglish(m[1]!)}…`],
+  [
+    /^Fix (\d+) fields before continuing$/,
+    (m) => `Исправьте поля (${m[1]}), чтобы продолжить`,
+  ],
+  [
+    /^Character limit reached \((.+)\)$/,
+    (m) => `Достигнут предел символов (${m[1]})`,
+  ],
+  [/^Uploading (.+)$/, (m) => `Загрузка ${m[1]}`],
+];
+
+export function translateEnglish(english: string): string {
   const exact = russian[english];
   if (exact) return exact;
 
@@ -230,8 +392,16 @@ function translateEnglish(english: string): string {
   match = english.match(/^Per screen · (.+) with downtime$/);
   if (match) return `По экранам · ${match[1]} с простоем`;
 
-  match = english.match(/^Open (.+)$/);
-  if (match) return `Открыть ${match[1]}`;
+  // Only a short "Open <thing>" is a button; a sentence that starts with the
+  // word ("Open incidents right now, …") must not turn into «Открыть …».
+  match = english.match(/^Open ([^,.;:]{1,40})$/);
+  if (match && match[1]!.split(" ").length <= 4)
+    return `Открыть ${translateEnglish(match[1]!)}`;
+
+  for (const [pattern, render] of templatePatterns) {
+    match = english.match(pattern);
+    if (match) return render(match);
+  }
 
   match = english.match(/^Configure (.+) for LSR signage\.$/);
   if (match)

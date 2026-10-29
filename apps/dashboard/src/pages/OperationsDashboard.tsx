@@ -555,6 +555,11 @@ function ScreenWall({
           : undefined;
         const playing =
           override?.contentName ?? screen.nowPlayingName ?? "Ничего не играет";
+        // Uploaded files are often named by their hash; the playlist name reads better.
+        const assetName =
+          asset?.name && !/^[0-9a-f]{16,}/i.test(asset.name)
+            ? asset.name
+            : playing;
         return (
           <li key={screen.id} className={`is-${health}`}>
             <Link to={`/screens/${screen.id}`}>
@@ -570,7 +575,7 @@ function ScreenWall({
                 ) : health === "working" || health === "problem" ? (
                   <span className="ops-wall__caption-only">
                     <Monitor size={22} aria-hidden="true" />
-                    {asset?.name ?? playing}
+                    {assetName}
                   </span>
                 ) : (
                   <Monitor size={28} aria-hidden="true" />
@@ -581,7 +586,7 @@ function ScreenWall({
                 />
                 {assetThumbnail ? (
                   <span className="ops-wall__caption">
-                    <span>Сейчас</span> {asset?.name}
+                    <span>Сейчас</span> {assetName}
                   </span>
                 ) : (
                   snapshot && (
