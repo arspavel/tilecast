@@ -21,6 +21,7 @@ import (
 	ical "github.com/emersion/go-ical"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/tilecast/tilecast/apps/server/internal/netpolicy"
 )
 
 const (
@@ -184,7 +185,7 @@ func (s *Service) sourceHTTPClient() *http.Client {
 		IdleConnTimeout:       30 * time.Second,
 	}
 	return &http.Client{
-		Transport: transport,
+		Transport: netpolicy.Guard(transport),
 		Timeout:   s.cfg.SourceFetch.Timeout,
 		CheckRedirect: func(request *http.Request, via []*http.Request) error {
 			if len(via) >= s.cfg.SourceFetch.MaximumRedirects {

@@ -208,6 +208,8 @@ func (s *server) routes() http.Handler {
 			dashboard.With(s.requireRoles("owner", "administrator"), s.requireCSRF, s.requireScreenScope).Put("/screens/{id}/policy", s.putScreenPolicy)
 			dashboard.With(s.requireRoles("owner", "administrator"), s.requireCSRF, s.requireScreenScope).Delete("/screens/{id}/policy", s.deleteScreenPolicy)
 			dashboard.With(s.requireRoles("owner", "administrator")).Get("/system/status", s.systemStatus)
+			dashboard.With(s.requireRoles("owner", "administrator")).Get("/system/network", s.networkMode)
+			dashboard.With(s.requireRoles("owner", "administrator"), s.requireCSRF).Put("/system/network", s.updateNetworkMode)
 			dashboard.With(s.requireRoles("owner", "administrator"), s.requireCSRF).Post("/system/maintenance/{action}", s.systemMaintenance)
 			if s.backups != nil {
 				dashboard.With(s.requireRoles("owner")).Get("/system/backups", s.listBackups)

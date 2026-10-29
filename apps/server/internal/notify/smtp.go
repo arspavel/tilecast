@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/tilecast/tilecast/apps/server/internal/netpolicy"
 )
 
 // EmailSender exists so the worker can be tested without a mail server. The
@@ -84,6 +86,10 @@ func (s *SMTPSender) Send(ctx context.Context, message Message) error {
 }
 
 func (s *SMTPSender) dial(ctx context.Context) (*smtp.Client, error) {
+	// A mail server inside the local network keeps working in offline mode.
+	if err := netpolicy.Allow(ctx, s.cfg.SMTPHost); err != nil {
+		return nil, err
+	}
 	address := net.JoinHostPort(s.cfg.SMTPHost, strconv.Itoa(s.cfg.SMTPPort))
 	dialer := &net.Dialer{Timeout: s.cfg.SMTPTimeout}
 	mode := strings.ToLower(strings.TrimSpace(s.cfg.SMTPTLS))

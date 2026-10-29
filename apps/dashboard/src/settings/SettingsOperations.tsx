@@ -37,6 +37,7 @@ import {
   UpdateDeploymentDrawer,
 } from "./UpdateDeploymentDrawer";
 import { deploymentHeadline, screenUpdateMeaning } from "./playerUpdateStates";
+import { NetworkModeSection } from "./NetworkModeSection";
 
 const maintenanceActions = [
   {
@@ -96,6 +97,7 @@ export function SystemPanel({ canManage }: { canManage: boolean }) {
   const s = query.data;
   return (
     <div className="settings-sections">
+      <NetworkModeSection />
       <section className="settings-subsection">
         <header>
           <h3>Diagnostics</h3>

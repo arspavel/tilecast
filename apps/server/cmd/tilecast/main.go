@@ -31,6 +31,7 @@ import (
 	"github.com/tilecast/tilecast/apps/server/internal/integrations"
 	"github.com/tilecast/tilecast/apps/server/internal/layouts"
 	"github.com/tilecast/tilecast/apps/server/internal/media"
+	"github.com/tilecast/tilecast/apps/server/internal/netpolicy"
 	"github.com/tilecast/tilecast/apps/server/internal/notify"
 	"github.com/tilecast/tilecast/apps/server/internal/playlists"
 	"github.com/tilecast/tilecast/apps/server/internal/plugins"
@@ -73,6 +74,11 @@ func serve() {
 
 	logger := newLogger(cfg.LogLevel)
 	ctx := context.Background()
+
+	// Every outbound HTTP client without its own transport goes through the
+	// offline guard; the Studio switch is loaded once the API starts.
+	netpolicy.SetForced(cfg.Offline)
+	http.DefaultTransport = netpolicy.Guard(http.DefaultTransport)
 
 	if err := database.Migrate(ctx, cfg.DatabaseURL); err != nil {
 		fail("database migration failed", err)

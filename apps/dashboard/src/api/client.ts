@@ -84,6 +84,7 @@ import type {
   SettingsDocument,
   PolicyDocument,
   EffectivePolicy,
+  NetworkMode,
   SystemStatus,
   ContentHealthReport,
   PlaylistRestoreResult,
@@ -747,6 +748,13 @@ export const api = {
   effectivePolicy: (id: string) =>
     request<EffectivePolicy>(`/screens/${id}/effective-policy`),
   systemStatus: () => request<SystemStatus>("/system/status"),
+  networkMode: () => request<NetworkMode>("/system/network"),
+  setNetworkMode: (offline: boolean, csrfToken: string) =>
+    request<NetworkMode>("/system/network", {
+      method: "PUT",
+      headers: { "X-CSRF-Token": csrfToken },
+      body: JSON.stringify({ offline }),
+    }),
   contentHealth: () => request<ContentHealthReport>("/content-health"),
   screenSnapshots: (screenId: string, limit = 50) =>
     request<ScreenSnapshotList>(

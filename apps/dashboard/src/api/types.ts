@@ -956,6 +956,15 @@ export type EffectivePolicy = {
   configRevision: number;
   hash: string;
 };
+export type NetworkMode = {
+  /** The Studio switch. */
+  offline: boolean;
+  /** TILECAST_OFFLINE on the server; Studio cannot turn it off. */
+  forced: boolean;
+  effective: boolean;
+  updatedAt?: string;
+};
+
 export type SystemStatus = {
   tilecastVersion: string;
   buildCommit: string;
