@@ -125,9 +125,9 @@ describe("Schedule Builder model", () => {
     expect(priorityPreset(42)).toBe("custom");
     expect(
       conflictWinnerReason({ priority: 100, specificity: 0 }, 0),
-    ).toContain("highest priority");
+    ).toContain("наивысший приоритет");
     expect(conflictWinnerReason({ priority: 0, specificity: 1 }, 0)).toContain(
-      "directly",
+      "напрямую",
     );
   });
 

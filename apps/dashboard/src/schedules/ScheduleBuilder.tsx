@@ -191,12 +191,13 @@ export function ScheduleEditorPage() {
     resolvedGroups[0]?.screens[0]?.id ??
     "";
   const preview = useQuery({
-    queryKey: ["schedule-preview", input, previewScreenId],
+    queryKey: ["schedule-preview", input, previewScreenId, id],
     queryFn: () =>
       api.previewSchedule(
         previewScreenId,
         schedulePreviewTimestamp(input),
         input,
+        id,
       ),
     enabled: Boolean(
       previewScreenId &&
@@ -988,17 +989,24 @@ function TargetPicker({
           )
           .map((screen) => {
             const group = screenGroups.get(screen.id);
+            // A screen in a group is scheduled through its group, but it is
+            // listed under its own name so the group's members do not appear
+            // as several identical rows.
             return group
               ? {
                   type: "group" as const,
                   id: group.id,
+                  key: `screen-${screen.id}`,
                   name: group.name,
-                  detail: `Display Group: ${group.name}`,
+                  label: screen.name,
+                  detail: `В группе «${group.name}» — выбирается вся группа`,
                 }
               : {
                   type: "screen" as const,
                   id: screen.id,
+                  key: `screen-${screen.id}`,
                   name: screen.name,
+                  label: screen.name,
                   detail: screen.location || "No location",
                 };
           })
@@ -1007,8 +1015,10 @@ function TargetPicker({
           .map((group) => ({
             type: "group" as const,
             id: group.id,
+            key: `group-${group.id}`,
             name: group.name,
-            detail: `${group.membershipCount} screen${group.membershipCount === 1 ? "" : "s"}`,
+            label: group.name,
+            detail: `Экранов в группе: ${group.membershipCount}`,
           }));
   return (
     <div className="schedule-target-picker">
@@ -1069,21 +1079,27 @@ function TargetPicker({
           return (
             <button
               type="button"
-              key={result.id}
+              key={result.key}
               disabled={selected}
               onClick={() =>
                 add({ type: result.type, id: result.id, name: result.name })
               }
             >
               <span>
-                <strong>{result.name}</strong>
+                <strong>{result.label}</strong>
                 <small>{result.detail}</small>
               </span>
               <span>{selected ? "Selected" : "Add"}</span>
             </button>
           );
         })}
-        {!results.length && <p>No {tab} match this search.</p>}
+        {!results.length && (
+          <p>
+            {tab === "groups"
+              ? "Нет групп по этому запросу."
+              : "Нет экранов по этому запросу."}
+          </p>
+        )}
       </div>
       {error && <span className="field__error">{error}</span>}
     </div>
@@ -1219,10 +1235,10 @@ function ScheduleSummary({
           <>
             <Notice
               variant="warning"
-              title={`${Math.max(conflicts.length, applicable.length - 1)} overlapping schedule${Math.max(conflicts.length, applicable.length - 1) === 1 ? "" : "s"}`}
+              title={`Пересекается расписаний: ${Math.max(conflicts.length, applicable.length - 1)}`}
             >
               {winner
-                ? `${winner.name} wins because ${conflictWinnerReason(winner, input.priority)}.`
+                ? `Показывается «${winner.name}»: ${conflictWinnerReason(winner, input.priority)}.`
                 : "Direct fallback content plays when no schedule is active."}
             </Notice>
             <ul>

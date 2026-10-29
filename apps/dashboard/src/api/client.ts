@@ -2400,9 +2400,15 @@ export const api = {
     screenId: string,
     timestamp: string,
     proposedSchedule?: ScheduleInput,
+    excludeScheduleId?: string,
   ) =>
     request<SchedulePreview>("/schedules/preview", {
       method: "POST",
-      body: JSON.stringify({ screenId, timestamp, proposedSchedule }),
+      body: JSON.stringify({
+        screenId,
+        timestamp,
+        proposedSchedule,
+        excludeScheduleId,
+      }),
     }),
 };

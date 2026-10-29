@@ -961,6 +961,13 @@ type Preview struct {
 }
 
 func (s *Service) Preview(ctx context.Context, screen uuid.UUID, at time.Time, proposed *Input) (Preview, error) {
+	return s.PreviewExcluding(ctx, screen, at, proposed, nil)
+}
+
+// PreviewExcluding previews a proposed schedule while it is being edited: the
+// saved copy of that same schedule is left out, or it would show up as a
+// conflict with its own new version.
+func (s *Service) PreviewExcluding(ctx context.Context, screen uuid.UUID, at time.Time, proposed *Input, exclude *uuid.UUID) (Preview, error) {
 	var screenOK bool
 	if err := s.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM screens sc JOIN organization_settings o ON o.id=sc.organization_id AND o.singleton WHERE sc.id=$1)`, screen).Scan(&screenOK); err != nil {
 		return Preview{}, err
@@ -971,6 +978,15 @@ func (s *Service) Preview(ctx context.Context, screen uuid.UUID, at time.Time, p
 	records, err := s.Relevant(ctx, screen)
 	if err != nil {
 		return Preview{}, err
+	}
+	if proposed != nil && exclude != nil {
+		kept := records[:0]
+		for _, record := range records {
+			if record.ID != *exclude {
+				kept = append(kept, record)
+			}
+		}
+		records = kept
 	}
 	if proposed != nil {
 		normalized, normalizeErr := s.normalizeSyncGroupTargets(ctx, *proposed)
@@ -1032,7 +1048,7 @@ func (s *Service) Preview(ctx context.Context, screen uuid.UUID, at time.Time, p
 		}
 	}
 	if len(out.Applicable) > 1 {
-		out.Conflicts = append(out.Conflicts, fmt.Sprintf("%d active schedules overlap; precedence selects %s", len(out.Applicable), out.Applicable[0].Name))
+		out.Conflicts = append(out.Conflicts, fmt.Sprintf("Пересекаются активные расписания: %d; по правилам приоритета выбрано «%s»", len(out.Applicable), out.Applicable[0].Name))
 	}
 	return out, nil
 }

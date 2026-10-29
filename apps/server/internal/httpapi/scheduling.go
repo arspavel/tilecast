@@ -253,6 +253,8 @@ func (s *server) previewSchedule(w http.ResponseWriter, r *http.Request) {
 		ScreenID  uuid.UUID         `json:"screenId"`
 		Timestamp *time.Time        `json:"timestamp"`
 		Proposed  *scheduling.Input `json:"proposedSchedule"`
+		// The schedule being edited, so its saved copy is not a conflict.
+		Exclude *uuid.UUID `json:"excludeScheduleId"`
 	}
 	if e := decodeJSON(w, r, &b); e != nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", e.Error())
@@ -262,7 +264,7 @@ func (s *server) previewSchedule(w http.ResponseWriter, r *http.Request) {
 	if b.Timestamp != nil {
 		at = *b.Timestamp
 	}
-	x, e := s.scheduling.Preview(r.Context(), b.ScreenID, at, b.Proposed)
+	x, e := s.scheduling.PreviewExcluding(r.Context(), b.ScreenID, at, b.Proposed, b.Exclude)
 	s.scheduleResponse(w, r, x, e, http.StatusOK)
 }
 func (s *server) scheduleResponse(w http.ResponseWriter, r *http.Request, x any, e error, status int) {

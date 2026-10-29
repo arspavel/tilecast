@@ -74,10 +74,9 @@ export function conflictWinnerReason(
   winner: { priority: number; specificity: number },
   proposedPriority: number,
 ) {
-  if (winner.priority !== proposedPriority)
-    return "it has the highest priority";
-  if (winner.specificity > 0) return "it targets the screen directly";
-  return "it starts later under the precedence rules";
+  if (winner.priority !== proposedPriority) return "у него наивысший приоритет";
+  if (winner.specificity > 0) return "оно назначено на экран напрямую";
+  return "по правилам приоритета выигрывает расписание, начавшееся позже";
 }
 
 export function formatClock(value?: string) {
