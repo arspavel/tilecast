@@ -579,6 +579,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 					// progress callback, so a stale error from an earlier failure must not count.
 					var reportedError: String? = null
 					val prepared = synchronizer.reconcile(url, credential, screenId, { syncProgress = it; downloadMeter.observe(it.downloadedBytes, SystemClock.elapsedRealtime()); reportedError = it.error }, selectedIdentity?.installationId)
+					syncProgress = syncProgress.copy(cacheUsedBytes = synchronizer.cacheUsedBytes())
 					if (reportedError == null) { syncFailureCount = 0; if (syncProgress.error != null) syncProgress = syncProgress.copy(error = null); getApplication<Application>().getSharedPreferences("tilecast-reliability",Application.MODE_PRIVATE).edit().putLong("last-successful-sync-at",System.currentTimeMillis()).apply() } else scheduleSyncRetry(url, credential)
 					if (prepared != null) {
 						val takeoverChanged=prepared.manifest.effectiveTakeover?.id!=activeTakeoverId
@@ -591,7 +592,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 					refreshCommissioning()
 				}
 					catch(error:CancellationException){throw error}
-					catch(error:Exception){syncProgress=SyncProgress(cacheUsedBytes=syncProgress.cacheUsedBytes,error=error.message?:"Не удалось синхронизировать контент");scheduleSyncRetry(url,credential)}
+					catch(error:Exception){syncProgress=SyncProgress(cacheUsedBytes=runCatching{synchronizer.cacheUsedBytes()}.getOrDefault(syncProgress.cacheUsedBytes),error=error.message?:"Не удалось синхронизировать контент");scheduleSyncRetry(url,credential)}
 			} while (syncPending)
 		}
 		syncJob?.join()
@@ -621,7 +622,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		pendingContent = null
 		pendingActivationJob?.cancel(); pendingActivationJob = null
 		activateScheduleSelection(prepared,url,credential)
-		syncProgress = SyncProgress(cacheUsedBytes = syncProgress.cacheUsedBytes)
+		syncProgress = SyncProgress(cacheUsedBytes = synchronizer.cacheUsedBytes())
 	}
 
 	private fun activateScheduleSelection(prepared:PreparedContent,url:String,credential:String){

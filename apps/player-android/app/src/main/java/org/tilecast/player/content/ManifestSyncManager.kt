@@ -280,6 +280,9 @@ class ManifestSyncManager(
     }
     private fun mediaDirectory() = File(context.filesDir, "media-cache").apply { mkdirs() }
 	private fun isValidCachedFile(file:File,size:Long,sha256:String)=runCatching{ContentPolicy.verify(file,size,sha256)}.getOrDefault(false)
+	// What is actually on disk. Progress callbacks only fire while downloading, so a
+	// restart with an unchanged playlist would otherwise report an empty cache.
+	suspend fun cacheUsedBytes():Long=withContext(Dispatchers.IO){cacheUsed()}
 	private fun cacheUsed()=mediaDirectory().walkTopDown().filter{it.isFile}.sumOf{it.length()}
     private fun finalFile(asset: ManifestAsset) = File(mediaDirectory(), "${asset.variantId}.${extension(asset.mimeType)}")
     private fun extension(mime: String) = when (mime) { "video/mp4" -> "mp4"; "image/png" -> "png"; "image/webp" -> "webp"; "image/gif" -> "gif"; else -> "jpg" }
