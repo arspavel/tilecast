@@ -9,7 +9,7 @@ cd "$DIR"
 SOURCE="${1:?Укажите папку резервной копии, например backups/20261026-120000}"
 [ -f "$SOURCE/database.sql.gz" ] || { echo "Нет $SOURCE/database.sql.gz" >&2; exit 1; }
 
-read -r -p "Текущие данные Tilecast будут заменены копией из $SOURCE. Продолжить? [y/N] " answer
+read -r -p "Текущие данные LSR signage будут заменены копией из $SOURCE. Продолжить? [y/N] " answer
 [ "$answer" = y ] || [ "$answer" = Y ] || exit 1
 
 docker compose stop server

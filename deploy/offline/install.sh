@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Installs or updates Tilecast from this offline bundle. Run it as root (or a
+# Installs or updates LSR signage from this offline bundle. Run it as root (or a
 # user in the docker group) from the unpacked bundle directory:
 #
 #   sudo ./install.sh
 #
 # The first run creates .env with generated passwords. Later runs keep .env,
-# back up the database, load the new images, and restart Tilecast.
+# back up the database, load the new images, and restart LSR signage.
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -60,7 +60,7 @@ fi
 say "Загрузка образов Docker (это займёт минуту-две)"
 gunzip -c images/tilecast-images.tar.gz | docker load
 
-say "Запуск Tilecast ${IMAGE_TAG}"
+say "Запуск LSR signage ${IMAGE_TAG}"
 docker compose up -d --remove-orphans
 
 say "Ожидание готовности сервера"
@@ -73,7 +73,7 @@ done
 
 URL="$(env_value TILECAST_PUBLIC_URL)"
 say "Готово"
-printf 'Tilecast Studio: %s\n' "$URL"
+printf 'LSR signage: %s\n' "$URL"
 if $FIRST_RUN; then
 	printf 'Откройте адрес в браузере и создайте организацию и владельца.\n'
 	printf 'Проверьте TILECAST_PUBLIC_URL в %s/.env: экраны подключаются именно по нему.\n' "$DIR"

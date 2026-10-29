@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Saves the Tilecast database and media to backups/<date>/.
+# Saves the LSR signage database and media to backups/<date>/.
 # Media is copied from the tilecast_data volume, so the archive can be large.
 #
 #   sudo ./backup.sh            database and media
