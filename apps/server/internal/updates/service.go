@@ -331,7 +331,17 @@ func (s *Service) Check(ctx context.Context) error {
 	}
 	if result.NotModified {
 		_, _ = s.db.Exec(ctx, `UPDATE update_provider_state SET last_checked_at=now(),safe_error=NULL,updated_at=now() WHERE provider='github'`)
-		return nil
+		// An unchanged list can still hold releases whose import failed last
+		// time, for example on a rate limit: finish them from the stored list.
+		var stored []byte
+		if err := s.db.QueryRow(ctx, `SELECT COALESCE(response,'[]'::jsonb) FROM update_provider_state WHERE provider='github'`).Scan(&stored); err != nil {
+			return nil
+		}
+		var releases []ProviderRelease
+		if err := json.Unmarshal(stored, &releases); err != nil {
+			return nil
+		}
+		return s.importReleases(ctx, releases)
 	}
 	encoded, err := json.Marshal(result.Releases)
 	if err != nil {
@@ -340,9 +350,16 @@ func (s *Service) Check(ctx context.Context) error {
 	if _, err = s.db.Exec(ctx, `INSERT INTO update_provider_state(provider,etag,last_checked_at,rate_limit_reset_at,response,safe_error,updated_at)VALUES('github',$1,now(),$2,$3::jsonb,NULL,now()) ON CONFLICT(provider) DO UPDATE SET etag=$1,last_checked_at=now(),rate_limit_reset_at=$2,response=$3::jsonb,safe_error=NULL,updated_at=now()`, result.ETag, result.RateReset, string(encoded)); err != nil {
 		return fmt.Errorf("store GitHub release response: %w", err)
 	}
+	return s.importReleases(ctx, result.Releases)
+}
+
+// importReleases imports every release it can. Releases already known are
+// skipped cheaply. When none could be imported the error is recorded so the
+// next check fetches the full list again instead of trusting its ETag.
+func (s *Service) importReleases(ctx context.Context, releases []ProviderRelease) error {
 	var imported int
 	var firstImportError error
-	for _, release := range result.Releases {
+	for _, release := range releases {
 		if importErr := s.importRelease(ctx, release); importErr != nil {
 			if firstImportError == nil {
 				firstImportError = importErr
@@ -618,8 +635,9 @@ func (s *Service) removeArtifacts(releaseID uuid.UUID) {
 
 func safeError(err error) string {
 	message := err.Error()
-	if len(message) > 240 {
-		message = message[:240]
+	// Cut by characters, not bytes: a Russian message must not end mid-letter.
+	if runes := []rune(message); len(runes) > 240 {
+		message = string(runes[:240])
 	}
 	return message
 }

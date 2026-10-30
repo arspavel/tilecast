@@ -131,7 +131,13 @@ func (p *GitHubProvider) Releases(ctx context.Context, etag string) (ProviderRes
 		return result, nil
 	}
 	if response.StatusCode == http.StatusForbidden && response.Header.Get("X-RateLimit-Remaining") == "0" {
-		return result, errors.New("GitHub API rate limit reached")
+		// Unauthenticated requests share 60 per hour per external address, which
+		// a corporate network often uses up for the whole office.
+		message := "Исчерпан лимит запросов к GitHub (60 в час без токена)"
+		if result.RateReset != nil {
+			message += ", сбросится в " + result.RateReset.Format("15:04") + " UTC"
+		}
+		return result, errors.New(message + ". Укажите TILECAST_GITHUB_TOKEN в .env, чтобы лимит стал 5000 в час.")
 	}
 	if response.StatusCode != http.StatusOK {
 		return result, fmt.Errorf("GitHub Releases returned HTTP %d", response.StatusCode)

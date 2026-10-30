@@ -796,7 +796,7 @@ export function PlayerUpdatesPanel({
                 </p>
               </>
             ) : (
-              `No ${platformLabel} Player releases have been imported. LSR signage checks GitHub automatically; use Sync from GitHub to retry immediately.`
+              `Выпуски плеера ${platformLabel} ещё не загружены. LSR signage проверяет GitHub автоматически; нажмите «Синхронизировать с GitHub», чтобы проверить сейчас.`
             )}
           </div>
         ) : (
