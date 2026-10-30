@@ -12,7 +12,9 @@ services:
     env_file: .env
     environment:
       TILECAST_ENV: production
-      TILECAST_OFFLINE: "true"
+      # Set in .env: true keeps the server off the Internet; false lets the
+      # "Работать без интернета" switch in Studio decide.
+      TILECAST_OFFLINE: ${TILECAST_OFFLINE:-true}
       TILECAST_HTTP_ADDR: :8080
       TILECAST_DATABASE_URL: postgres://${POSTGRES_USER:-tilecast}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-tilecast}?sslmode=disable
       TILECAST_FFMPEG_PATH: /usr/bin/ffmpeg
