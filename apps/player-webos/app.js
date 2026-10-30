@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.4.0";
-  var VERSION_CODE = 7;
+  var VERSION = "0.4.1";
+  var VERSION_CODE = 8;
   var STORE = "tilecast.webos.";
   // Media is kept in memory between playlist cycles so a loop does not
   // download every item again. Items on screen are never evicted.
@@ -345,13 +345,16 @@
     if (manifest.playlist) byId[manifest.playlist.id] = manifest.playlist;
     if (manifest.directFallbackPlaylist) byId[manifest.directFallbackPlaylist.id] = manifest.directFallbackPlaylist;
     var takeover = manifest.takeover || manifest.emergency;
-    if (takeover && inWindow(now, takeover.activatedAt, takeover.expiresAt) && byId[takeover.playlistId]) return byId[takeover.playlistId];
+    if (takeover && inWindow(now, takeover.activatedAt, takeover.expiresAt) && byId[takeover.playlistId]) { state.selectionSource = "takeover"; return byId[takeover.playlistId]; }
     var override = manifest.presentationOverride;
-    if (override && override.playlistId && inWindow(now, override.startedAt, override.expiresAt) && byId[override.playlistId]) return byId[override.playlistId];
+    if (override && override.playlistId && inWindow(now, override.startedAt, override.expiresAt) && byId[override.playlistId]) { state.selectionSource = "quick_present"; return byId[override.playlistId]; }
     var active = (manifest.schedules || []).filter(function (s) { return s.playlistId && scheduleApplies(s, now); });
     active.sort(function (a, b) { return (b.priority || 0) - (a.priority || 0) || (b.specificity || 0) - (a.specificity || 0); });
-    if (active.length && byId[active[0].playlistId]) return byId[active[0].playlistId];
-    return manifest.playlist || manifest.directFallbackPlaylist || null;
+    if (active.length && byId[active[0].playlistId]) { state.selectionSource = "schedule"; return byId[active[0].playlistId]; }
+    var fallback = manifest.playlist || manifest.directFallbackPlaylist || null;
+    // The server accepts only these sources; "webos" was rejected on every heartbeat.
+    state.selectionSource = fallback ? "direct_fallback" : "none";
+    return fallback;
   }
 
   function inWindow(now, start, end) {
@@ -1289,7 +1292,7 @@
       currentAssetId: item && item.assetId,
       playbackState: state.playbackState,
       currentPlaylistId: state.currentPlaylist && state.currentPlaylist.id,
-      selectionSource: "webos",
+      selectionSource: state.selectionSource || "none",
       lastHealthyPlaybackAt: state.lastHealthyPlaybackAt,
       lastPlaybackError: state.lastError,
       rendererResponding: true,

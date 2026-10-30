@@ -1,3 +1,4 @@
+import { randomId } from "../randomId";
 import {
   Button,
   ContextMenu,
@@ -163,7 +164,7 @@ export function ContentPage() {
       ) as SavedUpload[];
       return saved.map((item) => ({
         ...item,
-        localId: item.sessionId ?? crypto.randomUUID(),
+        localId: item.sessionId ?? randomId(),
         state: "failed",
         error: "Select the same file to resume this upload.",
       }));
@@ -255,7 +256,7 @@ export function ContentPage() {
     );
 
   const uploadFile = async (file: File, resume?: QueueItem) => {
-    const localId = resume?.localId ?? crypto.randomUUID();
+    const localId = resume?.localId ?? randomId();
     if (
       resume &&
       (file.name !== resume.filename || file.size !== resume.sizeBytes)

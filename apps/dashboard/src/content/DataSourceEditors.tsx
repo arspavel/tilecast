@@ -1,3 +1,4 @@
+import { randomId } from "../randomId";
 import { Select } from "../components/ui";
 import {
   useMutation,
@@ -1930,7 +1931,7 @@ function ManualDataSourceEditor({
   const [configuration, setConfiguration] = useState<ManualSourceConfig>(
     (dataSource?.configuration as ManualSourceConfig | undefined) ?? {
       columns: [{ key: "title", label: "Title", type: "text" }],
-      rows: [{ id: crypto.randomUUID(), values: { title: "" } }],
+      rows: [{ id: randomId(), values: { title: "" } }],
       dateSelection: {
         enabled: false,
         dateFormat: "auto",
@@ -2209,10 +2210,7 @@ function ManualDataSourceEditor({
             onClick={() =>
               setConfiguration((current) => ({
                 ...current,
-                rows: [
-                  ...current.rows,
-                  { id: crypto.randomUUID(), values: {} },
-                ],
+                rows: [...current.rows, { id: randomId(), values: {} }],
               }))
             }
           >

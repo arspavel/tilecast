@@ -1,3 +1,4 @@
+import { randomId } from "../randomId";
 import { ContextMenu, Select, useContextMenu } from "../components/ui";
 import type { ContextMenuItem } from "../components/ui";
 import { ContentPicker, PlaylistPicker } from "../components/content-picker";
@@ -213,7 +214,7 @@ export function createContentPlacement(
           a.kind === "playback" ? -1 : b.kind === "playback" ? 1 : 0,
         )[0]?.id;
   return {
-    id: crypto.randomUUID(),
+    id: randomId(),
     type: isApp ? "widget" : "asset",
     name: asset.name,
     ...placementBox(canvas, position),
@@ -250,7 +251,7 @@ export function createPlaylistZonePlacement(
   position?: { x: number; y: number },
 ): LayoutPlacement {
   return {
-    id: crypto.randomUUID(),
+    id: randomId(),
     type: "playlistZone",
     name: playlist.name,
     ...placementBox(canvas, position),
@@ -426,7 +427,7 @@ export function createPrimitivePlacement(
   const isLine = kind === "line";
   const isGroup = kind === "group";
   return {
-    id: crypto.randomUUID(),
+    id: randomId(),
     type: "primitive",
     name: kind === "text" ? "Text" : kind[0]!.toUpperCase() + kind.slice(1),
     x: canvas.width * 0.25,
@@ -1065,9 +1066,7 @@ export function LayoutEditorPage() {
     if (!current) return;
     const source = selectedPlacements(current, selection);
     if (!source.length) return;
-    const mapping = new Map(
-      source.map((item) => [item.id, crypto.randomUUID()]),
-    );
+    const mapping = new Map(source.map((item) => [item.id, randomId()]));
     const copies = source.map((item) => ({
       ...clone(item),
       id: mapping.get(item.id)!,
@@ -1136,7 +1135,7 @@ export function LayoutEditorPage() {
     if (!current || !clipboard.current.length) return;
     const pasted = clipboard.current.map((item) => ({
       ...clone(item),
-      id: crypto.randomUUID(),
+      id: randomId(),
       x: Math.max(0, Math.min(item.x + 20, current.canvas.width - item.width)),
       y: Math.max(
         0,

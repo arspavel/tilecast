@@ -1,3 +1,4 @@
+import { randomId } from "../randomId";
 import {
   Button,
   ContextMenu,
@@ -235,7 +236,7 @@ export function LayoutsPage() {
       const document = structuredClone(created.draft);
       document.placements.push(
         {
-          id: crypto.randomUUID(),
+          id: randomId(),
           type: "primitive",
           name: "Accent",
           x: 0,
@@ -249,7 +250,7 @@ export function LayoutsPage() {
           primitive: { kind: "rectangle", fillColor: "#2D7FF9" },
         },
         {
-          id: crypto.randomUUID(),
+          id: randomId(),
           type: "primitive",
           name: "Headline",
           x: document.canvas.width * 0.1,

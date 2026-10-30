@@ -1,3 +1,4 @@
+import { randomId } from "../randomId";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router";
@@ -40,7 +41,7 @@ function makeBlock(
   const start = new Date(Date.now() + 5 * 60 * 1000);
   start.setSeconds(0, 0);
   return {
-    id: crypto.randomUUID(),
+    id: randomId(),
     name: "Campaign block",
     contentType: type,
     contentId,

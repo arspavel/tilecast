@@ -1,3 +1,4 @@
+import { randomId } from "../../randomId";
 import { Upload, X } from "lucide-react";
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { api } from "../../api/client";
@@ -43,7 +44,7 @@ export function UploadContentDialog({
       current.map((item) => (item.id === id ? { ...item, ...value } : item)),
     );
   const upload = async (file: File) => {
-    const id = crypto.randomUUID();
+    const id = randomId();
     const mimeType = file.type || "application/octet-stream";
     setItems((current) => [
       ...current,
