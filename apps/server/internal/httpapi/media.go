@@ -171,6 +171,11 @@ func (s *server) listAssets(w http.ResponseWriter, r *http.Request) {
 	page, _ := strconv.Atoi(query.Get("page"))
 	pageSize, _ := strconv.Atoi(query.Get("pageSize"))
 	var folderID, collectionID, tagID *uuid.UUID
+	// "unfiled" is the Media page's "Без папки" entry: assets in no folder.
+	unfiled := query.Get("folderId") == "unfiled"
+	if unfiled {
+		query.Del("folderId")
+	}
 	for value, target := range map[string]**uuid.UUID{"folderId": &folderID, "collectionId": &collectionID, "tagId": &tagID} {
 		if raw := query.Get(value); raw != "" {
 			id, err := uuid.Parse(raw)
@@ -181,7 +186,7 @@ func (s *server) listAssets(w http.ResponseWriter, r *http.Request) {
 			*target = &id
 		}
 	}
-	result, err := s.media.ListAssets(r.Context(), media.ListOptions{Search: query.Get("search"), Type: query.Get("type"), WidgetProvider: query.Get("provider"), Status: query.Get("status"), Sort: query.Get("sort"), FolderID: folderID, CollectionID: collectionID, TagID: tagID, Page: page, PageSize: pageSize, Archived: query.Get("archived") == "true"})
+	result, err := s.media.ListAssets(r.Context(), media.ListOptions{Search: query.Get("search"), Type: query.Get("type"), WidgetProvider: query.Get("provider"), Status: query.Get("status"), Sort: query.Get("sort"), FolderID: folderID, CollectionID: collectionID, TagID: tagID, Page: page, PageSize: pageSize, Archived: query.Get("archived") == "true", Unfiled: unfiled})
 	if err != nil {
 		s.writeMediaError(w, r, err)
 		return

@@ -1,4 +1,5 @@
 import { randomId } from "../randomId";
+import { MediaFolderStrip } from "../components/content/MediaFolderStrip";
 import {
   Button,
   ContextMenu,
@@ -257,6 +258,9 @@ export function ContentPage() {
 
   const uploadFile = async (file: File, resume?: QueueItem) => {
     const localId = resume?.localId ?? randomId();
+    // A file uploaded while a folder is open goes into that folder.
+    const targetFolder =
+      folderFilter && folderFilter !== "unfiled" ? folderFilter : undefined;
     if (
       resume &&
       (file.name !== resume.filename || file.size !== resume.sizeBytes)
@@ -313,9 +317,15 @@ export function ContentPage() {
         updateQueue(localId, { uploadedBytes: offset });
       }
       updateQueue(localId, { state: "finalizing" });
-      await api.completeUpload(sessionId, csrf);
+      const uploaded = await api.completeUpload(sessionId, csrf);
+      if (targetFolder)
+        await api.bulkOrganize(
+          { assetIds: [uploaded.id], setFolder: true, folderId: targetFolder },
+          csrf,
+        );
       updateQueue(localId, { state: "processing", uploadedBytes: file.size });
       await queryClient.invalidateQueries({ queryKey: ["assets"] });
+      await queryClient.invalidateQueries({ queryKey: ["content-folders"] });
       window.setTimeout(
         () =>
           setQueue((current) =>
@@ -498,6 +508,7 @@ export function ContentPage() {
               onChange={(event) => setFolderFilter(event.target.value)}
             >
               <option value="">All folders</option>
+              <option value="unfiled">Без папки</option>
               {folders.data?.map((folder) => (
                 <option key={folder.id} value={folder.id}>
                   {folder.name} ({folder.assetCount})
@@ -566,6 +577,23 @@ export function ContentPage() {
         )}
         <ViewToggle value={view} onValueChange={setView} />
       </DashboardListToolbar>
+
+      {libraryView === "active" && (
+        <MediaFolderStrip
+          folders={folders.data ?? []}
+          value={folderFilter}
+          onChange={setFolderFilter}
+          canManage={canManage}
+          onCreate={async (name) => {
+            const created = await api.createContentFolder(
+              { name, description: "" },
+              csrf,
+            );
+            refreshOrganization();
+            setFolderFilter(created.id);
+          }}
+        />
+      )}
 
       {canManage && (libraryView === "active" || checkedAssetIds.size > 0) && (
         <ContentOrganizer

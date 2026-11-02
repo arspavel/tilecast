@@ -692,6 +692,8 @@ func (s *Service) ListAssets(ctx context.Context, o ListOptions) (ListResult, er
 	}
 	if o.FolderID != nil {
 		add("a.folder_id=$%d", *o.FolderID)
+	} else if o.Unfiled {
+		where = append(where, "a.folder_id IS NULL")
 	}
 	if o.CollectionID != nil {
 		add("EXISTS(SELECT 1 FROM content_collection_assets ca WHERE ca.asset_id=a.id AND ca.collection_id=$%d)", *o.CollectionID)

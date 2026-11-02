@@ -875,6 +875,8 @@ type ListOptions struct {
 	FolderID, CollectionID, TagID              *uuid.UUID
 	Page, PageSize                             int
 	Archived                                   bool
+	// Unfiled lists only assets that are in no folder.
+	Unfiled bool
 }
 
 // DataSourceListOptions filters the Data Source library.
