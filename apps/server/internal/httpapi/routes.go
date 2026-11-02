@@ -34,6 +34,11 @@ func (s *server) routes() http.Handler {
 	r.With(s.installRateLimit).Get("/install.sh", s.installScript)
 	r.With(s.installRateLimit).Get("/install-airplay.sh", s.airplayInstallScript)
 	r.With(s.installRateLimit).Get("/install/tilecast-player.service", s.playerServiceUnit)
+	// The LG webOS Signage package, built from the player this server serves at
+	// /webos/. Unauthenticated like the Linux assets: SI Server on a panel
+	// downloads it with no credential.
+	r.With(s.installRateLimit).Get("/install/webos/com.lg.app.signage.ipk", s.webOSPackage)
+	r.With(s.installRateLimit).Head("/install/webos/com.lg.app.signage.ipk", s.webOSPackage)
 	// The Presentation Network helper installer and its system unit. Same
 	// unauthenticated boundary as the other provisioning assets: they serve only
 	// what an operator already published, and a box being installed has no
