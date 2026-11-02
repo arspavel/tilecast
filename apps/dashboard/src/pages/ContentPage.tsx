@@ -79,6 +79,9 @@ type SavedUpload = Pick<
 >;
 
 const resumeKey = "tilecast.resumable-uploads.v1";
+// Files beyond this many wait their turn, so dropping a whole folder of media
+// does not hit the server with every upload at once.
+const maxParallelUploads = 3;
 const chunkSize = 5 * 1024 * 1024;
 
 export function canManageContent(user?: User) {
@@ -176,6 +179,19 @@ export function ContentPage() {
   const [selected, setSelected] = useState<Asset>();
   const controllers = useRef(new Map<string, AbortController>());
   const fileInput = useRef<HTMLInputElement>(null);
+  const uploadSlots = useRef({ active: 0, waiting: [] as Array<() => void> });
+  const withUploadSlot = async (task: () => Promise<void>) => {
+    const slots = uploadSlots.current;
+    if (slots.active >= maxParallelUploads)
+      await new Promise<void>((resolve) => slots.waiting.push(resolve));
+    slots.active += 1;
+    try {
+      await task();
+    } finally {
+      slots.active -= 1;
+      slots.waiting.shift()?.();
+    }
+  };
   const params = new URLSearchParams({ page: "1", pageSize: "48", sort });
   if (libraryView === "archive") params.set("archived", "true");
   if (search) params.set("search", search);
@@ -346,14 +362,14 @@ export function ContentPage() {
 
   const pickFiles = (event: ChangeEvent<HTMLInputElement>) => {
     for (const file of Array.from(event.target.files ?? []))
-      void uploadFile(file);
+      void withUploadSlot(() => uploadFile(file));
     event.target.value = "";
   };
   const dropFiles = (event: DragEvent) => {
     event.preventDefault();
     if (canManage)
       for (const file of droppedFiles(event.dataTransfer))
-        void uploadFile(file);
+        void withUploadSlot(() => uploadFile(file));
   };
   const cancel = async (item: QueueItem) => {
     controllers.current.get(item.localId)?.abort();
@@ -370,7 +386,7 @@ export function ContentPage() {
       "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm,video/x-matroska";
     input.onchange = () => {
       const file = input.files?.[0];
-      if (file) void uploadFile(file, item);
+      if (file) void withUploadSlot(() => uploadFile(file, item));
     };
     input.click();
   };

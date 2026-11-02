@@ -416,6 +416,14 @@ func (s *Service) FinalizeUpload(ctx context.Context, id, userID uuid.UUID) (Ass
 	if err := finalizationTx.Commit(ctx); err != nil {
 		return Asset{}, err
 	}
+	// Give the connection back before reading the asset. GetAsset takes a
+	// connection of its own; holding this one meanwhile let several uploads
+	// finishing together take every pooled connection and wait on each other,
+	// which stalled the whole server until the browsers gave up.
+	_, _ = conn.Exec(context.Background(), `SELECT pg_advisory_unlock(hashtextextended($1,0))`, id.String())
+	unlocked = true
+	conn.Release()
+	released = true
 	return s.GetAsset(ctx, assetID)
 }
 
