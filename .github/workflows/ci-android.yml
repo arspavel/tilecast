@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 17
@@ -32,7 +32,7 @@ jobs:
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug
       - name: Test Reporter
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@v3.0.0
+        uses: dorny/test-reporter@v3.2.0
         with:
           name: Android tests
           path: apps/player-android/app/build/test-results/testDebugUnitTest/*.xml
