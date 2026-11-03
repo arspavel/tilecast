@@ -286,7 +286,9 @@ describe("screen detail tabs", () => {
     await user.keyboard("{ArrowRight}");
     expect(document.activeElement?.textContent).toContain("Manage");
     await user.keyboard("{ArrowLeft}{ArrowLeft}");
-    expect(document.activeElement?.textContent).toContain("Content");
+    expect(document.activeElement?.textContent).toContain(
+      "Контент по умолчанию",
+    );
     await user.keyboard("{Home}");
     expect(document.activeElement?.textContent).toContain("Overview");
     await user.keyboard("{End}");
@@ -300,7 +302,7 @@ describe("screen detail tabs", () => {
     // or the preview panel silently disappears.
     expect(await screen.findByTestId("preview")).toBeTruthy();
     expect(
-      await screen.findByRole("heading", { name: "Screen overview" }),
+      await screen.findByRole("heading", { name: "Сведения об экране" }),
     ).toBeTruthy();
   });
 

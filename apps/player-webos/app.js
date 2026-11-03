@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.4.1";
-  var VERSION_CODE = 8;
+  var VERSION = "0.4.2";
+  var VERSION_CODE = 9;
   var STORE = "tilecast.webos.";
   // Media is kept in memory between playlist cycles so a loop does not
   // download every item again. Items on screen are never evicted.
@@ -291,6 +291,7 @@
     if (Date.now() - state.lastConfigSyncAt < 5 * 60 * 1000) return;
     state.lastConfigSyncAt = Date.now();
     request("GET", "/api/v1/player/config", null, {}, false).then(function (config) {
+      if (config && config.configRevision != null) state.configRevision = config.configRevision;
       if (config && config.playback) {
         state.playbackDefaults = config.playback;
         writeJson("playbackDefaults", config.playback);
@@ -303,6 +304,11 @@
     syncConfig();
     request("GET", "/api/v1/player/manifest", null, {}, false).then(function (manifest) {
       if (state.mode === "disabled") state.mode = "playback";
+      // Positive when this TV's clock runs ahead of the server's.
+      if (manifest && manifest.serverTime) {
+        var serverNow = Date.parse(manifest.serverTime);
+        if (isFinite(serverNow)) state.clockOffsetSeconds = Math.round((Date.now() - serverNow) / 1000);
+      }
       state.manifest = manifest;
       writeJson("manifest", manifest);
       state.lastError = null;
@@ -350,7 +356,8 @@
     if (override && override.playlistId && inWindow(now, override.startedAt, override.expiresAt) && byId[override.playlistId]) { state.selectionSource = "quick_present"; return byId[override.playlistId]; }
     var active = (manifest.schedules || []).filter(function (s) { return s.playlistId && scheduleApplies(s, now); });
     active.sort(function (a, b) { return (b.priority || 0) - (a.priority || 0) || (b.specificity || 0) - (a.specificity || 0); });
-    if (active.length && byId[active[0].playlistId]) { state.selectionSource = "schedule"; return byId[active[0].playlistId]; }
+    if (active.length && byId[active[0].playlistId]) { state.selectionSource = "schedule"; state.currentScheduleId = active[0].id || null; return byId[active[0].playlistId]; }
+    state.currentScheduleId = null;
     var fallback = manifest.playlist || manifest.directFallbackPlaylist || null;
     // The server accepts only these sources; "webos" was rejected on every heartbeat.
     state.selectionSource = fallback ? "direct_fallback" : "none";
@@ -1281,6 +1288,8 @@
     if (!state.credential) return;
     var item = state.currentItem;
     var video = stage.querySelector("video:not(.pending)");
+    var download = activeDownload();
+    var upcoming = nextChange();
     request("POST", "/api/v1/player/heartbeat", {
       screenWidth: window.screen.width || window.innerWidth || 1920,
       screenHeight: window.screen.height || window.innerHeight || 1080,
@@ -1296,7 +1305,17 @@
       lastHealthyPlaybackAt: state.lastHealthyPlaybackAt,
       lastPlaybackError: state.lastError,
       rendererResponding: true,
-      expectedMotion: !!video
+      expectedMotion: !!video,
+      // Reported like the Android player, so Studio's screen page has data.
+      activeConfigRevision: state.configRevision,
+      deviceClockOffsetSeconds: state.clockOffsetSeconds,
+      currentScheduleId: state.currentScheduleId || undefined,
+      nextTransitionAt: upcoming ? upcoming.toISOString() : undefined,
+      downloadQueueCount: download ? download.count : 0,
+      downloadedBytes: download ? download.loaded : 0,
+      requiredBytes: download ? download.total : 0,
+      cacheUsedBytes: media.bytes,
+      cacheLimitBytes: MEDIA_CACHE_BYTES
     }, {}, false).then(function () {
       // The screen was enabled again in Studio; resume without re-pairing.
       if (state.mode === "disabled") syncManifest();
@@ -1367,12 +1386,17 @@
     return null;
   }
 
-  function nextChangeText() {
+  // Recomputed at most once a minute; the heartbeat and the overlay share it.
+  function nextChange() {
     if (Date.now() - info.nextChangeAt > 60000) {
       info.nextChange = computeNextChange();
       info.nextChangeAt = Date.now();
     }
-    var at = info.nextChange;
+    return info.nextChange;
+  }
+
+  function nextChangeText() {
+    var at = nextChange();
     if (!at) return "не запланирована";
     var today = new Date().toDateString() === at.toDateString();
     var when = (today ? "" : pad(at.getDate()) + "." + pad(at.getMonth() + 1) + " ") + pad(at.getHours()) + ":" + pad(at.getMinutes());

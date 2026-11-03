@@ -13,6 +13,12 @@ import {
   ResourceLink,
 } from "../pages/ActivityShared";
 import { buildActivityLink } from "../pages/activityLinks";
+import {
+  timelineDescription,
+  timelineDomainLabels,
+  timelineTitle,
+  timelineValue,
+} from "./screenTimelineLabels";
 
 type TimelineEntry = {
   id: string;
@@ -153,11 +159,13 @@ export function ScreenTimeline({ screenId }: { screenId: string }) {
                 <span
                   className={`activity-domain activity-domain--${entry.domain}`}
                 >
-                  {entry.domain}
+                  {timelineDomainLabels[entry.domain] ?? entry.domain}
                 </span>
                 <div>
-                  <strong>{entry.title}</strong>
-                  {entry.description && <small>{entry.description}</small>}
+                  <strong>{timelineTitle(entry.kind, entry.title)}</strong>
+                  {entry.description && (
+                    <small>{timelineDescription(entry.description)}</small>
+                  )}
                   <span className="screen-timeline__facts">
                     {entry.durationMs != null && (
                       <span>{formatDuration(entry.durationMs)}</span>
@@ -167,7 +175,9 @@ export function ScreenTimeline({ screenId }: { screenId: string }) {
                     {(entry.kind === "interval" || entry.kind === "session") &&
                       entry.endedAt === undefined &&
                       entry.durationMs == null && <span>Still open</span>}
-                    {entry.result && <span>{humanize(entry.result)}</span>}
+                    {entry.result && (
+                      <span>{timelineValue(entry.result, humanize)}</span>
+                    )}
                     {entry.linkType === "incident" ? (
                       <Link to={buildActivityLink("incidents")}>
                         View incident
@@ -200,11 +210,13 @@ function CurrentStatus({ status }: { status: ScreenTimeline["status"] }) {
           <span
             className={`screen-timeline__health screen-timeline__health--${status.health}`}
           >
-            {humanize(status.health)}
+            {timelineValue(status.health, humanize)}
           </span>
           {/* The reason is shown beside the classification so it is never an
               unexplained label. */}
-          <small>{humanize(status.healthReason)}</small>
+          <small>
+            {timelineTitle(status.healthReason, humanize(status.healthReason))}
+          </small>
         </dd>
       </div>
       <div>

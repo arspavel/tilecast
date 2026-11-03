@@ -64,6 +64,7 @@ import { FormField } from "../components/FormField";
 import { FireTvAccessibilityAdbPanel } from "../components/FireTvAccessibilityAdbPanel";
 import { ScreenManagementTabs } from "../components/ScreenManagementTabs";
 import { ScreenDisplayControls } from "../components/ScreenDisplayControls";
+import { ScreenOverviewCards } from "./ScreenOverviewCards";
 import { PlayerPolicyEditor } from "../settings/PlayerPolicyEditor";
 import { formatLocationAddress } from "../settings/LocationsPanel";
 import { isAndroidScreen } from "../playerPlatform";
@@ -1821,11 +1822,39 @@ function needsAttention(screen: Screen) {
   );
 }
 
+const syncStatusLabels: Record<string, string> = {
+  current: "Актуально",
+  preparing: "Подготовка",
+  out_of_date: "Устарело",
+  not_reported: "Нет данных",
+};
+
+const playbackLabels: Record<string, string> = {
+  playing: "Воспроизводится",
+  idle: "Нет контента",
+  disabled: "Показ отключён",
+  off_hours: "Вне рабочих часов",
+  safe_mode: "Безопасный режим",
+  starting: "Запускается",
+};
+
+function byteSize(value: number) {
+  if (value < 1024) return `${value} Б`;
+  const units = ["КБ", "МБ", "ГБ", "ТБ"];
+  let amount = value / 1024;
+  let unit = 0;
+  while (amount >= 1024 && unit < units.length - 1) {
+    amount /= 1024;
+    unit += 1;
+  }
+  return `${amount.toFixed(amount >= 10 ? 0 : 1)} ${units[unit]}`;
+}
+
 function roomLabel(screen: Screen) {
   if (screen.roomName && screen.roomNumber)
-    return `${screen.roomName} · Room ${screen.roomNumber}`;
+    return `${screen.roomName} · каб. ${screen.roomNumber}`;
   if (screen.roomName) return screen.roomName;
-  if (screen.roomNumber) return `Room ${screen.roomNumber}`;
+  if (screen.roomNumber) return `каб. ${screen.roomNumber}`;
   return "";
 }
 
@@ -2800,6 +2829,14 @@ export function ScreenDetailPage() {
     refetchInterval: 5_000,
     enabled: true,
   });
+  // The next schedule change, computed by the server for any player; a player
+  // that reports its own nextTransitionAt (Android) wins.
+  const schedulePreview = useQuery({
+    queryKey: ["screens", id, "schedule-preview"],
+    queryFn: () => api.previewSchedule(id, new Date().toISOString()),
+    refetchInterval: 60_000,
+    enabled: Boolean(id),
+  });
   const reliability = useQuery({
     queryKey: ["screens", id, "reliability"],
     queryFn: () => api.screenReliability(id),
@@ -2887,8 +2924,13 @@ export function ScreenDetailPage() {
           </span>
         }
         description={
-          [screen.location, roomLabel(screen)].filter(Boolean).join(" · ") ||
-          "No location set"
+          [
+            screen.location,
+            roomLabel(screen),
+            screen.inventoryNumber && `инв. № ${screen.inventoryNumber}`,
+          ]
+            .filter(Boolean)
+            .join(" · ") || "No location set"
         }
         actions={
           <>
@@ -2902,16 +2944,6 @@ export function ScreenDetailPage() {
                 {stopQuickPresent.isPending
                   ? "Останавливаем…"
                   : "Остановить показ"}
-              </button>
-            )}
-            {canManageScreens(auth.status?.user) && !activeQuickPresent && (
-              <button
-                type="button"
-                className="button button--secondary"
-                onClick={() => setEditingDetails((editing) => !editing)}
-              >
-                <Pencil size={15} aria-hidden="true" />
-                {editingDetails ? "Close editor" : "Edit details"}
               </button>
             )}
             {canManageScreens(auth.status?.user) &&
@@ -2969,92 +3001,6 @@ export function ScreenDetailPage() {
           возобновится обычный контент.
         </div>
       )}
-      {editingDetails && (
-        <section
-          className="screen-details-editor"
-          aria-labelledby="screen-details-editor-title"
-        >
-          <header>
-            <div>
-              <h3 id="screen-details-editor-title">Player details</h3>
-            </div>
-          </header>
-          {updateDetails.error && (
-            <div className="notice notice--error" role="alert">
-              {updateDetails.error.message}
-            </div>
-          )}
-          <form
-            onSubmit={(event) =>
-              void detailsForm.handleSubmit((values) =>
-                updateDetails.mutateAsync(values),
-              )(event)
-            }
-          >
-            <FormField
-              id="editScreenName"
-              label="Screen name"
-              autoFocus
-              error={detailsForm.formState.errors.name?.message}
-              {...detailsForm.register("name")}
-            />
-            <LocationPicker
-              locations={locations.data?.items ?? []}
-              value={detailsForm.watch("locationId")}
-              onChange={(locationId) =>
-                detailsForm.setValue("locationId", locationId, {
-                  shouldDirty: true,
-                })
-              }
-            />
-            <div className="screen-room-fields">
-              <FormField
-                id="editScreenRoomNumber"
-                label="Номер помещения (необязательно)"
-                {...detailsForm.register("roomNumber")}
-              />
-              <FormField
-                id="editScreenInventoryNumber"
-                label="Инвентарный номер (необязательно)"
-                placeholder="ИНВ-000123"
-                error={detailsForm.formState.errors.inventoryNumber?.message}
-                {...detailsForm.register("inventoryNumber")}
-              />
-            </div>
-            <label
-              className="field screen-details-editor__description"
-              htmlFor="editScreenDescription"
-            >
-              <span className="field__label">Description (optional)</span>
-              <textarea
-                id="editScreenDescription"
-                {...detailsForm.register("description")}
-              />
-              {detailsForm.formState.errors.description?.message && (
-                <span className="field__error">
-                  {detailsForm.formState.errors.description.message}
-                </span>
-              )}
-            </label>
-            <div className="screen-details-editor__actions">
-              <button
-                type="button"
-                className="button button--secondary"
-                onClick={() => setEditingDetails(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="button button--primary"
-                disabled={updateDetails.isPending}
-              >
-                {updateDetails.isPending ? "Saving…" : "Save details"}
-              </button>
-            </div>
-          </form>
-        </section>
-      )}
       <ViewTabs
         className="screen-detail-tabs"
         label="Screen details"
@@ -3063,7 +3009,7 @@ export function ScreenDetailPage() {
         items={[
           { value: "overview", label: "Overview" },
           { value: "snapshots", label: "Snapshots" },
-          { value: "content", label: "Content" },
+          { value: "content", label: "Контент по умолчанию" },
           { value: "activity", label: "Activity" },
           {
             value: "manage",
@@ -3074,146 +3020,92 @@ export function ScreenDetailPage() {
       />
 
       {tab === "overview" && (
-        <section
-          className="screen-overview"
-          aria-labelledby="screen-overview-title"
-        >
-          <header>
-            <h3 id="screen-overview-title">Screen overview</h3>
-            <p>Current player state and the settings that affect it.</p>
-          </header>
+        <>
           {reliability.data?.externalPresentationState &&
             reliability.data.externalPresentationState !== "none" && (
               <div className="notice notice--info">
-                <strong>AIRPLAY ACTIVE</strong> · This screen is showing an
-                external presentation
+                Идёт показ AirPlay
                 {reliability.data.airplayConnected
-                  ? " and is receiving mirrored video."
-                  : "; it is waiting for a sender."}{" "}
-                Preview capture is disabled while AirPlay is active.
+                  ? ": экран получает изображение."
+                  : ": экран ждёт подключения отправителя."}
               </div>
             )}
-          {canManageScreens(auth.status?.user) && (
-            <ScreenDisplayControls screen={screen} />
+          {updateDetails.error && (
+            <div className="notice notice--error" role="alert">
+              {updateDetails.error.message}
+            </div>
           )}
-          <dl className="screen-overview__grid">
-            <div>
-              <dt>Online status</dt>
-              <dd>
-                <StatusLabel status={screen.status} />
-              </dd>
-            </div>
-            <div>
-              <dt>Current content</dt>
-              <dd>
-                {assignment.data?.playbackState ??
-                  assignment.data?.playlistName ??
-                  "No content"}
-              </dd>
-            </div>
-            <div>
-              <dt>Synchronization</dt>
-              <dd>
-                {assignment.data?.synchronizationStatus?.replaceAll("_", " ") ??
-                  "Not reported"}
-              </dd>
-            </div>
-            <div>
-              <dt>Player version</dt>
-              <dd>{screen.playerVersion || "Not reported"}</dd>
-            </div>
-            <div>
-              <dt>Reliability mode</dt>
-              <dd>
-                {reliability.data?.effectiveMode?.replaceAll("_", " ") ??
-                  "Not reported"}
-              </dd>
-            </div>
-            <div>
-              <dt>Active hours</dt>
-              <dd>
-                {reliability.data?.activeHoursState?.replaceAll("_", " ") ??
-                  "Not reported"}
-              </dd>
-            </div>
-            <div>
-              <dt>Player-setting overrides</dt>
-              <dd>
-                <Link to={`?tab=manage`}>
-                  {Object.keys(screenPolicy.data?.values ?? {}).length}{" "}
-                  configured · Manage screen
-                </Link>
-              </dd>
-            </div>
-          </dl>
-          <div className="screen-overview__links">
-            <button type="button" onClick={() => selectTab("content")}>
-              View content
-            </button>
-            <button type="button" onClick={() => selectTab("manage")}>
-              Manage screen
-            </button>
-          </div>
-          <section
-            className="screen-hardware-history"
-            aria-labelledby="screen-hardware-history-title"
-          >
-            <header>
-              <h3 id="screen-hardware-history-title">Hardware history</h3>
-              <p>The logical screen stays stable when hardware is replaced.</p>
-            </header>
-            {playerHistory.data?.items.length ? (
-              <div className="screen-hardware-history__list">
-                {playerHistory.data.items.map((hardware) => (
-                  <article
-                    key={hardware.id}
-                    className={
-                      hardware.retiredAt
-                        ? "screen-hardware-history__item screen-hardware-history__item--retired"
-                        : "screen-hardware-history__item"
+          <ScreenOverviewCards
+            screen={screen}
+            assignment={assignment.data ?? undefined}
+            quickPresentName={activeQuickPresent?.contentName}
+            nextTransition={
+              assignment.data?.nextTransitionAt ??
+              schedulePreview.data?.nextTransition
+            }
+            canEdit={canManageScreens(auth.status?.user)}
+            editing={editingDetails}
+            onEdit={() => setEditingDetails(true)}
+            editor={
+              <form
+                onSubmit={(event) =>
+                  void detailsForm.handleSubmit((values) =>
+                    updateDetails.mutateAsync(values),
+                  )(event)
+                }
+              >
+                <FormField
+                  id="editScreenName"
+                  label="Имя экрана"
+                  autoFocus
+                  error={detailsForm.formState.errors.name?.message}
+                  {...detailsForm.register("name")}
+                />
+                <LocationPicker
+                  locations={locations.data?.items ?? []}
+                  value={detailsForm.watch("locationId")}
+                  onChange={(locationId) =>
+                    detailsForm.setValue("locationId", locationId, {
+                      shouldDirty: true,
+                    })
+                  }
+                />
+                <div className="screen-room-fields">
+                  <FormField
+                    id="editScreenRoomNumber"
+                    label="Номер кабинета"
+                    {...detailsForm.register("roomNumber")}
+                  />
+                  <FormField
+                    id="editScreenInventoryNumber"
+                    label="Инвентарный номер"
+                    placeholder="ИНВ-000123"
+                    error={
+                      detailsForm.formState.errors.inventoryNumber?.message
                     }
+                    {...detailsForm.register("inventoryNumber")}
+                  />
+                </div>
+                <div className="screen-details-editor__actions">
+                  <button
+                    type="button"
+                    className="button button--secondary"
+                    onClick={() => setEditingDetails(false)}
                   >
-                    <div className="screen-hardware-history__identity">
-                      <strong>
-                        {hardware.manufacturer} {hardware.model}
-                      </strong>
-                      <span className="screen-hardware-history__specs">
-                        {hardware.platform} · {hardware.playerVersion} ·{" "}
-                        {hardware.screenWidth}×{hardware.screenHeight}
-                      </span>
-                    </div>
-                    <div className="screen-hardware-history__lifecycle">
-                      <span className="screen-hardware-history__state">
-                        <span aria-hidden="true" />
-                        {hardware.retiredAt
-                          ? `Retired ${new Date(hardware.retiredAt).toLocaleDateString()}`
-                          : "Current hardware"}
-                      </span>
-                      <small className="screen-hardware-history__meta">
-                        <span>
-                          Paired{" "}
-                          {new Date(hardware.pairedAt).toLocaleDateString()}
-                        </span>
-                        {hardware.retirementReason ? (
-                          <>
-                            <span aria-hidden="true">·</span>
-                            <span>{hardware.retirementReason}</span>
-                          </>
-                        ) : null}
-                      </small>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : playerHistory.isLoading ? (
-              <p className="table-loading">Loading hardware history…</p>
-            ) : (
-              <p className="empty-state__message">
-                No hardware history recorded.
-              </p>
-            )}
-          </section>
-        </section>
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    className="button button--primary"
+                    disabled={updateDetails.isPending}
+                  >
+                    {updateDetails.isPending ? "Сохранение…" : "Сохранить"}
+                  </button>
+                </div>
+              </form>
+            }
+          />
+        </>
       )}
 
       {tab === "content" && (
@@ -3289,21 +3181,27 @@ export function ScreenDetailPage() {
             <div>
               <dt>Current selection</dt>
               <dd>
-                {assignment.data?.selectionSource === "takeover"
-                  ? "Takeover"
-                  : assignment.data?.selectionSource === "schedule"
-                    ? `Scheduled${assignment.data.currentScheduleId ? ` · ${(assignment.data.relevantSchedules ?? []).find((s) => s.id === assignment.data?.currentScheduleId)?.name ?? "schedule"}` : ""}`
-                    : assignment.data?.selectionSource === "direct_fallback"
-                      ? "Direct fallback"
-                      : "No content"}
+                {activeQuickPresent
+                  ? `Временный показ · ${activeQuickPresent.contentName}`
+                  : assignment.data?.selectionSource === "takeover"
+                    ? "Takeover"
+                    : assignment.data?.selectionSource === "schedule"
+                      ? `Scheduled${assignment.data.currentScheduleId ? ` · ${(assignment.data.relevantSchedules ?? []).find((s) => s.id === assignment.data?.currentScheduleId)?.name ?? "schedule"}` : ""}`
+                      : assignment.data?.selectionSource === "direct_fallback"
+                        ? "Direct fallback"
+                        : "No content"}
               </dd>
             </div>
             <div>
               <dt>Next scheduled change</dt>
               <dd>
-                {assignment.data?.nextTransitionAt
-                  ? new Date(assignment.data.nextTransitionAt).toLocaleString()
-                  : "None reported"}
+                {(assignment.data?.nextTransitionAt ??
+                schedulePreview.data?.nextTransition)
+                  ? new Date(
+                      (assignment.data?.nextTransitionAt ??
+                        schedulePreview.data?.nextTransition)!,
+                    ).toLocaleString("ru-RU")
+                  : "Не запланировано"}
               </dd>
             </div>
             <div>
@@ -3329,8 +3227,9 @@ export function ScreenDetailPage() {
             <div>
               <dt>Synchronization</dt>
               <dd>
-                {assignment.data?.synchronizationStatus?.replaceAll("_", " ") ??
-                  "Not reported"}
+                {syncStatusLabels[
+                  assignment.data?.synchronizationStatus ?? ""
+                ] ?? "Нет данных"}
               </dd>
             </div>
             <div>
@@ -3353,7 +3252,7 @@ export function ScreenDetailPage() {
               <dt>Device clock difference</dt>
               <dd>
                 {assignment.data?.deviceClockOffsetSeconds != null
-                  ? `${Math.abs(assignment.data.deviceClockOffsetSeconds)} seconds`
+                  ? `${Math.abs(assignment.data.deviceClockOffsetSeconds)} с`
                   : "Not reported"}
               </dd>
             </div>
@@ -3361,28 +3260,38 @@ export function ScreenDetailPage() {
               <dt>Downloads</dt>
               <dd>
                 {assignment.data?.downloadQueueCount != null
-                  ? `${assignment.data.downloadQueueCount} queued · ${assignment.data.downloadedBytes ?? 0} of ${assignment.data.requiredBytes ?? 0} bytes`
+                  ? assignment.data.downloadQueueCount === 0
+                    ? "Всё загружено"
+                    : `В очереди: ${assignment.data.downloadQueueCount} · ${byteSize(assignment.data.downloadedBytes ?? 0)} из ${byteSize(assignment.data.requiredBytes ?? 0)}`
                   : "Not reported"}
               </dd>
             </div>
-            <div>
-              <dt>Website playback</dt>
-              <dd>
-                {assignment.data?.websiteState
-                  ? `${assignment.data.websiteState?.replaceAll("_", " ") ?? "Not reported"}${assignment.data.websiteCurrentHost ? ` · ${assignment.data.websiteCurrentHost}` : ""}`
-                  : "Not active"}
-              </dd>
-            </div>
-            <div>
-              <dt>Blocked website navigation</dt>
-              <dd>
-                {assignment.data?.websiteBlockedNavigationCount ??
-                  "Not reported"}
-              </dd>
-            </div>
+            {assignment.data?.websiteState && (
+              <>
+                <div>
+                  <dt>Website playback</dt>
+                  <dd>
+                    {assignment.data?.websiteState
+                      ? `${assignment.data.websiteState?.replaceAll("_", " ") ?? "Not reported"}${assignment.data.websiteCurrentHost ? ` · ${assignment.data.websiteCurrentHost}` : ""}`
+                      : "Not active"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Blocked website navigation</dt>
+                  <dd>
+                    {assignment.data?.websiteBlockedNavigationCount ??
+                      "Not reported"}
+                  </dd>
+                </div>
+              </>
+            )}
             <div>
               <dt>Playback</dt>
-              <dd>{assignment.data?.playbackState ?? "Not reported"}</dd>
+              <dd>
+                {playbackLabels[assignment.data?.playbackState ?? ""] ??
+                  assignment.data?.playbackState ??
+                  "Нет данных"}
+              </dd>
             </div>
             <div>
               <dt>Takeover</dt>
@@ -3396,7 +3305,9 @@ export function ScreenDetailPage() {
               <dt>Cache</dt>
               <dd>
                 {assignment.data?.cacheUsedBytes != null
-                  ? `${assignment.data.cacheUsedBytes} of ${assignment.data.cacheLimitBytes ?? 0} bytes`
+                  ? assignment.data.cacheLimitBytes
+                    ? `${byteSize(assignment.data.cacheUsedBytes)} из ${byteSize(assignment.data.cacheLimitBytes)}`
+                    : byteSize(assignment.data.cacheUsedBytes)
                   : "Not reported"}
               </dd>
             </div>
@@ -3441,6 +3352,9 @@ export function ScreenDetailPage() {
         </section>
       )}
 
+      {tab === "manage" && canManageScreens(auth.status?.user) && (
+        <ScreenDisplayControls screen={screen} />
+      )}
       {tab === "manage" && (
         <section
           className="screen-manage__navigation"

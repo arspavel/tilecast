@@ -136,11 +136,11 @@ describe("screen timeline", () => {
     // State changes, playback, incidents, commands and administrative changes
     // in one order, rather than four lists to line up by eye.
     expect(rows.map((row) => row.textContent?.split("\n")[0])).toHaveLength(5);
-    expect(list.textContent).toContain("Offline");
+    expect(list.textContent).toContain("Не в сети");
     expect(list.textContent).toContain("Lobby loop");
     expect(list.textContent).toContain("Playback is failing");
-    expect(list.textContent).toContain("Command created");
-    expect(list.textContent).toContain("Renamed the screen");
+    expect(list.textContent).toContain("Отправлена команда");
+    expect(list.textContent).toContain("Изменены сведения об экране");
   });
 
   it("shows current status above the history", async () => {
@@ -166,7 +166,7 @@ describe("screen timeline", () => {
     const health = (await screen.findByText("Health")).closest("div")!;
     // The same four-state classification the fleet-health section uses, never
     // shown as an unexplained label.
-    expect(health.textContent).toContain("Impaired");
+    expect(health.textContent).toContain("Есть проблемы");
     expect(health.textContent).toContain("Playback Error");
   });
 
@@ -174,7 +174,7 @@ describe("screen timeline", () => {
     const user = userEvent.setup();
     renderTimeline();
 
-    await screen.findByText("Renamed the screen");
+    await screen.findByText("Изменены сведения об экране");
     await user.click(screen.getByRole("button", { name: "Commands" }));
 
     await waitFor(() =>
@@ -185,7 +185,7 @@ describe("screen timeline", () => {
     await waitFor(() =>
       expect(screen.queryByText("Renamed the screen")).toBeNull(),
     );
-    expect(screen.getByText("Command created")).toBeTruthy();
+    expect(screen.getByText("Отправлена команда")).toBeTruthy();
   });
 
   it("offers every documented domain filter", async () => {
@@ -215,7 +215,7 @@ describe("screen timeline", () => {
     const user = userEvent.setup();
     renderTimeline();
 
-    await screen.findByText("Renamed the screen");
+    await screen.findByText("Изменены сведения об экране");
     await user.click(screen.getByRole("button", { name: "Commands" }));
     await waitFor(() =>
       expect(requested.some((url) => url.includes("domain=commands"))).toBe(
