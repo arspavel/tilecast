@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.4.2";
-  var VERSION_CODE = 9;
+  var VERSION = "0.4.3";
+  var VERSION_CODE = 10;
   var STORE = "tilecast.webos.";
   // Media is kept in memory between playlist cycles so a loop does not
   // download every item again. Items on screen are never evicted.
@@ -417,7 +417,7 @@
     var defaults = state.playbackDefaults || {};
     var explicit = Number(item.durationMs);
     if (!item.usePlayerDefaults && isFinite(explicit) && explicit > 0) return Math.max(1000, explicit);
-    if (item.assetType === "website") return 30000;
+    if (item.assetType === "website" || item.assetType === "widget") return 30000;
     return Math.max(1, Number(defaults.defaultImageDurationSeconds) || 10) * 1000;
   }
 
@@ -571,7 +571,7 @@
     var items = playlistItems();
     if (items.length < 2) return;
     var next = items[(state.itemIndex + 1) % items.length];
-    if (!next || next.assetType === "website") return;
+    if (!next || next.assetType === "website" || next.assetType === "widget") return;
     var asset = findAsset(next.assetId, next.variantId);
     if (asset) loadMedia(asset).catch(function () { /* Retried when the item plays. */ });
   }
@@ -591,14 +591,18 @@
       itemFailed("Элемент не загрузился вовремя", token);
     }, READY_TIMEOUT_MS);
 
-    if (item.assetType === "website") {
-      var website = findWebsite(item.assetId);
-      if (!website) return itemFailed("Нет настроек веб-страницы", token);
+    if (item.assetType === "website" || item.assetType === "widget") {
+      var website = item.assetType === "website" ? findWebsite(item.assetId) : findWidgetWebsite(item.assetId);
+      if (!website) {
+        return itemFailed(item.assetType === "widget"
+          ? "Этот вид виджета пока не показывается на webOS"
+          : "Нет настроек веб-страницы", token);
+      }
       // The same website again (for example a one-item playlist) stays loaded
       // instead of reloading at every cycle.
       var visible = visibleElement();
       if (visible && visible.tagName === "IFRAME" && visible.getAttribute("data-site") === website.url &&
-          previous && previous.assetType === "website" && previous.assetId === item.assetId) {
+          previous && previous.assetType === item.assetType && previous.assetId === item.assetId) {
         clearTimeout(state.readyTimer);
         itemHealthy();
         armNext(itemDuration(item), token);
@@ -627,6 +631,19 @@
     }).catch(function (error) {
       itemFailed(error.message, token);
     });
+  }
+
+  // A "Веб-сайт" widget carries its address in the widget configuration rather
+  // than in manifest.websites; other widget kinds need a renderer webOS lacks.
+  function findWidgetWebsite(assetId) {
+    var list = state.manifest && state.manifest.widgets || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].assetId !== assetId) continue;
+      var config = list[i].configuration || {};
+      var url = config.displayUrl || config.url;
+      return list[i].provider === "website" && url ? { assetId: assetId, url: url } : null;
+    }
+    return null;
   }
 
   function findWebsite(assetId) {
