@@ -189,7 +189,9 @@ export function ScreenOverviewCards({
               <span className="screen-card__stack">
                 <span>Не запланирована</span>
                 <small className="screen-card__note">
-                  Показывается контент по умолчанию
+                  {quickPresentName
+                    ? "После временного показа — контент по умолчанию"
+                    : "Показывается контент по умолчанию"}
                 </small>
               </span>
             )}
@@ -208,9 +210,12 @@ export function ScreenOverviewCards({
           screen.screenWidth && screen.screenHeight
             ? `${screen.screenWidth}×${screen.screenHeight}`
             : undefined,
-          [screen.deviceManufacturer, screen.deviceModel]
-            .filter(Boolean)
-            .join(" "),
+          // "LG" + "LG webOS TV" would read "LG LG webOS TV".
+          screen.deviceModel?.startsWith(screen.deviceManufacturer ?? "\u0000")
+            ? screen.deviceModel
+            : [screen.deviceManufacturer, screen.deviceModel]
+                .filter(Boolean)
+                .join(" "),
         ]
           .filter(Boolean)
           .join(" · ")}
