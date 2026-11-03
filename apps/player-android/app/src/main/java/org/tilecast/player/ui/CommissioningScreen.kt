@@ -2,8 +2,13 @@ package org.tilecast.player.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -45,18 +52,21 @@ fun CommissioningScreen(
 ) {
     val activeSteps = CommissioningStep.activeEntries
     val stepNumber = activeSteps.indexOf(state.step).coerceAtLeast(0) + 1
+    // The step text scrolls and the action row stays pinned at the bottom: with
+    // large display scaling or longer Russian copy the content no longer fits,
+    // and a button pushed off-screen could not be reached at all.
     Column(
-        Modifier.fillMaxSize().padding(horizontal = 80.dp, vertical = 54.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
+        Modifier.fillMaxSize().imePadding().padding(horizontal = 56.dp, vertical = 32.dp),
     ) {
-        Column(Modifier.fillMaxWidth(.82f)) {
-            Text("Подготовка плеера к работе без присмотра", color = SignalText, fontSize = 42.sp, fontWeight = FontWeight.SemiBold)
-            Text("Мастер проверяет возможности Android, которые нужны для работы без присмотра.", color = SignalMuted, fontSize = 20.sp)
-            Spacer(Modifier.height(28.dp))
+        Column(Modifier.weight(1f).fillMaxWidth(.86f).verticalScroll(rememberScrollState())) {
+            Text("Подготовка плеера к работе без присмотра", color = SignalText, fontSize = 34.sp, fontWeight = FontWeight.SemiBold)
+            Text("Мастер проверяет возможности Android, которые нужны для работы без присмотра.", color = SignalMuted, fontSize = 18.sp)
+            Spacer(Modifier.height(20.dp))
             Text("Шаг $stepNumber из ${activeSteps.size}", color = SignalBlue, fontSize = 16.sp)
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
             CommissioningStepBody(state, setPin, openAccessibility, openInstallPermission, refresh, advance, runSelfTest)
         }
+        Spacer(Modifier.height(16.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
             when (state.step) {
                 CommissioningStep.RESULT -> SignalButton(onClick = finish) { Text("Завершить настройку") }
@@ -88,6 +98,8 @@ private fun CommissioningStepBody(
     when (state.step) {
         CommissioningStep.ADMIN_PIN -> {
             var pin by remember { mutableStateOf("") }
+            val keyboard = LocalSoftwareKeyboardController.current
+            val focus = LocalFocusManager.current
             Text("Задайте PIN администратора", color = SignalText, fontSize = 30.sp)
             Text("PIN открывает только меню обслуживания LSR signage и хранится в виде защищённого хеша.", color = SignalMuted, fontSize = 18.sp)
             Spacer(Modifier.height(18.dp))
@@ -104,6 +116,10 @@ private fun CommissioningStepBody(
                 onClick = {
                     setPin(pin.toCharArray())
                     pin = ""
+                    // The keyboard otherwise stays up on the next step and
+                    // covers its buttons.
+                    keyboard?.hide()
+                    focus.clearFocus()
                     advance()
                 },
                 enabled = pin.length >= 4,
@@ -179,12 +195,14 @@ private fun CommissioningStepBody(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CapabilityStep(title: String, description: String, verified: Boolean, action: String, open: () -> Unit, refresh: () -> Unit) {
-    Text(title, color = SignalText, fontSize = 30.sp)
-    Text(description, color = SignalMuted, fontSize = 18.sp)
+    Text(title, color = SignalText, fontSize = 26.sp)
+    Text(description, color = SignalMuted, fontSize = 17.sp)
     StatusLine("Проверка", verified)
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    // Long Russian labels wrap to a second line instead of pushing a button off-screen.
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SignalButton(onClick = open) { Text(action) }
         SignalOutlinedButton(onClick = refresh) { Text("Проверить снова") }
     }
