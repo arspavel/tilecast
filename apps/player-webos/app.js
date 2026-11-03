@@ -1,12 +1,17 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.4.3";
-  var VERSION_CODE = 10;
+  var VERSION = "0.4.4";
+  var VERSION_CODE = 11;
   var STORE = "tilecast.webos.";
   // Media is kept in memory between playlist cycles so a loop does not
   // download every item again. Items on screen are never evicted.
   var MEDIA_CACHE_BYTES = 384 * 1024 * 1024;
+  // Downloads live in browser memory, which LG signage firmware caps far
+  // below the panel's flash. Videos above this size play straight from the
+  // server instead of evicting everything else or failing outright.
+  var STREAM_VIDEO_BYTES = 96 * 1024 * 1024;
+  var STREAM_URL_REFRESH_MS = 60 * 60 * 1000;
   var VIDEO_STALL_MS = 20000;
   var READY_TIMEOUT_MS = 30000;
   var RELOAD_AFTER_UNHEALTHY_MS = 5 * 60 * 1000;
@@ -448,11 +453,33 @@
   function loadMedia(asset) {
     var key = mediaKey(asset);
     var entry = media.entries[key];
+    if (entry && entry.streamed && entry.expiresAt && entry.expiresAt - Date.now() < STREAM_URL_REFRESH_MS && entry.pins === 0) {
+      delete media.entries[key];
+      entry = null;
+    }
     if (entry) {
       entry.used = ++media.clock;
       return entry.promise;
     }
     entry = { key: key, url: null, size: 0, used: ++media.clock, pins: 0 };
+    if (shouldStream(asset)) {
+      entry.streamed = true;
+      entry.promise = request("POST", asset.downloadPath + "/stream-url", {}).then(function (link) {
+        entry.url = state.serverUrl + link.path;
+        entry.expiresAt = Date.parse(link.expiresAt) || Date.now() + STREAM_URL_REFRESH_MS * 2;
+        return entry.url;
+      }, function (error) {
+        delete media.entries[key];
+        // A server without streaming support still serves the whole file.
+        if (error.status === 404 || error.status === 405) {
+          state.streamUnsupported = true;
+          return loadMedia(asset);
+        }
+        throw error;
+      });
+      media.entries[key] = entry;
+      return entry.promise;
+    }
     entry.promise = downloadWithRetry(asset, 3).then(function (blob) {
       entry.url = URL.createObjectURL(blob);
       entry.size = blob.size || 0;
@@ -465,6 +492,13 @@
     });
     media.entries[key] = entry;
     return entry.promise;
+  }
+
+  function shouldStream(asset) {
+    return !state.streamUnsupported &&
+      (asset.mimeType || "").indexOf("video/") === 0 &&
+      Number(asset.fileSize) > STREAM_VIDEO_BYTES &&
+      /^\/api\/v1\/player\/assets\//.test(asset.downloadPath || "");
   }
 
   function downloadWithRetry(asset, attempts) {
@@ -535,7 +569,7 @@
   }
 
   function dropMedia(entry) {
-    if (entry.url) URL.revokeObjectURL(entry.url);
+    if (entry.url && !entry.streamed) URL.revokeObjectURL(entry.url);
     media.bytes -= entry.size;
     delete media.entries[entry.key];
   }

@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/json"
@@ -128,6 +129,10 @@ type server struct {
 	installLimiter                *rateLimiter
 	accountLimiter                *rateLimiter
 	trustedProxies                []netip.Prefix
+	// streamKey signs short-lived media URLs for players whose <video> element
+	// cannot send an Authorization header. It lives only in memory: a restart
+	// invalidates the URLs and players simply ask for new ones.
+	streamKey [32]byte
 }
 
 type contextKey string
@@ -205,6 +210,9 @@ func New(deps Dependencies) *API {
 		s.devices.SetAirplayReconciler(s.reconcileAirplaySession)
 	}
 	s.offline = deps.Offline
+	if _, err := rand.Read(s.streamKey[:]); err != nil {
+		panic("httpapi: no randomness for stream URL key: " + err.Error())
+	}
 	if deps.ReleasePublishToken != "" {
 		s.releasePublishTokenHash = sha256.Sum256([]byte(deps.ReleasePublishToken))
 		s.releasePublishTokenConfigured = true
