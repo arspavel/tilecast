@@ -45,14 +45,17 @@ data class PlayerDiagnostics(
  * Download speed from cumulative byte counts. Samples older than the window
  * are dropped; a smaller count than before means a new download and resets
  * the meter. The last measured speed stays available after a download ends.
+ * Parallel downloads report progress from several threads at once, so access
+ * is synchronized: a racing ArrayDeque returns null slots and broke sync.
  */
 class ThroughputMeter(private val windowMillis: Long = 5_000) {
     private val samples = ArrayDeque<Pair<Long, Long>>()
-    var lastBytesPerSecond: Long? = null
+    @Volatile var lastBytesPerSecond: Long? = null
         private set
-    var lastSampleAt: Long = 0
+    @Volatile var lastSampleAt: Long = 0
         private set
 
+    @Synchronized
     fun observe(bytes: Long, nowMillis: Long) {
         if (samples.isNotEmpty() && bytes < samples.last().second) samples.clear()
         samples.addLast(nowMillis to bytes)
