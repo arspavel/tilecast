@@ -112,7 +112,7 @@ function UptimeBody({ report }: { report: UptimeReport }) {
       <div className="uptime-figures">
         <div className="uptime-figures__headline">
           <strong>{formatPercent(report.uptimePercent)}</strong>
-          <span>Up · {report.windowLabel.toLowerCase()}</span>
+          <span>Работает · {windowName(report)}</span>
           <UptimeTrend report={report} />
         </div>
         <dl className="uptime-figures__list">
@@ -173,7 +173,7 @@ function UptimeBody({ report }: { report: UptimeReport }) {
               size={14}
               aria-hidden="true"
             />
-            Per screen · {screenBreakdown(report)}
+            По экранам · {screenBreakdown(report)}
           </span>
           <ul className="uptime-legend">
             {(Object.keys(stateLabels) as UptimeState[]).map((state) => (
@@ -211,14 +211,14 @@ function UptimeBody({ report }: { report: UptimeReport }) {
 // Unmeasured screens are named rather than hidden: a player that has not
 // reported state yet is a real gap in the graph, not a healthy screen.
 function screenBreakdown(report: UptimeReport) {
-  const parts = [`${report.screensTracked} screens`];
+  const parts = [screensCount(report.screensTracked)];
   parts.push(
     report.screensWithDowntime > 0
-      ? `${report.screensWithDowntime} with downtime`
-      : "none with downtime",
+      ? `с простоем: ${report.screensWithDowntime}`
+      : "без простоев",
   );
   if (report.screensUnmeasured > 0) {
-    parts.push(`${report.screensUnmeasured} not measured yet`);
+    parts.push(`ещё не измерено: ${report.screensUnmeasured}`);
   }
   return parts.join(" · ");
 }
@@ -238,9 +238,9 @@ function ScreenRow({
       <div
         className="uptime-strip"
         role="img"
-        aria-label={`${screen.screenName}: ${formatPercent(screen.uptimePercent)} up${
+        aria-label={`${screen.screenName}: работает ${formatPercent(screen.uptimePercent)}${
           screen.downSeconds > 0
-            ? `, ${formatSeconds(screen.downSeconds)} down`
+            ? `, не работал ${formatSeconds(screen.downSeconds)}`
             : ""
         }`}
       >
@@ -260,12 +260,12 @@ function ScreenRow({
       </span>
       <span className="uptime-screen__note">
         {screen.downSeconds > 0
-          ? `${formatSeconds(screen.downSeconds)} down`
+          ? `не работал ${formatSeconds(screen.downSeconds)}`
           : screen.impairedSeconds > 0
-            ? `${formatSeconds(screen.impairedSeconds)} impaired`
+            ? `с проблемами ${formatSeconds(screen.impairedSeconds)}`
             : screen.uptimePercent === null
-              ? "Not reporting yet"
-              : "No interruptions"}
+              ? "Ещё не на связи"
+              : "Без перерывов"}
       </span>
     </div>
   );
@@ -283,13 +283,11 @@ function Segment({ kind, percent }: { kind: UptimeState; percent: number }) {
 
 function UptimeTrend({ report }: { report: UptimeReport }) {
   if (report.uptimePercent === null || report.previousUptimePercent === null) {
-    return <small className="uptime-trend">No comparable earlier window</small>;
+    return <small className="uptime-trend">Нет данных за прошлый период</small>;
   }
   const delta = report.uptimePercent - report.previousUptimePercent;
   if (Math.abs(delta) < 0.05) {
-    return (
-      <small className="uptime-trend">Unchanged from the previous window</small>
-    );
+    return <small className="uptime-trend">Как в прошлом периоде</small>;
   }
   const Icon = delta > 0 ? TrendingUp : TrendingDown;
   return (
@@ -301,7 +299,7 @@ function UptimeTrend({ report }: { report: UptimeReport }) {
       }
     >
       <Icon size={14} aria-hidden="true" />
-      {`${delta > 0 ? "+" : "−"}${Math.abs(delta).toFixed(1)} points vs previous window`}
+      {`${delta > 0 ? "+" : "−"}${Math.abs(delta).toFixed(1).replace(".", ",")} п. п. к прошлому периоду`}
     </small>
   );
 }
@@ -310,24 +308,24 @@ function chartDescription(report: UptimeReport) {
   const bucketsWithDowntime = report.buckets.filter(
     (bucket) => bucket.downPercent > 0,
   ).length;
-  return `${report.windowLabel}: ${formatPercent(report.uptimePercent)} up across ${
-    report.screensTracked
-  } screens, ${formatSeconds(report.downSeconds)} down, with downtime in ${bucketsWithDowntime} of ${
+  return `${windowName(report)}: работает ${formatPercent(report.uptimePercent)}, ${screensCount(
+    report.screensTracked,
+  )}, простой ${formatSeconds(report.downSeconds)}, интервалов с простоем: ${bucketsWithDowntime} из ${
     report.buckets.length
-  } intervals.`;
+  }.`;
 }
 
 function bucketTitle(bucket: UptimeBucket, bucketSeconds: number) {
   const parts = [
-    `Up ${bucket.upPercent.toFixed(1)}%`,
-    `Impaired ${bucket.impairedPercent.toFixed(1)}%`,
-    `Down ${bucket.downPercent.toFixed(1)}%`,
+    `Работает ${bucket.upPercent.toFixed(1)}%`,
+    `Есть проблемы ${bucket.impairedPercent.toFixed(1)}%`,
+    `Не работает ${bucket.downPercent.toFixed(1)}%`,
   ];
   if (bucket.unknownPercent > 0) {
-    parts.push(`No data ${bucket.unknownPercent.toFixed(1)}%`);
+    parts.push(`Нет данных ${bucket.unknownPercent.toFixed(1)}%`);
   }
   if (bucket.screensDown > 0) {
-    parts.push(`${bucket.screensDown} screen(s) down`);
+    parts.push(`не работает экранов: ${bucket.screensDown}`);
   }
   return `${formatRange(bucket.start, bucketSeconds)} · ${parts.join(" · ")}`;
 }
@@ -362,12 +360,28 @@ function formatPercent(value: number | null) {
 }
 
 function formatSeconds(seconds: number) {
-  if (seconds <= 0) return "None";
+  if (seconds <= 0) return "Нет";
   const days = Math.floor(seconds / 86_400);
   const hours = Math.floor((seconds % 86_400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m`;
-  return `${Math.round(seconds)}s`;
+  if (days > 0) return `${days} дн ${hours} ч`;
+  if (hours > 0) return `${hours} ч ${minutes} мин`;
+  if (minutes > 0) return `${minutes} мин`;
+  return `${Math.round(seconds)} с`;
+}
+
+// The server names the window in English ("Last 24 hours").
+function windowName(report: UptimeReport) {
+  if (report.window === "24h") return "за 24 часа";
+  if (report.window === "7d") return "за 7 дней";
+  return report.windowLabel.toLowerCase();
+}
+
+function screensCount(count: number) {
+  const tens = count % 100;
+  const ones = count % 10;
+  if (tens >= 11 && tens <= 14) return `${count} экранов`;
+  if (ones === 1) return `${count} экран`;
+  if (ones >= 2 && ones <= 4) return `${count} экрана`;
+  return `${count} экранов`;
 }

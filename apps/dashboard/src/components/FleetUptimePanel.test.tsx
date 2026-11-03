@@ -93,18 +93,18 @@ describe("FleetUptimePanel", () => {
 
     expect(await screen.findByText("81.3%")).toBeTruthy();
     // Downtime is stated as a duration, not only as a colour in the chart.
-    expect(screen.getByText("30m")).toBeTruthy();
-    expect(screen.getByText("15m")).toBeTruthy();
+    expect(screen.getByText("30 мин")).toBeTruthy();
+    expect(screen.getByText("15 мин")).toBeTruthy();
     expect(screen.getByText("1 of 2")).toBeTruthy();
-    expect(screen.getByText("+5.0 points vs previous window")).toBeTruthy();
+    expect(screen.getByText("+5,0 п. п. к прошлому периоду")).toBeTruthy();
     // The worst screen keeps the order the server ranked it in.
     const links = screen
       .getAllByRole("link")
       .map((link) => link.textContent)
       .filter((label) => label === "Library" || label === "Cafeteria");
     expect(links).toEqual(["Library", "Cafeteria"]);
-    expect(screen.getByText("30m down")).toBeTruthy();
-    expect(screen.getByText("No interruptions")).toBeTruthy();
+    expect(screen.getByText("не работал 30 мин")).toBeTruthy();
+    expect(screen.getByText("Без перерывов")).toBeTruthy();
   });
 
   it("keeps the per-screen strips collapsed so the overview stays short", async () => {
@@ -113,11 +113,11 @@ describe("FleetUptimePanel", () => {
     );
     renderPanel();
 
-    const disclosure = await screen.findByText(/^Per screen · /);
+    const disclosure = await screen.findByText(/^По экранам · /);
     expect(disclosure.closest("details")?.hasAttribute("open")).toBe(false);
     // A player that has not reported state yet is counted, not hidden.
     expect(disclosure.textContent).toBe(
-      "Per screen · 3 screens · 1 with downtime · 1 not measured yet",
+      "По экранам · 3 экрана · с простоем: 1 · ещё не измерено: 1",
     );
   });
 
