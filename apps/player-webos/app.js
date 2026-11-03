@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.4.4";
-  var VERSION_CODE = 11;
+  var VERSION = "0.5.0";
+  var VERSION_CODE = 12;
   var STORE = "tilecast.webos.";
   // Media is kept in memory between playlist cycles so a loop does not
   // download every item again. Items on screen are never evicted.
@@ -318,6 +318,7 @@
       writeJson("manifest", manifest);
       state.lastError = null;
       pruneMedia(manifest);
+      syncDisk(manifest);
       activateManifest(manifest);
     }).catch(function (error) {
       state.lastError = error.message;
@@ -450,7 +451,21 @@
     return asset.assetId + ":" + (asset.variantId || "");
   }
 
+  // The panel's own storage is checked first, so a file kept there plays
+  // without the network even right after a reboot.
   function loadMedia(asset) {
+    return diskWhenReady().then(function () {
+      var name = diskName(asset);
+      if (diskPlayable(name)) {
+        var cached = media.entries[mediaKey(asset)];
+        if (cached && cached.url && cached.pins === 0) dropMedia(cached);
+        return disk.base + name;
+      }
+      return loadMediaInMemory(asset);
+    });
+  }
+
+  function loadMediaInMemory(asset) {
     var key = mediaKey(asset);
     var entry = media.entries[key];
     if (entry && entry.streamed && entry.expiresAt && entry.expiresAt - Date.now() < STREAM_URL_REFRESH_MS && entry.pins === 0) {
@@ -473,7 +488,7 @@
         // A server without streaming support still serves the whole file.
         if (error.status === 404 || error.status === 405) {
           state.streamUnsupported = true;
-          return loadMedia(asset);
+          return loadMediaInMemory(asset);
         }
         throw error;
       });
@@ -581,6 +596,232 @@
       var entry = media.entries[k];
       if (!keep[k] && entry.url && entry.pins === 0) dropMedia(entry);
     });
+  }
+
+  // ---- Panel storage (LG Signage) ------------------------------------------
+  // Browser memory on LG signage firmware holds a few hundred megabytes while
+  // the panel has gigabytes of flash. Signage panels reach that flash through
+  // the SCAP storage service: the service downloads a file into
+  // file://internal/ itself and the panel's local web server plays it back,
+  // so content survives reboots and network outages. A TV without the service
+  // keeps the memory cache and streaming.
+
+  var STORAGE_SERVICE = "luna://com.webos.service.commercial.signage.storageservice/";
+  var DISK_ROOT = "file://internal/";
+  var DISK_PREFIX = "tc-";
+  // Left free for the firmware and the panel's own logs.
+  var DISK_RESERVE_BYTES = 512 * 1024 * 1024;
+  var DISK_COPY_TIMEOUT_MS = 4 * 60 * 60 * 1000;
+  var DISK_PLAYBACK_BASES = ["http://127.0.0.1:9080/"];
+  var disk = {
+    state: "unknown", base: null, playback: "unknown", files: {}, usedBytes: 0,
+    freeBytes: 0, totalBytes: 0, queue: [], queued: {}, busy: null, error: null, ready: null
+  };
+
+  function diskName(asset) {
+    return DISK_PREFIX + asset.assetId + "-" + (asset.variantId || "original") + diskExtension(asset.mimeType);
+  }
+
+  // The panel's web server picks the content type from the extension.
+  function diskExtension(mime) {
+    var known = {
+      "video/mp4": ".mp4", "video/webm": ".webm", "video/quicktime": ".mov", "video/x-matroska": ".mkv",
+      "video/mp2t": ".ts", "image/jpeg": ".jpg", "image/png": ".png", "image/gif": ".gif", "image/webp": ".webp"
+    };
+    return known[(mime || "").toLowerCase()] || ".bin";
+  }
+
+  function diskStorable(asset) {
+    var mime = asset.mimeType || "";
+    return (mime.indexOf("video/") === 0 || mime.indexOf("image/") === 0) &&
+      /^\/api\/v1\/player\/assets\//.test(asset.downloadPath || "");
+  }
+
+  function diskPlayable(name) {
+    return disk.state === "ready" && !!disk.base && disk.files[name] != null;
+  }
+
+  function diskCall(method, params, timeoutMs) {
+    return lunaCall(STORAGE_SERVICE + method, params, timeoutMs || 15000);
+  }
+
+  // Waits for the first storage check, but never holds playback for long.
+  function diskWhenReady() {
+    if (!disk.ready) return Promise.resolve();
+    return Promise.race([disk.ready, delay(20000)]);
+  }
+
+  function initDisk() {
+    disk.state = "checking";
+    var completed = readJson("diskFiles") || {};
+    disk.ready = refreshDiskSpace().then(function () {
+      return diskCall("fs/listFiles", { pathURI: DISK_ROOT });
+    }).then(function (result) {
+      var leftovers = [];
+      disk.files = {};
+      (result.files || []).forEach(function (file) {
+        if (file.type === "folder" || String(file.name).indexOf(DISK_PREFIX) !== 0) return;
+        // Only files recorded after a finished download count; anything else
+        // is a copy cut short by a power loss.
+        if (completed[file.name] != null && Number(completed[file.name]) === Number(file.size)) disk.files[file.name] = Number(file.size);
+        else leftovers.push(file.name);
+      });
+      saveDiskIndex();
+      leftovers.forEach(removeDiskFile);
+      disk.state = "ready";
+      var any = Object.keys(disk.files)[0];
+      return any ? probeDiskPlayback(any) : null;
+    }).catch(function (error) {
+      disk.state = "unavailable";
+      disk.error = error.message;
+    });
+    return disk.ready;
+  }
+
+  function refreshDiskSpace() {
+    return diskCall("fs/storageInfo", {}, 8000).then(function (result) {
+      var info = result.spaceInfo || {};
+      var total = Number(info.totalSize) || 0;
+      // SCAP reports kilobytes; a panel never has less than a gigabyte.
+      var scale = total > 0 && total < 1e9 ? 1024 : 1;
+      disk.totalBytes = total * scale;
+      disk.freeBytes = (Number(info.freeSize) || 0) * scale;
+    });
+  }
+
+  function saveDiskIndex() {
+    disk.usedBytes = 0;
+    Object.keys(disk.files).forEach(function (name) { disk.usedBytes += disk.files[name]; });
+    writeJson("diskFiles", disk.files);
+  }
+
+  function removeDiskFile(name) {
+    delete disk.files[name];
+    saveDiskIndex();
+    return diskCall("fs/removeFile", { file: DISK_ROOT + name }).catch(function () { /* Already gone. */ });
+  }
+
+  // The address the panel serves internal storage on is checked once with a
+  // real file; without it the stored files cannot be shown and the player
+  // keeps memory and streaming instead.
+  function probeDiskPlayback(name) {
+    if (disk.base) return Promise.resolve(disk.base);
+    var bases = DISK_PLAYBACK_BASES.slice();
+    var next = function () {
+      if (!bases.length) {
+        disk.playback = "failed";
+        disk.error = "Панель не отдаёт файлы с накопителя";
+        return null;
+      }
+      var base = bases.shift();
+      return probeUrl(base + name, name).then(function () {
+        disk.base = base;
+        disk.playback = "ok";
+        disk.error = null;
+        return base;
+      }, next);
+    };
+    return next();
+  }
+
+  function probeUrl(url, name) {
+    return new Promise(function (resolve, reject) {
+      var isVideo = /\.(mp4|webm|mov|mkv|ts)$/.test(name);
+      var element = isVideo ? document.createElement("video") : new Image();
+      var timer = setTimeout(function () { done(false); }, 10000);
+      function done(ok) {
+        clearTimeout(timer);
+        element.onloadedmetadata = element.onload = element.onerror = null;
+        if (isVideo) { element.removeAttribute("src"); element.load(); }
+        if (ok) resolve(); else reject(new Error("probe_failed"));
+      }
+      if (isVideo) {
+        element.muted = true;
+        element.preload = "metadata";
+        element.onloadedmetadata = function () { done(true); };
+      } else {
+        element.onload = function () { done(true); };
+      }
+      element.onerror = function () { done(false); };
+      element.src = url;
+    });
+  }
+
+  // Called with every manifest: keeps what the manifest still uses, removes
+  // the rest and queues missing files one at a time.
+  function syncDisk(manifest) {
+    if (!disk.ready) return;
+    disk.ready.then(function () {
+      if (disk.state !== "ready" || disk.playback === "failed") return;
+      var wanted = {};
+      (manifest.assets || []).forEach(function (asset) {
+        if (!diskStorable(asset)) return;
+        var name = diskName(asset);
+        wanted[name] = true;
+        if (disk.files[name] == null && !disk.queued[name]) {
+          disk.queued[name] = true;
+          disk.queue.push(asset);
+        }
+      });
+      var playing = state.currentItem && state.currentItem.assetId;
+      Object.keys(disk.files).forEach(function (name) {
+        if (wanted[name]) return;
+        if (playing && name.indexOf(DISK_PREFIX + playing + "-") === 0) return;
+        removeDiskFile(name);
+      });
+      pumpDisk();
+    });
+  }
+
+  function pumpDisk() {
+    if (disk.busy || !disk.queue.length || !state.credential) return;
+    var asset = disk.queue.shift();
+    var name = diskName(asset);
+    delete disk.queued[name];
+    if (disk.files[name] != null) return pumpDisk();
+    disk.busy = { name: name, total: Number(asset.fileSize) || 0, startedAt: Date.now() };
+    refreshDiskSpace().catch(function () {}).then(function () {
+      var size = Number(asset.fileSize) || 0;
+      if (disk.freeBytes && size + DISK_RESERVE_BYTES > disk.freeBytes) {
+        throw new Error("Мало места на накопителе панели для файла " + formatBytes(size));
+      }
+      return request("POST", asset.downloadPath + "/stream-url", {});
+    }).then(function (link) {
+      // The storage service fetches the file itself; the signed link carries
+      // the authorisation a plain URL cannot.
+      return diskCall("fs/copyFile", {
+        src: state.serverUrl + link.path,
+        dest: DISK_ROOT + name,
+        maxRedirection: 3
+      }, DISK_COPY_TIMEOUT_MS);
+    }).then(function () {
+      return diskCall("fs/listFiles", { pathURI: DISK_ROOT });
+    }).then(function (result) {
+      var stored = null;
+      (result.files || []).forEach(function (file) { if (file.name === name) stored = Number(file.size); });
+      var expected = Number(asset.fileSize) || 0;
+      if (stored == null || (expected > 0 && stored !== expected)) {
+        removeDiskFile(name);
+        throw new Error("Файл на накопителе не совпал по размеру, будет скачан снова");
+      }
+      disk.files[name] = stored;
+      saveDiskIndex();
+      disk.error = null;
+      return probeDiskPlayback(name);
+    }).catch(function (error) {
+      // Tried again with the next manifest sync.
+      disk.error = error.message;
+    }).then(function () {
+      disk.busy = null;
+      if (disk.playback !== "failed") pumpDisk();
+    });
+  }
+
+  // A stored file that no longer plays is removed and fetched again.
+  function diskPlaybackFailed(url) {
+    if (!disk.base || !url || url.indexOf(disk.base) !== 0) return;
+    removeDiskFile(url.slice(disk.base.length));
+    if (state.manifest) syncDisk(state.manifest);
   }
 
   // ---- Playback ----------------------------------------------------------
@@ -706,7 +947,10 @@
       reveal(image, key, token);
       armNext(itemDuration(item), token);
     };
-    image.onerror = function () { itemFailed("Не удалось открыть изображение", token); };
+    image.onerror = function () {
+      diskPlaybackFailed(url);
+      itemFailed("Не удалось открыть изображение", token);
+    };
     image.src = url;
     stage.appendChild(image);
   }
@@ -741,7 +985,10 @@
       if (!item.usePlayerDefaults && isFinite(cap) && cap > 0) armNext(cap, token);
     };
     video.onended = function () { if (token === state.renderToken) playNext(); };
-    video.onerror = function () { itemFailed("Ошибка воспроизведения видео", token); };
+    video.onerror = function () {
+      diskPlaybackFailed(url);
+      itemFailed("Ошибка воспроизведения видео", token);
+    };
     video.src = url;
     stage.appendChild(video);
     var promise = video.play();
@@ -1365,8 +1612,8 @@
       downloadQueueCount: download ? download.count : 0,
       downloadedBytes: download ? download.loaded : 0,
       requiredBytes: download ? download.total : 0,
-      cacheUsedBytes: media.bytes,
-      cacheLimitBytes: MEDIA_CACHE_BYTES
+      cacheUsedBytes: media.bytes + (diskInUse() ? disk.usedBytes : 0),
+      cacheLimitBytes: diskInUse() ? disk.usedBytes + Math.max(0, disk.freeBytes - DISK_RESERVE_BYTES) : MEDIA_CACHE_BYTES
     }, {}, false).then(function () {
       // The screen was enabled again in Studio; resume without re-pairing.
       if (state.mode === "disabled") syncManifest();
@@ -1391,6 +1638,7 @@
       localStorage.setItem(STORE + "installationId", state.installationId);
     }
     if (!state.serverUrl) return showSetup("");
+    if (!disk.ready) initDisk();
     if (state.credential && state.credential.serverUrl !== state.serverUrl) resetEnrollment();
     if (state.credential) runPaired(); else beginPairing();
   }
@@ -1455,6 +1703,17 @@
     return left > 0 ? when + " (через " + formatDuration(left) + ")" : when;
   }
 
+  function diskInUse() {
+    return disk.state === "ready" && disk.playback !== "failed";
+  }
+
+  function diskStateLabel() {
+    if (disk.state === "checking" || disk.state === "unknown") return "проверка…";
+    if (disk.state === "unavailable") return "недоступен на этой модели (" + (disk.error || "нет службы") + ")";
+    if (disk.playback === "failed") return "файлы не воспроизводятся с накопителя";
+    return "готов";
+  }
+
   function activeDownload() {
     var loaded = 0, total = 0, count = 0, startedAt = Date.now();
     Object.keys(state.downloads).forEach(function (key) {
@@ -1488,7 +1747,17 @@
       lines.push("Плейлист: нет активного контента");
     }
     lines.push("Следующая смена: " + nextChangeText());
-    lines.push("Хранилище: " + formatBytes(media.bytes) + " из " + formatBytes(MEDIA_CACHE_BYTES) + " (память плеера)");
+    if (diskInUse()) {
+      lines.push("Накопитель панели: " + formatBytes(disk.usedBytes) + " · файлов " + Object.keys(disk.files).length + " · свободно " + formatBytes(disk.freeBytes));
+    } else {
+      lines.push("Накопитель панели: " + diskStateLabel());
+    }
+    if (disk.busy) {
+      lines.push("Сохранение на накопитель: " + (disk.busy.total ? formatBytes(disk.busy.total) + " · " : "") +
+        Math.round((Date.now() - disk.busy.startedAt) / 1000) + " с" + (disk.queue.length ? " · в очереди " + disk.queue.length : ""));
+    }
+    if (disk.error) lines.push("Накопитель: " + disk.error);
+    lines.push("Память плеера: " + formatBytes(media.bytes) + " из " + formatBytes(MEDIA_CACHE_BYTES));
     if (download) {
       var percent = download.total ? Math.min(100, Math.round(download.loaded * 100 / download.total)) : 0;
       lines.push("Загрузка контента: " + percent + "% · " + formatBytes(download.loaded) + (download.total ? " из " + formatBytes(download.total) : "") + " · файлов " + download.count);
