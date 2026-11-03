@@ -375,9 +375,10 @@ export function translateEnglish(english: string): string {
     return `Обновлено ${match[1]} ${units[match[2]!]}`;
   }
 
-  match = english.match(/^(\d+)\s*(m|h|d|w) ago$/);
+  match = english.match(/^(\d+)\s*(s|m|h|d|w) ago$/);
   if (match) {
     const units: Record<string, string> = {
+      s: "с назад",
       m: "мин. назад",
       h: "ч. назад",
       d: "дн. назад",
