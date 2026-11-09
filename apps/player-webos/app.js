@@ -1165,20 +1165,17 @@
     return m + ":" + (s < 10 ? "0" : "") + s;
   }
 
-  // Draws what the player shows. Images and videos are copied from their own
-  // same-origin blob URLs. A website frame cannot be read by the page, and some
-  // panels render video on a hardware plane, so those cases produce a status
-  // card that names the content instead of a misleading black frame.
+  // Draws what the player shows. Images and videos held in browser memory are
+  // copied from their same-origin blob URLs. A website frame, a file played
+  // from the panel's own storage (another origin) and video on a hardware
+  // plane cannot be read by the page, so those cases produce a status card
+  // that names the content instead of a broken or misleading frame.
   function captureFrame(maxWidth, maxHeight) {
     var screenWidth = window.innerWidth || 1920, screenHeight = window.innerHeight || 1080;
     var scale = Math.min(1, maxWidth / screenWidth, maxHeight / screenHeight);
     var width = Math.max(2, Math.round(screenWidth * scale)), height = Math.max(2, Math.round(screenHeight * scale));
-    var canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
+    var canvas = blankCanvas(width, height);
     var context = canvas.getContext("2d");
-    context.fillStyle = "#000";
-    context.fillRect(0, 0, width, height);
     var element = visibleElement();
     var drawn = false;
     if (element && (element.tagName === "IMG" || element.tagName === "VIDEO")) {
@@ -1188,8 +1185,19 @@
           isImage ? element.naturalWidth : element.videoWidth,
           isImage ? element.naturalHeight : element.videoHeight, width, height);
         context.drawImage(element, rect[0], rect[1], rect[2], rect[3]);
+        // Throws for a file played from the panel's own storage: it comes from
+        // another origin, and a canvas holding it can no longer be exported.
+        context.getImageData(0, 0, 1, 1);
         drawn = isImage || !mostlyBlack(context, width, height);
-      } catch (_) { drawn = false; }
+      } catch (_) {
+        canvas = blankCanvas(width, height);
+        context = canvas.getContext("2d");
+        drawn = false;
+      }
+      if (!drawn && isImage) {
+        drawCard(context, width, height, "Показывается изображение", statusLines());
+        drawn = true;
+      }
       if (!drawn && !isImage) {
         var position = Math.floor(element.currentTime || 0), total = Math.floor(element.duration || 0);
         drawCard(context, width, height, "Воспроизводится видео", statusLines().concat([
@@ -1206,6 +1214,16 @@
       drawCard(context, width, height, state.messageTitle || "LSR signage Player", (state.messageText ? [state.messageText] : []).concat(statusLines()));
     }
     return { canvas: canvas, width: width, height: height };
+  }
+
+  function blankCanvas(width, height) {
+    var canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    var context = canvas.getContext("2d");
+    context.fillStyle = "#000";
+    context.fillRect(0, 0, width, height);
+    return canvas;
   }
 
   function canvasJpeg(canvas, quality) {
