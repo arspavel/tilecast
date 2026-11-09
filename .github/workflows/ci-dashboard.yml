@@ -38,7 +38,7 @@ jobs:
           npm test -- --reporter=default --reporter=junit --outputFile=test-results/vitest.xml
       - name: Test Reporter
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@v3.0.0
+        uses: dorny/test-reporter@v3.2.0
         with:
           name: Dashboard tests
           path: apps/dashboard/test-results/vitest.xml
