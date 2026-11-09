@@ -830,12 +830,16 @@
 .widget-editor > .source-editor__body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 0.82fr);
-  gap: var(--tc-space-4) var(--tc-space-5);
+  /* No row gap: the preview spans 999 implicit rows, and a gap between each
+     of them stretched the page by thousands of pixels and pushed the preview
+     far below the form. The sections space themselves instead. */
+  gap: 0 var(--tc-space-5);
   align-items: start;
 }
 
 .widget-editor > .source-editor__body > :not(.widget-editor__preview) {
   grid-column: 1;
+  margin-bottom: var(--tc-space-4);
 }
 
 .widget-editor__layout {
@@ -1089,6 +1093,11 @@
   .widget-editor > .source-editor__body {
     display: flex;
     flex-direction: column;
+    row-gap: var(--tc-space-4);
+  }
+
+  .widget-editor > .source-editor__body > :not(.widget-editor__preview) {
+    margin-bottom: 0;
   }
 
   .widget-editor > .source-editor__body > * {

@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.5.0";
-  var VERSION_CODE = 12;
+  var VERSION = "0.5.1";
+  var VERSION_CODE = 13;
   var STORE = "tilecast.webos.";
   // Media is kept in memory between playlist cycles so a loop does not
   // download every item again. Items on screen are never evicted.
@@ -1588,6 +1588,7 @@
     var video = stage.querySelector("video:not(.pending)");
     var download = activeDownload();
     var upcoming = nextChange();
+    var sentAt = Date.now();
     request("POST", "/api/v1/player/heartbeat", {
       screenWidth: window.screen.width || window.innerWidth || 1920,
       screenHeight: window.screen.height || window.innerHeight || 1080,
@@ -1615,10 +1616,26 @@
       cacheUsedBytes: media.bytes + (diskInUse() ? disk.usedBytes : 0),
       cacheLimitBytes: diskInUse() ? disk.usedBytes + Math.max(0, disk.freeBytes - DISK_RESERVE_BYTES) : MEDIA_CACHE_BYTES
     }, {}, false).then(function () {
+      // The round trip doubles as the latency shown in the service overlay,
+      // so the figure is known even when nobody opened it on the panel.
+      if (!info.element) {
+        info.latencyMs = Date.now() - sentAt;
+        info.latencyError = null;
+      }
+      sendServiceInfo();
       // The screen was enabled again in Studio; resume without re-pairing.
       if (state.mode === "disabled") syncManifest();
     }).catch(function (error) {
       handleDeviceError(error);
+    });
+  }
+
+  // Studio shows the same lines as the remote's Up button. A server without
+  // this endpoint is asked again only after an hour.
+  function sendServiceInfo() {
+    if (state.serviceInfoUnsupportedUntil && Date.now() < state.serviceInfoUnsupportedUntil) return;
+    request("POST", "/api/v1/player/service-info", { lines: infoLines().lines }, {}, false).catch(function (error) {
+      if (error.status === 404 || error.status === 405) state.serviceInfoUnsupportedUntil = Date.now() + 60 * 60 * 1000;
     });
   }
 

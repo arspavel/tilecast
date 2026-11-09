@@ -133,6 +133,8 @@ type server struct {
 	// cannot send an Authorization header. It lives only in memory: a restart
 	// invalidates the URLs and players simply ask for new ones.
 	streamKey [32]byte
+	// serviceInfo holds the latest service overlay text each player reported.
+	serviceInfo serviceInfoStore
 }
 
 type contextKey string

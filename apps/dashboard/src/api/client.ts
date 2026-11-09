@@ -1394,6 +1394,10 @@ export const api = {
     ),
   screen: async (id: string) =>
     normalizeScreen(await request<Screen | null>(`/screens/${id}`)),
+  screenServiceInfo: (id: string) =>
+    request<{ lines: string[]; reportedAt: string | null }>(
+      `/screens/${id}/service-info`,
+    ),
   screenReliability: (id: string) =>
     request<ReliabilityStatus>(`/screens/${id}/reliability`),
   screenPlayerHistory: async (id: string) => {

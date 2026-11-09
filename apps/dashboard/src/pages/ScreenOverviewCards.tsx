@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
+import { api } from "../api/client";
 import type { PlaylistAssignment, Screen } from "../api/types";
 import { relativeTime } from "./screenHealth";
 import "./ScreenOverviewCards.css";
@@ -199,6 +201,8 @@ export function ScreenOverviewCards({
         </dl>
       </section>
 
+      <ScreenServiceInfoCard screenId={screen.id} />
+
       <p className="screen-card__device">
         {[
           screen.platform?.toLowerCase().includes("webos")
@@ -221,5 +225,71 @@ export function ScreenOverviewCards({
           .join(" · ")}
       </p>
     </div>
+  );
+}
+
+/**
+ * What the panel shows on its own service overlay (the remote's Up button),
+ * as the player last reported it. LG webOS players from 0.5.1 send it with
+ * every heartbeat.
+ */
+function ScreenServiceInfoCard({ screenId }: { screenId: string }) {
+  const report = useQuery({
+    queryKey: ["screens", screenId, "service-info"],
+    queryFn: () => api.screenServiceInfo(screenId),
+    refetchInterval: 15_000,
+  });
+  const lines = report.data?.lines ?? [];
+  const reportedAt = report.data?.reportedAt ?? undefined;
+  // The player reports every 15 seconds; a minute of silence means the
+  // lines below are what the panel showed when it was last heard from.
+  const stale =
+    reportedAt !== undefined &&
+    Date.now() - new Date(reportedAt).getTime() > 60_000;
+
+  return (
+    <section
+      className="screen-card screen-card--wide"
+      aria-labelledby="screen-service-title"
+    >
+      <header className="screen-card__header">
+        <div>
+          <h3 id="screen-service-title">Служебная информация панели</h3>
+          <small className="screen-card__note">
+            То же, что панель показывает по кнопке «Вверх» на пульте
+          </small>
+        </div>
+        {reportedAt && (
+          <span
+            className={`screen-card__meta${stale ? " screen-card__meta--stale" : ""}`}
+          >
+            {stale ? "Устарело: " : "Обновлено "}
+            {relativeTime(reportedAt)}
+          </span>
+        )}
+      </header>
+      {lines.length > 0 ? (
+        <dl className="screen-card__list">
+          {lines.map((line, index) => {
+            const split = line.indexOf(": ");
+            return split > 0 ? (
+              <Row key={index} label={line.slice(0, split)}>
+                {line.slice(split + 2)}
+              </Row>
+            ) : (
+              <div key={index} className="screen-card__row">
+                <dd>{line}</dd>
+              </div>
+            );
+          })}
+        </dl>
+      ) : (
+        <p className="screen-card__placeholder">
+          {report.isLoading
+            ? "Загрузка…"
+            : "Панель ещё не присылала данные. Их отправляет плеер LG webOS 0.5.1 и новее раз в 15 секунд, пока панель на связи."}
+        </p>
+      )}
+    </section>
   );
 }
